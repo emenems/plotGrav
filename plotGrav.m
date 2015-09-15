@@ -78,8 +78,8 @@ if nargin == 0
         m102 = uimenu(m10,'Label','TRiLOGi');
                 uimenu(m102,'Label','Path','CallBack','plotGrav select_trilogi');
                 uimenu(m102,'Label','File','CallBack','plotGrav select_trilogi_file');
-        uimenu(m10,'Label','Other1 tsf/dat file','CallBack','plotGrav select_other1');
-        uimenu(m10,'Label','Other2 tsf/dat file','CallBack','plotGrav select_other2');
+        uimenu(m10,'Label','Other1 file','CallBack','plotGrav select_other1');
+        uimenu(m10,'Label','Other2 file','CallBack','plotGrav select_other2');
         uimenu(m10,'Label','Tides tsf file','CallBack','plotGrav select_tides');
         uimenu(m10,'Label','Filter file','CallBack','plotGrav select_filter');
         uimenu(m10,'Label','Webcam path','CallBack','plotGrav select_webcam');
@@ -844,6 +844,17 @@ if nargin == 0
                                 channels_other1(cut) = [];
                                 units_other1(cut) = [];
                                 clear cut
+                            case 'mat'
+                                temp = importdata(file_path_other1);
+                                time.other1 = datenum(double(temp.time));temp.time = [];
+                                data.other1 = double(temp.data);temp.data = [];
+                                channels_other1 = temp.channels;
+                                units_other1 = temp.units;
+                                clear temp
+                                for i = 1:length(channels_other1)
+                                    data_table_other1(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other1(i)),char(units_other1(i))),false,false,false}; % update table
+                                end
+                            
                         end
                         set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',...
                             data_table_other1,'UserData',data_table_other1);
@@ -897,6 +908,16 @@ if nargin == 0
                                 channels_other2(cut) = [];
                                 units_other2(cut) = [];
                                 clear cut
+                            case 'mat'
+                                temp = importdata(file_path_other2);
+                                time.other2 = datenum(double(temp.time));temp.time = [];
+                                data.other2 = double(temp.data);temp.data = [];
+                                channels_other2 = temp.channels;
+                                units_other2 = temp.units;
+                                clear temp
+                                for i = 1:length(channels_other2)
+                                    data_table_other2(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other2(i)),char(units_other2(i))),false,false,false}; % update table
+                                end
                         end
                         set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',...
                             data_table_other2,'UserData',data_table_other2);
@@ -2270,7 +2291,7 @@ if nargin == 0
                 end
             case 'select_other1'
                 %% Select files/paths interactively
-                [name,path] = uigetfile({'*.tsf';'*.dat'},'Select Other1 TSoft or DAT (Soil moisure) file');
+                [name,path] = uigetfile({'*.tsf';'*.dat';'*.mat'},'Select Other1 TSoft/DAT (Soil moisure) or MAT file');
                 if name == 0                                            % If cancelled-> no input
                     set(findobj('Tag','plotGrav_text_status'),'String','No file selected.');drawnow % status
                 else
@@ -2278,7 +2299,7 @@ if nargin == 0
                     set(findobj('Tag','plotGrav_text_status'),'String','Other1 file selected.');drawnow % status
                 end
             case 'select_other2'
-                [name,path] = uigetfile({'*.tsf';'*.dat'},'Select Other2 TSoft or DAT (Soil moisure) file');
+                [name,path] = uigetfile({'*.tsf';'*.dat';'*.mat'},'Select Other2 TSoft/DAT (Soil moisure) or MAT file');
                 if name == 0                                            % If cancelled-> no input
                     set(findobj('Tag','plotGrav_text_status'),'String','No file selected');drawnow % status
                 else
