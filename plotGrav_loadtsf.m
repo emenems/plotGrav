@@ -28,10 +28,14 @@ increment = [];
 countinfo = [];
 
 %% Get undetval
-cr = 0;
-num_chan = 1;
-fid = fopen(input_tsf);
-row = fgetl(fid);cr = cr+1;
+try
+    cr = 0;
+    num_chan = 1;
+    fid = fopen(input_tsf);
+    row = fgetl(fid);cr = cr+1;
+catch
+    error('plotGrav_loadtsf:FOF','Fail to open the file. File not found');
+end
 % Get UNDETVAL
 while ischar(row)
     if length(row) >= 6
@@ -182,6 +186,7 @@ try
         if ~isempty(undetval)
             data(data == undetval) = NaN;
         end
+        error('plotGrav_loadtsf:FRH','Fail to read header');
     end
         
 %     % Get footer info
@@ -192,7 +197,8 @@ try
 %         row = fgetl(fid);
 %     end
 catch
-    fclose(fid);
+    fclose('all');
+    error('plotGrav_loadtsf:FRD','Fail to read data');
 %     fprintf('Could not load the required file. Checkt the format (file must contain: COUNTINFO, CHANNEL, UNITS, UNDETVAL)\n');
 end
 end
