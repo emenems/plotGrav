@@ -62,7 +62,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
     if numel(check_open_window)>0											% do not continue if some window already open
         fprintf('Please use only one app window in Matlab\n')               % send message to command window
     else																	% Otherwise, continue with GUI generating
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% G U I %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% G U I %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Generate GUI
         % SET PATHS!!														% Default paths to input time series. These parameters can be (after start) manually via GUI
         path_igrav = '\\dms\hygra\iGrav\iGrav006 Data\';					% ROOT file path to iGrav data, i.e., without year, month and day information. 
@@ -479,6 +479,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 else																		% nargin ~= 0 => Use Switch/Case to run selected code blocks (first part, i.e., nargin == 0, create GUI window)
 	warning('off');                                                     	% turn off warning (especially for polynomial fitting)
 	switch in_switch														% Switch between code blocs
+%%%%%%%%%%%%%%%%%%% L O A D I N G   D A T A %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		case 'load_all_data'												% Start loading data. This part starts after pressing 'Load data' button.			
 			plotGrav('reset_tables');	                                   	% reset all tables. Set all uitables (igrav,trilogi,other1,other2) to default values. The tables will be updated after loading data.
 			%% Get user inputs
@@ -533,85 +534,27 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     % corrected for tide or filtered. 'Just loading, no
                     % stacking'
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/tsf data...');drawnow % send message to status bar
-					try                                                     % use try/catch to avoid program crash. Catch the not-loaded file names.
-						[time.igrav,data.igrav,channels_igrav,units_igrav] = plotGrav_loadtsf(file_path_igrav); % used default function for tsf data loading.
-						for i = 1:length(channels_igrav)                    % run this for for all channels of the input file in order to extract the channel names (channel correct)
-							temp = strsplit(char(channels_igrav(i)),':');   % split string using :, i.e., tsf standard for separating Location:Intrument:Measurement. See plotGrav_loadtsf functions
-							channels_igrav(i) = temp(end);                  % get the last string, i.e., 'Measurement' == channel name
-                            % Now, after extracting channels name, update the iGrav ui-table. 
-                            % First, change only names and units, not check/unchecked (will be done later)
-							data_table_igrav(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false}; % update table
-							clear temp                                      % remove temp variable
-                        end
-                        
-						set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',...
-								data_table_igrav,'UserData',data_table_igrav); % store the updated ui-table.
-						set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store the loaded channel units 
-						set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-                        
-						if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values, otherwise set data.igrav, time.igrav = []. 
-                            data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range (i.e. starting and ending time)
-							time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector. The order is important. First data and then time (otherwise, the modified time vector woud not fit data dimension)
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data loaded: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-							igrav_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.igrav
-						else
-							data.igrav = [];                                % otherwise empty. [] means that the ui-table will be empty and no ploting from iGrav panel will be possible.
-							time.igrav = [];
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        end
-                    catch error_message                                     % Catch possible errors during data loading
-						data.igrav = [];                                    % same as if no data loaded
-						time.igrav = [];
-                        if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF') % switch between error IDs. See plotGrav_loadtsf.m function for error handling
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        else
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        end
-					end
-				elseif strcmp(file_path_igrav(end-3:end),'.mat')            % switch between file/folder input
+                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,1,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',...
+                            uitable_data,'UserData',uitable_data); % store the updated ui-table.
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store the loaded channel units 
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
+                    if ~isempty(data.igrav)
+                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
+                    end
+				elseif strcmp(file_path_igrav(end-3:end),'.mat')            % switch between file/folder input                    
                     % LOAD MAT file, i.e. in plotGrav supported file format (array): containing following layers: 
                     % *.data (vector or matrix), *.time (matlab format or civil calender format), *.channels (cell array), *.units (cell array). 
-                    % File may contain other channels, but the above stated are mandatory.
-                    % These time series will not be corrected for tide or filtered. 'Just loading, no
-                    % stacking'
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/MAT data...');drawnow % send message to status bar
-					try
-						temp = importdata(file_path_igrav);                 % store the data to temporary variable (use importdata not load to overcome possible naming issues)
-						time.igrav = datenum(double(temp.time));temp.time = []; % convert to matlab time format. Does not affect the result if data already in such format. Convert to double in case input is stored in single precision.
-						data.igrav = double(temp.data);temp.data = [];      % convert the input data to double precision and remove temp.data variable to clear some memory
-						channels_igrav = temp.channels;                     % get channel names. It is assumed the temp.channels stores the data in the same file format as plotGrav, e.g., {'Gravity','Pressure};
-						units_igrav = temp.units;                           % get channel units. -- || --
-						clear temp                                          % remove the temporary variable
-						for i = 1:length(channels_igrav)                    % run for all channels to prepare the date for ui-table
-							data_table_igrav(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false}; % just names and units. Check/uncheck will be updated later.
-						end
-						set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
-								data_table_igrav,'UserData',data_table_igrav);
-						set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
-						set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-						if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values
-							data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range (i.e. starting and ending time)
-							time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector. The order is important. First data and then time (otherwise, the modified time vector woud not fit data dimension)
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data loaded: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm);
-							igrav_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.igrav
-						else
-							data.igrav = [];                                % otherwise empty, i.e. will not be visible for plotting
-							time.igrav = [];
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        end
-					catch error_message                                     % Catch possible errors during data loading
-						data.igrav = [];                                    % otherwise empty
-						time.igrav = [];
-                        if strcmp(error_message.identifier,'MATLAB:FileIO:InvalidFid')
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        else
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s loaded but NOT processed. Check format and required layers (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
-                        end
-					end
+                    % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
+					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/tsf data...');drawnow % send message to status bar
+                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,2,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                            uitable_data,'UserData',uitable_data);
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
+                    if ~isempty(data.igrav)
+                        igrav_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.igrav
+                    end
 				elseif strcmp(file_path_igrav(end-3:end),'.030')        
                     % LOAD SG030 files, i.e. SG030 data stored in tsf format
                     % file_path_igrav = full file name of one of the files with SG030 data. Not Path, but file!
@@ -660,16 +603,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						end
 						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
 						data.igrav = vertcat(data.igrav,tdata);             % stack the temporary variable on already loaded ones (data)
-						clear ttime tdata r file_name                       % remove used variables    
+						clear ttime tdata file_name                         % remove used variables    
 					end
 					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values
 						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
 						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data loaded: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % write to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
 						data.igrav = [];                                    % otherwise empty
 						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG030 input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % Write message to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG030 input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
 					end
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % update the ui-table
 						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
@@ -694,14 +637,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                     set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
                                         sprintf('Unzipping iGrav data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow 
                                     unzip(file_in,file_out);                % unzip using built in matlab function
-                                else
-                                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file unzipping: %s does NOT exist (%04d/%02d/%02d %02d:%02d)\n',file_in,ty,tm,td,th,tmm); % write to logfile
+%                                 else
+%                                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file unzipping: %s does NOT exist (%04d/%02d/%02d %02d:%02d)\n',file_in,ty,tm,td,th,tmm); % write to logfile
                                 end
-                            else
-                                set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
-                                        sprintf('Could not unzip iGrav data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow 
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file path: %s does NOT exist (%04d/%02d/%02d %02d:%02d)\n',...
-                                                    fullfile(file_path_igrav,sprintf('iGrav006_%04d',time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),ty,tm,td,th,tmm); % write to logfile
                             end
                             % Start loading iGrav data
 							set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
@@ -740,11 +678,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values: for logfile 
 						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
 						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data loaded: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm); % write to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
 						data.igrav = [];                                    % otherwise empty
 						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm);
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
 					end
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % store the ui-table data
 						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
@@ -760,137 +698,107 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
 			
 			%% Load TRiLOGi data
-			if strcmp(file_path_trilogi(end-3:end),'.tsf')            % switch between file/folder input
-				try
-					[time.trilogi,data.trilogi,channels_trilogi,units_trilogi] = plotGrav_loadtsf(file_path_trilogi); % load data
-					for i = 1:length(channels_trilogi)
-						temp = strsplit(char(channels_trilogi(i)),':');  % split string (Location:Intrument:Measurement). See plotGrav_loadtsf functions
-						channels_trilogi(i) = temp(end);         % set channel name
-						data_table_trilogi(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_trilogi(i)),char(units_trilogi(i))),false,false,false}; % update table
-						clear temp                              % remove temp variable
-					end
-					set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',...
-							data_table_trilogi,'UserData',data_table_trilogi);
-					set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store Data
-					set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store hannel names
-					if length(find(isnan(data.trilogi))) ~= numel(data.trilogi) % check if loaded data contains numeric values
-						data.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'trilogi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						trilogi_loaded = 2;
-					else
-						data.trilogi = [];                                  % otherwise empty
-						time.trilogi = [];
-						fprintf(fid,'No trilogi data loaded\n');
-					end
-					set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
-							get(findobj('Tag','plotGrav_uitable_trilogi_data'),'UserData')); % store data! This data will be then loaded
-				catch
-					data.trilogi = [];                                    % otherwise empty
-					time.trilogi = [];
-					fprintf(fid,'No trilogi data loaded\n');
-					fprintf('Could not load trilogi data: %s\n',file_path_trilogi);
-				end
-			elseif strcmp(file_path_trilogi(end-3:end),'.mat')            % switch between file/folder input
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/MAT data...');drawnow % send message to status bar
-					try
-						temp = importdata(file_path_trilogi);
-						time.trilogi = datenum(double(temp.time));temp.time = [];
-						data.trilogi = double(temp.data);temp.data = [];
-						channels_trilogi = temp.channels;
-						units_trilogi = temp.units;
-						clear temp
-						for i = 1:length(channels_trilogi)
-							data_table_trilogi(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_trilogi(i)),char(units_trilogi(i))),false,false,false}; % update table
-						end
-						set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',...
-								data_table_trilogi,'UserData',data_table_trilogi);
-						set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store Data
-						set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store hannel names
-						if length(find(isnan(data.trilogi))) ~= numel(data.trilogi) % check if loaded data contains numeric values
-							data.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = []; % remove time epochs out of requested range
-							time.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = [];
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							trilogi_loaded = 1;
-						else
-							data.trilogi = [];                                  % otherwise empty
-							time.trilogi = [];
-							fprintf(fid,'No TRiLOGi data loaded\n');
-						end
-						set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
-							get(findobj('Tag','plotGrav_uitable_trilogi_data'),'UserData')); % store data! This data will be then loaded
-				catch
-					data.trilogi = [];                                    % otherwise empty
-					time.trilogi = [];
-					fprintf(fid,'No trilogi data loaded\n');
-					fprintf('Could not load trilogi data: %s\n',file_path_trilogi);
-				end
-			else
-				if ~isempty(file_path_trilogi)
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi data...');drawnow % send message to status bar
-					time.trilogi = [];                                      % prepare variable (time.trilogi will store time in matlab format)
-					data.trilogi = [];                                      % prepare variable (data.trilogi will store tsoft channels)
-					trilogi_loaded = 0;                                     % aux. variable to check if at least one file has been loaded
-					for i = 1:length(time_in(:,7))                          % for loop for each day                            
-						condit_trilogi = 10;fi = 0;                         % aux. variables, condit_trilogi = minimum number of loaded rows (one TRiLOGi day can be stored in many files, plotGrav will use only that one with has at least condit_trilogi rows)
-						try                                                 % use try/catch (many TRiLOGi files are not stored in proper format)
-							while condit_trilogi <= 10                      % loop = repeat until the file with at least condit_trilogi rows if found
-								fi = fi + 1;                                % fi is the running number in the TRiLOGi file name
-								file_name = fullfile(file_path_trilogi,...  % create file name = path + date + suffix
-									sprintf('%04d%02d%02d_%03d%s',time_in(i,1),time_in(i,2),time_in(i,3),fi,trilogi_suffix));
-								[ttime,tdata] = plotGrav_loadtsf(file_name); % load the current file
-								if length(ttime) < 10                       % check how many rows does the file contain
-									condit_trilogi = 0;
-								else
-									condit_trilogi = 20;
-								end
-							end
-							[tyear,tmonth,tday,thour,tmin,tsec] = datevec(ttime); % convert back to civil time
-							tday = time_in(i,3);                            % make sure the current day is used (TRiLOGi writes sometime wrong day in first few rows).
-							ttime = datenum(tyear,tmonth,tday,thour,tmin,tsec); % convert to matlab time
-							trilogi_loaded = 1; 
-						catch
-							ttime = datenum(time_in(i,1:3));                % current file time (hours = 0)
-							tdata(1,1:trilogi_channels) = NaN;              % insert NaN
-							fprintf('Could not load TRiLOGi data: %s\n',file_name); % send message to command line that this TRiLOGi file could not be loaded
-						end
-						time.trilogi = vertcat(time.trilogi,ttime);         % stack the temporary variable on already loaded ones (time)
-						data.trilogi = vertcat(data.trilogi,tdata);         % stack the temporary variable on already loaded ones (data)
-						clear ttime tdata file_name                         % remove used variables
-					end
-					if length(find(isnan(data.trilogi))) ~= numel(data.trilogi) % check if loaded data contains numeric values
-						data.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = [];
-						try
-							r = find(diff(time.trilogi) == 0);              % find time epochs with wrong/zero increase
-							if ~isempty(r)
-							   time.trilogi(r+1) = time.trilogi(r) + mode(diff(time.trilogi)); % correct those time epochs (add one minute)
-							end
-							clear r
-						end
-					else
-						data.trilogi = [];                                  % otherwise empty
-						time.trilogi = [];
-					end
-					if trilogi_loaded == 0                                  % if no data loaded
-						set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
-							{false,false,false,'NotAvailable',false,false,false}); % update table
-							time.trilogi = [];
-							data.trilogi = [];
-							fprintf(fid,'No TRiLOGi data loaded\n');
-					else
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
-							get(findobj('Tag','plotGrav_uitable_trilogi_data'),'UserData'));
-					end
-				else
-					fprintf(fid,'No TRiLOGi data loaded\n');                % if no TRiLOGi path has been selected
-					time.trilogi = [];
-					data.trilogi = [];
-					set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
-						{false,false,false,'NotAvailable',false,false,false}); % update table
-				end
-			end
+            % Switch beween file formats
+            trilogi_loaded = 0;                                             % aux. variable to check if at least one file has been loaded
+			if strcmp(file_path_trilogi(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
+                % LOAD Tsoft file: the file contains the whole time series. 'Just loading, no stacking'
+                % Only condition is, the file is stored in tsoft format
+                % with standard header. The TRiLOGi data are NEVER corrected/calibrated/filtered!
+                set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/tsf data...');drawnow % send message to status bar
+                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,1,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                        uitable_data,'UserData',uitable_data);
+                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.trilogi)
+                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                end
+			elseif strcmp(file_path_trilogi(end-3:end),'.mat')              
+                % LOAD MAT file, i.e. in plotGrav supported file format (array): containing following layers: 
+                % *.data (vector or matrix), *.time (matlab format or civil calender format), *.channels (cell array), *.units (cell array). 
+                % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
+                set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/mat data...');drawnow % send message to status bar
+                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,2,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                        uitable_data,'UserData',uitable_data);
+                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.trilogi)
+                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                end
+            elseif ~isempty(file_path_trilogi)
+                % LOAD TRiLOGi controller files stored in tsf format
+                % file_path_trilogi = file path (not name) to all input data
+                % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
+                % These time series will be stacked. 'Loading and stacking'
+                set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi data...');drawnow % send message to status bar
+                time.trilogi = [];                                          % prepare variable (time.trilogi will store time in matlab format)
+                data.trilogi = [];                                          % prepare variable (data.trilogi will store tsoft channels)
+                for i = 1:length(time_in(:,7))                              % for loop for each day                            
+                    condit_trilogi = 10;fi = 0;                             % aux. variables, condit_trilogi = minimum number of loaded rows (one TRiLOGi day can be stored in many files, plotGrav will use only that one with has at least condit_trilogi rows)
+                    try                                                     % use try/catch (many TRiLOGi files are not stored in proper format)
+                        while condit_trilogi <= 10                          % loop = repeat until the file with at least condit_trilogi rows if found
+                            fi = fi + 1;                                    % fi is the running number in the TRiLOGi file name
+                            file_name = fullfile(file_path_trilogi,...      % create file name = path + date + suffix
+                                sprintf('%04d%02d%02d_%03d%s',time_in(i,1),time_in(i,2),time_in(i,3),fi,trilogi_suffix));
+                            [ttime,tdata] = plotGrav_loadtsf(file_name);    % load the current file
+                            if length(ttime) < 10                           % check how many rows does the file contain
+                                condit_trilogi = 0;
+                            else
+                                condit_trilogi = 20;
+                            end
+                        end
+                        [tyear,tmonth,~,thour,tmin,tsec] = datevec(ttime);  % convert back to civil time
+                        tday = time_in(i,3);                                % make sure the current day is used (TRiLOGi writes sometime wrong day in first few rows). Still, this may result in a wrong data especially at the months transition.
+                        ttime = datenum(tyear,tmonth,tday,thour,tmin,tsec); % convert to matlab time
+                        trilogi_loaded = 1;                                 % if ~= 0 => some data loaded. 1 = one file per day (TRiLOGi input)
+                    catch error_message
+                        ttime = datenum(time_in(i,1:3));                    % current file time (hours = 0)
+                        tdata(1,1:trilogi_channels) = NaN;                  % insert NaN
+                        if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF')  % switch between error IDs. See plotGrav_loadtsf.m function for error handling
+                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                        elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
+                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                        elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
+                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                        else
+                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                        end
+                    end
+                    time.trilogi = vertcat(time.trilogi,ttime);             % stack the temporary variable on already loaded ones (time)
+                    data.trilogi = vertcat(data.trilogi,tdata);             % stack the temporary variable on already loaded ones (data)
+                    clear ttime tdata file_name                             % remove used variables
+                end
+                if length(find(isnan(data.trilogi))) ~= numel(data.trilogi) % check if loaded data contains numeric values
+                    data.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = []; % remove time epochs out of requested range
+                    time.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = [];
+                    try
+                        r = find(diff(time.trilogi) == 0);                  % find time epochs with wrong/zero increase (some TRiLOGi files contain duplicate/redundant values)
+                        if ~isempty(r)
+                           time.trilogi(r+1) = time.trilogi(r) + mode(diff(time.trilogi)); % correct those time epochs (add one minute)
+                        end
+                        clear r                                             % clear the temporary variable
+                    end
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+                else
+                    data.trilogi = [];                                      % otherwise empty
+                    time.trilogi = [];
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in TRiLOGi input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
+                end
+                if trilogi_loaded == 0                                      % if no data loaded
+                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                        {false,false,false,'NotAvailable',false,false,false}); % update table
+                        time.trilogi = [];
+                        data.trilogi = [];
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                end
+            else
+                fprintf(fid,'No TRiLOGi data loaded\n');                    % if no or empty TRiLOGi path has been selected
+                time.trilogi = [];
+                data.trilogi = [];
+                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                    {false,false,false,'NotAvailable',false,false,false});  % update ui-table
+            end
 			%% Load Other1 data
 			set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1 data...');drawnow % send message to status bar
 			if ~isempty(file_path_other1)
