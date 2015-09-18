@@ -251,7 +251,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			%m43 = uimenu(m4,'Label','Copy');
               %uimenu(m43,'Label','Channel','CallBack','plotGrav compute_copy_channel');
         
-        % (UI) Panels for selecting time series
+        % (UI) Panels for selecting time series. Each row of such
+        % ui-table referes to a matrix column. The loaded time series are
+        % store namely in matrices (one matrix per input/file/panel). The
+        % columns refer to plotting axes, i.e., left 1 to 3 and right 1 to
+        % 3. Checking or unchecking of ui-table checkboxes evokes
+        % automatically the plotting section.
 		p3 = uipanel(F1,'Units','normalized','Position',[0.01,0.76,0.265,0.33-0.10],... % Settings panel (uppermost panel)
 				'Title','Settings','FontSize',9);
         p1 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','iGrav','R1','R2','R3'},... % first panel for iGrav/SG030 (upper left)
@@ -448,7 +453,6 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		uicontrol(p30,'Style','Edit','String',file_logfile,'units','normalized',...			% set default logfile file name
 				  'Position',[0.17,0.48-0.07,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
 				  'Tag','plotGrav_edit_logfile_file','HorizontalAlignment','left');
-		
                        
         % AXES: set axes for future plots
         aL1 = axes('units','normalized','Position',[0.33,0.71,0.63,0.26],'Tag','axesL1','FontSize',9);	% First axes = L1 (plot one, left)
@@ -467,14 +471,14 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         ylabel(aL3,'L3');ylabel(aR3,'R3');																% set to show user which axes corresponds to L3 and R3.
         set(findobj('Tag','plotGrav_check_labels'),'UserData',[aL3,aR3]);								% Store the axes handles for future calling. Each plot is stored separately.
         
-		% Set default ui-tables (what should be checked and what not). Same after each plotGrav start and 'Load data' button is pressed.
-		% Nevertheless, the ui-tables will be automatically updated after loading some time series.
-        plotGrav('reset_tables');
-        
 		% Define colors for lines (all plots). Do not use Matlab's default colorscale.
         color_scale = [1 0 0;0 1 0;0 0 1;0 0 0;1 1 0;0 0.5 0;0.5 0.5 0.5;0.6 0.2 0.0;0.75 0.75 0.75;0.85 0.16 0;0.53 0.32 0.32;0.2 0.2 0.2]; % crate colours (for plots)
         color_scale(length(color_scale)+1:100,1) = 1;                       % If more than 12 time series are selected, use red color. It will be difficult to resolve the different lines so or so.
         set(findobj('Tag','plotGrav_text_nms2'),'UserData',color_scale);	% Store the defined color scale. It will be loaded within plotGrav_plotData.m function
+        
+		% Set default ui-tables (what should be checked and what not). Same after each plotGrav start and 'Load data' button is pressed.
+		% Nevertheless, the ui-tables will be automatically updated after loading some time series.
+        plotGrav('reset_tables');
     end 																	% numel(check_open_window)>0 => check if some plotGrav window already open.    
 else																		% nargin ~= 0 => Use Switch/Case to run selected code blocks (first part, i.e., nargin == 0, create GUI window)
 	warning('off');                                                     	% turn off warning (especially for polynomial fitting)
@@ -513,7 +517,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			igrav_time_resolution = 1;                                      % igrav time sampling in seconds (fixed, iGrav and SG030 measure with 1 second resolutin => do no use for 10 second data)
 			time_in(:,7) = [datenum(start_time):1:datenum(end_time)]';      % Convert the input starting time and ending time to matlab format and create a time vector. Time step is ONE day = one file per day written by iGrav or SG
 			time_in(:,1:6) = datevec(time_in(:,7));                         % crate input time matrix (calendar date + time), e.g., [2015,3,1,0,0,0,736024]. These information will be used to create file name to be loaded.            
-			% Open the log file.
+			leap_second = [2015 06 30 23 59 59];                            % excact data for of leap seconds. These values will be used to find the leap second and to REMOVE it (otherwise redundant data permiting filterin = non-monotonic time vector)
+            % Open the log file.
 			try
 				fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'w'); % use user file name
 			catch
@@ -542,11 +547,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if ~isempty(data.igrav)
                         igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
                     end
-				elseif strcmp(file_path_igrav(end-3:end),'.mat')            % switch between file/folder input                    
+				elseif strcmp(file_path_igrav(end-3:end),'.mat')                            
                     % LOAD MAT file, i.e. in plotGrav supported file format (array): containing following layers: 
                     % *.data (vector or matrix), *.time (matlab format or civil calender format), *.channels (cell array), *.units (cell array). 
                     % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/tsf data...');drawnow % send message to status bar
+					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/mat data...');drawnow % send message to status bar
                     [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,2,start_time,end_time,fid,'iGrav');
                     set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
                             uitable_data,'UserData',uitable_data);
@@ -554,6 +559,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
                     if ~isempty(data.igrav)
                         igrav_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.igrav
+                    end
+                elseif strcmp(file_path_igrav(end-3:end),'.dat')
+                    % LOAD DAT file, i.e., soil moisture cluste data stored
+                    % in csv format. This howerver, requred fixed header (4
+                    % rows) and delimiter (','). 'Loading, no stacking'
+                    set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/dat data...');drawnow % send message to status bar
+                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,3,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                            uitable_data,'UserData',uitable_data);
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
+                    if ~isempty(data.igrav)
+                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
                     end
 				elseif strcmp(file_path_igrav(end-3:end),'.030')        
                     % LOAD SG030 files, i.e. SG030 data stored in tsf format
@@ -698,8 +716,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
 			
 			%% Load TRiLOGi data
-            % Switch beween file formats
             trilogi_loaded = 0;                                             % aux. variable to check if at least one file has been loaded
+            % Switch beween file formats
 			if strcmp(file_path_trilogi(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
                 % LOAD Tsoft file: the file contains the whole time series. 'Just loading, no stacking'
                 % Only condition is, the file is stored in tsoft format
@@ -719,6 +737,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/mat data...');drawnow % send message to status bar
                 [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,2,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                        uitable_data,'UserData',uitable_data);
+                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.trilogi)
+                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                end
+            elseif strcmp(file_path_trilogi(end-3:end),'.dat')              
+                set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/dat data...');drawnow % send message to status bar
+                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,3,start_time,end_time,fid,'TRiLOGi');
                 set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
                         uitable_data,'UserData',uitable_data);
                 set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
@@ -783,7 +811,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 else
                     data.trilogi = [];                                      % otherwise empty
                     time.trilogi = [];
-                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in TRiLOGi input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data TRiLOGi data in selected time interval (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                 end
                 if trilogi_loaded == 0                                      % if no data loaded
                     set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
@@ -800,387 +828,310 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     {false,false,false,'NotAvailable',false,false,false});  % update ui-table
             end
 			%% Load Other1 data
-			set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1 data...');drawnow % send message to status bar
-			if ~isempty(file_path_other1)
-				try                                                     % Try to load the data. One file contains ALL data => no loop like for iGrav and TRiLOGi
-					switch file_path_other1(end-2:end)                  % switch between supported file formats
-						case 'tsf'                                      % read tsoft
-							[time.other1,data.other1,channels_other1,units_other1] = plotGrav_loadtsf(file_path_other1); % load data
-							for i = 1:length(channels_other1)
-								temp = strsplit(char(channels_other1(i)),':');  % split string (Location:Intrument:Measurement). See plotGrav_loadtsf functions
-								channels_other1(i) = temp(end);         % set channel name
-								data_table_other1(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other1(i)),char(units_other1(i))),false,false,false}; % update table
-								clear temp                              % remove temp variable
-							end
-						case 'dat'                                      % read Soil moisture cluster data
-							[time.other1,data.other1,temp] = plotGrav_readcsv(file_path_other1,4,',',1,'"yyyy-mm-dd HH:MM:SS"','All');
-							channels_other1 = temp(2,2:end);            % channel name
-							units_other1 = temp(3,2:end);               % channel units
-							cut = [];
-							for i = 1:length(channels_other1)           % update Other1 table
-								if ~isempty(channels_other1{i})
-									data_table_other1(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other1(i)),char(units_other1(i))),false,false,false};
-								else
-									cut = vertcat(cut,i);
-								end
-								clear temp
-							end
-							channels_other1(cut) = [];
-							units_other1(cut) = [];
-							clear cut
-						case 'mat'
-							temp = importdata(file_path_other1);
-							time.other1 = datenum(double(temp.time));temp.time = [];
-							data.other1 = double(temp.data);temp.data = [];
-							channels_other1 = temp.channels;
-							units_other1 = temp.units;
-							clear temp
-							for i = 1:length(channels_other1)
-								data_table_other1(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other1(i)),char(units_other1(i))),false,false,false}; % update table
-							end
-						
-					end
-					set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',...
-						data_table_other1,'UserData',data_table_other1);
-					set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1); % store Data
-					set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels_other1); % store hannel names
-					if length(find(isnan(data.other1))) ~= numel(data.other1) % check if loaded data contains numeric values
-						data.other1(time.other1<datenum(start_time) | time.other1>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.other1(time.other1<datenum(start_time) | time.other1>datenum(end_time),:) = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					else
-						data.other1 = [];                                  % otherwise empty
-						time.other1 = [];
-						fprintf(fid,'No Other1 data loaded\n');
-					end
-				catch
-					fprintf('Could not load Other1 data: %s\n',file_path_other1); % send message to command line that this Other1 file could not be loaded
-				end
+            % Unlike for iGrav and TRiLOGi panel, one file contains the
+            % whole time series => 'Loading, no stacking'
+			if ~isempty(file_path_other1)                                   % continue only if user selected a file via GUI (by default [])
+                % Switch between supported file formats
+                switch file_path_other1(end-3:end)                          % switch between supported file formats
+                    case '.tsf'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/tsf data...');drawnow % send message to status bar
+                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,1,start_time,end_time,fid,'Other1');
+                    case '.mat'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/mat data...');drawnow % send message to status bar
+                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,2,start_time,end_time,fid,'Other1');
+                    case '.dat'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/dat data...');drawnow % send message to status bar
+                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,3,start_time,end_time,fid,'Other1');
+                    otherwise
+                        time.other1 = [];data.other1 = [];channels_other1 = [];units_other1 = [];
+                        uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_other1,ty,tm,td,th,tmm);
+                end
+                % Regardless the input format, store the loaded data
+                set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',... % update the ui-table
+                    uitable_data,'UserData',uitable_data);
+                set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1); % store channel units
+                set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels_other1); % store channel names
 			else
 				fprintf(fid,'No Other1 data loaded\n');
 				time.other1 = [];
 				data.other1 = [];
 				set(findobj('Tag','plotGrav_uitable_other1_data'),'data',...
-					{false,false,false,'NotAvailable',false,false,false}); % update table
+					{false,false,false,'NotAvailable',false,false,false});  % update table = set to empty if  file input not selected
 			end
-			%% Load Other2 data (currently not active)
-			set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2 data...');drawnow % send message to status bar
-			if ~isempty(file_path_other2)                               % same as for Other 1
-				try
-					switch file_path_other2(end-2:end)
-						case 'tsf'                                      % read tsoft
-							[time.other2,data.other2,channels_other2,units_other2] = plotGrav_loadtsf(file_path_other2);
-							for i = 1:length(channels_other2)
-								temp = strsplit(char(channels_other2(i)),':');  % split string (Location:Intrument:Measurement)
-								channels_other2(i) = temp(end);
-								data_table_other2(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other2(i)),char(units_other2(i))),false,false,false};
-								clear temp
-							end
-						case 'dat'                                      % read Soil moisture cluster data
-							[time.other2,data.other2,temp] = plotGrav_readcsv(file_path_other2,4,',',1,'"yyyy-mm-dd HH:MM:SS"','All');
-							channels_other2 = temp(2,2:end);
-							units_other2 = temp(3,2:end);
-							cut = [];
-							for i = 1:length(channels_other2)           % update other2 table
-								if ~isempty(channels_other2{i})
-									data_table_other2(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other2(i)),char(units_other2(i))),false,false,false};
-								else
-									cut = vertcat(cut,i);
-								end
-								clear temp
-							end
-							channels_other2(cut) = [];
-							units_other2(cut) = [];
-							clear cut
-						case 'mat'
-							temp = importdata(file_path_other2);
-							time.other2 = datenum(double(temp.time));temp.time = [];
-							data.other2 = double(temp.data);temp.data = [];
-							channels_other2 = temp.channels;
-							units_other2 = temp.units;
-							clear temp
-							for i = 1:length(channels_other2)
-								data_table_other2(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_other2(i)),char(units_other2(i))),false,false,false}; % update table
-							end
-					end
-					set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',...
-						data_table_other2,'UserData',data_table_other2);
-					set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2);
-					set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels_other2);
-					if length(find(isnan(data.other2))) ~= numel(data.other2) % check if loaded data contains numeric values
-						data.other2(time.other2<datenum(start_time) | time.other2>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.other2(time.other2<datenum(start_time) | time.other2>datenum(end_time),:) = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					else
-						data.other2 = [];                                  % otherwise empty
-						time.other2 = [];
-						fprintf(fid,'No Other2 data loaded\n');
-					end
-				catch
-					fprintf('Could not load Other2 data: %s\n',file_path_other2); % send message to command line that this Other2 file could not be loaded
-				end
+			%% Load Other2 data
+            % Unlike for iGrav and TRiLOGi panel, one file contains the
+            % whole time series => 'Loading, no stacking'
+			if ~isempty(file_path_other2)                                   % continue only if user selected a file via GUI (by default [])
+                % Switch between supported file formats
+                switch file_path_other2(end-3:end)                          % switch between supported file formats
+                    case '.tsf'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/tsf data...');drawnow % send message to status bar
+                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,1,start_time,end_time,fid,'Other2');
+                    case '.mat'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/mat data...');drawnow % send message to status bar
+                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,2,start_time,end_time,fid,'Other2');
+                    case '.dat'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/dat data...');drawnow % send message to status bar
+                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,3,start_time,end_time,fid,'Other2');
+                    otherwise
+                        time.other2 = [];data.other2 = [];channels_other2 = [];units_other2 = [];
+                        uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_other2,ty,tm,td,th,tmm);
+                end
+                % Regardless the input format, store the loaded data
+                set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',... % update the ui-table
+                    uitable_data,'UserData',uitable_data);
+                set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2); % store channel units
+                set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels_other2); % store channel names
 			else
 				fprintf(fid,'No Other2 data loaded\n');
-				time.other2 = [];
-				data.other2 = [];
-				set(findobj('Tag','plotGrav_uitable_other2_data'),'data',...
-					{false,false,false,'NotAvailable',false,false,false}); % update table
+				time.other1 = [];
+				data.other1 = [];
+				set(findobj('Tag','plotGrav_uitable_other1_data'),'data',...
+					{false,false,false,'NotAvailable',false,false,false});  % update table = set to empty if  file input not selected
 			end
 			%% Load filter
-			% Filter
-			if igrav_loaded == 1 || igrav_loaded == 3                   % load only if iGrav data have been loaded
+			% Load filter file. Only loading, data will be filter in the
+			% following section.
+			if igrav_loaded == 1 || igrav_loaded == 3                       % load only if iGrav/SG030 data have been loaded
 				try
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
 					if ~isempty(filter_file)                                % try to load the filter file/response if some string is given
-						Num = load(filter_file);                            % load filter file = in ETERNA format - header
+						Num = load(filter_file);                            % load filter file = in ETERNA modified format (header must be commented using %)
 						Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));     % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Filter loaded: %s (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm);
 					else
 						Num = [];                                           % if not loaded, set to [] (empty)
 					end
-				catch
-					fprintf('Could not load filter: %s\n',filter_file);     % send message to command line that filter file could not be loaded
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not load filter file %s (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm);
+                catch error_message
+                    if strcmp(error_message.identifier,'MATLAB:FileIO:InvalidFid')
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Filter file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm); % Write message to logfile
+                    else
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not load filter file %s . Check format (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm); % Write message to logfile
+                    end
 					Num = [];                                               % if not loaded, set to [] (empty)
 				end
 			else
-				Num = [];                                               % if not loaded, set to [] (empty)
+				Num = [];                                                   % if not loaded, set to [] (empty)
 			end
 			
 			%% Filter data
-			if (igrav_loaded == 1 || igrav_loaded == 3) && ~isempty(Num) % filter only if at least one iGrav/SG030 file has been loaded and the filter file as well
+            % After loading the filter and iGrav/SG030 filter fixed
+            % channels, i.e., gravity.
+			if (igrav_loaded == 1 || igrav_loaded == 3) && ~isempty(Num)    % filter only if at least one iGrav/SG030 file has been loaded + the filter file (previous section)
 				set(findobj('Tag','plotGrav_text_status'),'String','Filtering...');drawnow % status
-				data.filt = [];time.filt = [];                          % prepare variables (*.filt = filtered values)
-				for j = 1%:size(data.igrav,2)                           % set which channels should be filtered (1:size(data.igrav,2) = all channels)
-					[timeout,dataout,id] = plotGrav_findTimeStep(time.igrav,data.igrav(:,j),igrav_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
-					dout = [];                                          % aux. variable
-					for i = 1:size(id,1)                                % use for each time interval (between time steps that have been found using plotGrav_findTimeStep function) separately                 
-						if length(dataout(id(i,1):id(i,2))) > length(Num)*2 % filter only if the current time interval is long enough
-							[ftime,fgrav] = plotGrav_conv(timeout(id(i,1):id(i,2)),dataout(id(i,1):id(i,2)),Num,'valid'); % use plotGrav_conv = Convolution function (outputs only valid time interval, see plotGrav_conv function for details)
-						else
-							ftime = timeout(id(i,1):id(i,2));           % if the interval is too short, set to NaN 
-							fgrav(1:length(ftime),1) = NaN;
-						end
-						dout = vertcat(dout,fgrav,NaN);                 % stack the aux. data vertically (current channel) + NaN to mark holes between fillering sequences
-						if j == 1
-							time.filt = vertcat(time.filt,ftime,...     % stack the aux. time only for first channel (same for all)
-								ftime(end)+igrav_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
-						end
-						clear ftime fgrav
-					end
-					data.filt = horzcat(data.filt,dout);                % stack the aux. data horizontally (all channels)
-				end
-				[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data filtered (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-				time.filt(end) = [];                                    % remove last value (is equal NaN, see dout = vertcat(dout,fgrav,NaN))
-				data.filt(end) = [];
+				data.filt = [];time.filt = [];                              % prepare variables (*.filt = filtered values)
+                try
+                    % Check for leap seconds + remove if present
+                    for ls = 1:size(leap_second,1)                  
+                        r = find(time.igrav == datenum(leap_second(ls,:)));
+                        if ~isempty(r)                                      % continue only if loaded data contains given time epoch
+                            if abs(time.igrav(r) - time.igrav(r+1)) < 0.9/86400 || abs(time.igrav(r) - time.igrav(r+1)) > 1.1/86400  % check if leap second indeed present in the data (might be removed manually)
+                                time.igrav(r+1,:) = [];                     
+                                data.igrav(r+1,:) = [];
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: leap second %04d/%02d/%02d %02d:%02d:%02d removed (%04d/%02d/%02d %02d:%02d)\n',...
+                                    leap_second(ls,1),leap_second(ls,2),leap_second(ls,3),leap_second(ls,4),leap_second(ls,5),leap_second(ls,6),ty,tm,td,th,tmm);
+                            end
+                        end
+                    end
+                    clear r ls
+                    for j = 1%:size(data.igrav,2)                           % set which channels should be filtered (1 = gravity observed, 1:size(data.igrav,2) = all channels)
+                        [timeout,dataout,id] = plotGrav_findTimeStep(time.igrav,data.igrav(:,j),igrav_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
+                        dout = [];                                          % aux. variable
+                        for i = 1:size(id,1)                                % use for each time interval (filter between time steps that have been found using plotGrav_findTimeStep function) separately                 
+                            if length(dataout(id(i,1):id(i,2))) > length(Num)*2 % filter only if the current time interval is long enough
+                                [ftime,fgrav] = plotGrav_conv(timeout(id(i,1):id(i,2)),dataout(id(i,1):id(i,2)),Num,'valid'); % use plotGrav_conv = Convolution function (outputs only valid time interval, see plotGrav_conv function for details)
+                            else
+                                ftime = timeout(id(i,1):id(i,2));           % if the interval is too short, set to NaN 
+                                fgrav(1:length(ftime),1) = NaN;
+                            end
+                            dout = vertcat(dout,fgrav,NaN);                 % stack the aux. data vertically (current channel) + NaN to mark holes between fillering sequences
+                            if j == 1                                       % do only onece, i.e. for first channel
+                                time.filt = vertcat(time.filt,ftime,...     % stack the aux. time only for first channel (same for all)
+                                    ftime(end)+igrav_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
+                            end
+                            clear ftime fgrav
+                        end
+                        data.filt = horzcat(data.filt,dout);                % stack the aux. data horizontally (all channels)
+                    end
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data filtered (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    time.filt(end) = [];                                    % remove last value (is equal NaN, see dout = vertcat(dout,fgrav,NaN))
+                    data.filt(end) = [];
+                catch error_message
+                    data.filt = [];time.filt = [];                          % otherwise, set to empty + write to logfile
+                    if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not filter gravity due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    else
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not filter gravity. Reason unknown.(%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    end
+                end
 			else
-				data.filt = [];                                         % otherwise, set to empty + write to logfile
+				data.filt = [];                                             % otherwise, set to empty + write to logfile
 				[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
 			end
 			
 			%% Tides
-			if igrav_loaded == 1 || igrav_loaded == 3
-				try                                                         % try to load tides
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading Tides...');drawnow % status
-					if ~isempty(tide_file)                                  % load only if a file is given
-						[time.tide,data.tide] = plotGrav_loadtsf(tide_file); % load tsoft file
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Tide file loaded %s (%04d/%02d/%02d %02d:%02d)\n',tide_file,ty,tm,td,th,tmm); % logfile
-					else
-						time.tide = [];                                     % otherwise set to empty
-						data.tide = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No tide file (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					end
-				catch
-					fprintf('Could not load Tides: %s\n',tide_file);
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No tide file %s (%04d/%02d/%02d %02d:%02d)\n',tide_file,ty,tm,td,th,tmm);
-					time.tide = [];                                         % set to empty if an error occurs
-					data.tide = [];
-				end
+            % Load Tide effect file. The correction will be applied in the
+            % following section. Do only if iGrav or SG030 (stacked) data
+            % have been loaded.
+			if igrav_loaded == 1 || igrav_loaded == 3                       % 1 => igrav, 3 => SG030
+                set(findobj('Tag','plotGrav_text_status'),'String','Loading Tides...');drawnow % status
+                if ~isempty(tide_file)                                      % load only if a file is given/selected
+                    [time.tide,data.tide] = plotGrav_loadData(tide_file,1,[],[],fid,'Tides');
+                else
+                    time.tide = [];                                         % otherwise set to empty
+                    data.tide = [];
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No Tide file selected (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                end
 			else
-				time.tide = [];                                         % set to empty if an error occurs
+				time.tide = [];                                             % set to empty => no correction will be applied.
 				data.tide = [];
 			end
 			%% Correct time series
-			if igrav_loaded == 1                                        % iGrav data loaded
-				try                     
+            % In this section, the loaded time series are corrected for
+            % tides and atmosphere (pol effect optional, i.e., if tide
+            % file contains second column with polar motion effect). The
+            % correction are computed only if iGrav or SG030 'Loading and
+            % stacking' data present. No correction for other inputs.
+			if igrav_loaded == 1 || igrav_loaded == 3                       % iGrav or SG030 data loaded
+                % the procedure of correction computation is identical for
+                % both gravimeters, however, the input data differ with
+                % respect to recorded column. Therefore, store the
+                % corrections in different columns.
+                switch igrav_loaded                                         
+                    case 1
+                        column_id = 0;                                      % will be added to default column numbering
+                        column_g_id = 1;                                    % column with gravity variations
+                        column_p_id = 2;                                    % column with pressure variations
+                        gravi_string = 'iGrav';                                 % will be used for logfile
+                    case 3
+                        column_id = -18;                                    % will be added to default column numbering
+                        column_g_id = 1;                                    % column with gravity variations (1 = lower sphere, 2 = upper sphere)
+                        column_p_id = 3;                                    % column with pressure variations
+                        gravi_string = 'SG030';                             % will be used for logfile
+                        plotGrav('reset_tables_sg030');                     % Change the ui-table to SG030 (by default for iGrav)
+                end
+				try                   
 					set(findobj('Tag','plotGrav_text_status'),'String','Computing corrections...');drawnow % status
-					if calib_delay~=0                                   % introduce time shift if available
-						data.igrav(:,1) = interp1(time.igrav+calib_delay/86400,data.igrav(:,1),time.igrav);
-						fprintf(fid,'SG030 phase shift introduced = %4.2f s (%04d/%02d/%02d %02d:%02d)\n',calib_delay,ty,tm,td,th,tmm);
+                    % Calibrating time series: phase shift. Must be
+                    % performed prior to correction introduction!
+					if calib_delay~=0                                       % introduce time shift if available
+						data.igrav(:,column_g_id) = interp1(time.igrav+calib_delay/86400,data.igrav(:,column_g_id),time.igrav); % re-interpolate to new time sampling (shifted using calib_delay)
+                        fprintf(fid,'%s phase shift introduced = %4.2f s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,calib_delay,ty,tm,td,th,tmm);
 						if ~isempty(data.filt) 
-							data.filt(:,1) = interp1(time.filt+calib_delay/86400,data.filt(:,1),time.filt);
+							data.filt(:,column_g_id) = interp1(time.filt+calib_delay/86400,data.filt(:,column_g_id),time.filt);
 						end
-					end
-					data.igrav(:,22) = data.igrav(:,1)*calib_factor;        % Calibrated gravity (add igrav channel 22)
-					data.igrav(:,28) = (data.igrav(:,2) - mean(data.igrav(~isnan(data.igrav(:,2)),2)))*admittance_factor; % atmospheric effect - mean value (channel 28)
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data atmo correction = %4.2f nm/s^2/hPa (%04d/%02d/%02d %02d:%02d)\n',admittance_factor,ty,tm,td,th,tmm);
-					if ~isempty(data.filt)                                  % use filtered values only if filtering was successful
-						data.igrav(:,23) = interp1(time.filt,data.filt(:,1),time.igrav)*calib_factor; % Gravity: calibrated and filtered (igrav channel 23)
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data calibrated = %4.2f nm/s^2/V (%04d/%02d/%02d %02d:%02d)\n',calib_factor,ty,tm,td,th,tmm);
-						if ~isempty(data.tide)                              % correct for tide only if loaded
-							if size(data.tide) > 7                          % interpolated polar motion effect, if the tide tsf file contains more than one channel (assumed that this channel contains polar motion acceleration)
-								data.igrav(:,27) = interp1(time.tide,data.tide(:,2),time.igrav); % polar motion effect (channel 27)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    end
+                    % Computing atmospheric effect. Will be applied later.
+					data.igrav(:,28+column_id) = (data.igrav(:,column_p_id) - mean(data.igrav(~isnan(data.igrav(:,column_p_id)),column_p_id)))*admittance_factor; % atmospheric effect - mean value (channel 28)
+					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data atmo correction = %4.2f nm/s^2/hPa (%04d/%02d/%02d %02d:%02d)\n',gravi_string,admittance_factor,ty,tm,td,th,tmm);
+                    if ~isempty(data.filt)                                  % use filtered values only if filtering was successful
+                        % Calibrating time series: amplitude factor
+                        data.igrav(:,22+column_id) = data.igrav(:,column_g_id)*calib_factor;    % Calibrated gravity (stored in a new channel = 22)
+						data.igrav(:,23+column_id) = interp1(time.filt,data.filt(:,column_g_id),time.igrav)*calib_factor; % Gravity: calibrated and filtered (igrav channel 23)
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data calibrated = %4.2f nm/s^2/V (%04d/%02d/%02d %02d:%02d)\n',gravi_string,calib_factor,ty,tm,td,th,tmm);
+                        % Tide (optional Pol) correction
+						if ~isempty(data.tide)                              % correct for tide only if effect loaded 
+							if size(data.tide) > 1                          % interpolated polar motion effect, if the tide tsf file contains more than one channel (assumed that this channel contains polar motion acceleration)
+								data.igrav(:,27+column_id) = interp1(time.tide,data.tide(:,2),time.igrav); % polar motion effect (channel 27)
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data corrected for polar motion: %s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,tide_file,ty,tm,td,th,tmm);
 							else
-								data.igrav(:,27) = 0;                       % otherwise equal 0 
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data not corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+								data.igrav(:,27+column_id) = 0;             % otherwise, polar motion effect equal 0 
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data not corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
 							end
-							data.igrav(:,26) = interp1(time.tide,data.tide(:,1),time.igrav); % tide effect (channel 26)
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data corrected for tides (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+							data.igrav(:,26+column_id) = interp1(time.tide,data.tide(:,1),time.igrav); % tide effect (channel 26). Tide effect must be in the first tsf channel!
+							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data corrected for tides: %s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,tide_file,ty,tm,td,th,tmm);
 						else
-							data.igrav(:,26) = 0;                           % if not loaded, set to zero 
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data not corrected for tides/polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						end
-						data.igrav(:,24) = data.igrav(:,23) - data.igrav(:,26) - data.igrav(:,27) - data.igrav(:,28); % corrected (filtered and calibrated) gravity (channel 24)
-
+							data.igrav(:,26+column_id:27+column_id) = 0;    % if not loaded, set to zero 
+							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data not corrected for tides/polar motion. (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
+                        end
+                        % corrected      =  filtered        - tides            - polar motion     - atmosphere
+						data.igrav(:,24+column_id) = data.igrav(:,23+column_id) - data.igrav(:,26+column_id) - data.igrav(:,27+column_id) - data.igrav(:,28+column_id); % corrected (filtered and calibrated) gravity (channel 24)
+                        % Correct for gravimeter drift (trend). Store the
+                        % drift approximation in 29th channel. The
+                        % corrected gravity (for tides,atmo,pol and drift
+                        % in 25th channel)
 						switch drift_fit                                    % select drift approximation
 							case 1
-								data.igrav(:,29) = 0;                       % no drift estimated
+								data.igrav(:,29+column_id) = 0;             % no drift estimated
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 							case 2
-								data.igrav(:,29) = mean(data.igrav(~isnan(data.igrav(:,24)),24)); % mean value
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Constant drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                                out_par = mean(data.igrav(~isnan(data.igrav(:,24)),24)); % mean value
+								data.igrav(:,29+column_id) = out_par;       % can use scalar because data.igrav is defined as matrix = will be used for all rows of 29th column.
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Constant drift: %6.2f (%04d/%02d/%02d %02d:%02d)\n',out_par,ty,tm,td,th,tmm);
 							case 3
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly1');
-								data.igrav(:,29) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Linear drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly1');
+								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Linear drift coefficients: %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),ty,tm,td,th,tmm);
 							case 4
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly2');
-								data.igrav(:,29) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Quadratic drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly2');
+								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Quadratic drift coefficients: %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),ty,tm,td,th,tmm);
 							case 5
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly3');
-								data.igrav(:,29) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Cubic drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly3');
+								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: Cubic drift coefficients: %10.8f, %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),out_par(4),ty,tm,td,th,tmm);
 						end
-						data.igrav(:,25) = data.igrav(:,24) - data.igrav(:,29); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
-					elseif igrav_loaded == 0
-						data.igrav(:,[23,24,25,26,27,29]) = 0;              % set to zero if filtered data not available (except atmospheric effect)
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data correction due to missing filter file (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					else
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data correction. It is assumed that the loaded file contains corrected values. (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+						data.igrav(:,25+column_id) = data.igrav(:,24+column_id) - data.igrav(:,29+column_id); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
+                    else
+						data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;              % set to zero if filtered data not available (except atmospheric effect)
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data correction due to unseccessful filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
 					end
-				catch
-					fprintf('Could not correct gravity\n');                 % send message to command line
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
-				end
-			elseif igrav_loaded == 3                                    % SG030 data
-				plotGrav('reset_tables_sg030');
-				try                     
-					set(findobj('Tag','plotGrav_text_status'),'String','Computing corrections...');drawnow % status
-					if calib_delay~=0                                   % introduce time shift if available
-						data.igrav(:,1) = interp1(time.igrav+calib_delay/86400,data.igrav(:,1),time.igrav);
-						fprintf(fid,'SG030 phase shift introduced = %4.2f s (%04d/%02d/%02d %02d:%02d)\n',calib_delay,ty,tm,td,th,tmm);
-						if ~isempty(data.filt) 
-							data.filt(:,1) = interp1(time.filt+calib_delay/86400,data.filt(:,1),time.filt);
-						end
-					end
-					data.igrav(:,22-18) = data.igrav(:,1)*calib_factor;        % Calibrated gravity (add igrav channel 22)
-					data.igrav(:,28-18) = (data.igrav(:,3) - mean(data.igrav(~isnan(data.igrav(:,3)),3)))*admittance_factor; % atmospheric effect - mean value (channel 10)
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data atmo correction = %4.2f nm/s^2/hPa (%04d/%02d/%02d %02d:%02d)\n',admittance_factor,ty,tm,td,th,tmm);
-					if ~isempty(data.filt)                                  % use filtered values only if filtering was successful
-						data.igrav(:,23-18) = interp1(time.filt,data.filt(:,1),time.igrav)*calib_factor; % Gravity: calibrated and filtered (igrav channel 5)
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data calibrated = %4.2f nm/s^2/V (%04d/%02d/%02d %02d:%02d)\n',calib_factor,ty,tm,td,th,tmm);
-						if ~isempty(data.tide)                              % correct for tide only if loaded
-							if size(data.tide) > 7                          % interpolated polar motion effect, if the tide tsf file contains more than one channel (assumed that this channel contains polar motion acceleration)
-								data.igrav(:,27-18) = interp1(time.tide,data.tide(:,2),time.igrav); % polar motion effect (channel 9)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							else
-								data.igrav(:,27-18) = 0;                       % otherwise equal 0 
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data not corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							end
-							data.igrav(:,26-18) = interp1(time.tide,data.tide(:,1),time.igrav); % tide effect (channel 8)
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data corrected for tides (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						else
-							data.igrav(:,26-18) = 0;                           % if not loaded, set to zero 
-							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data not corrected for tides/polar motion (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						end
-						data.igrav(:,24-18) = data.igrav(:,23-18) - data.igrav(:,26-18) - data.igrav(:,27-18) - data.igrav(:,28-18); % corrected (filtered and calibrated) gravity (channel 6)
-
-						switch drift_fit                                    % select drift approximation
-							case 1
-								data.igrav(:,29-18) = 0;                       % no drift estimated
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
-							case 2
-								data.igrav(:,29-18) = mean(data.igrav(~isnan(data.igrav(:,24-18)),24-18)); % mean value
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data: Constant drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							case 3
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24-18),'poly1');
-								data.igrav(:,29-18) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data: Linear drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							case 4
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24-18),'poly2');
-								data.igrav(:,29-18) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data: Quadratic drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-							case 5
-								[out_par,out_sig,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24-18),'poly3');
-								data.igrav(:,29-18) = out_fit;                 % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data: Cubic drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-						end
-						data.igrav(:,25-18) = data.igrav(:,24-18) - data.igrav(:,29-18); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
-					elseif igrav_loaded == 0
-						data.igrav(:,[23,24,25,26,27,29]-18) = 0;              % set to zero if filtered data not available (except atmospheric effect)
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No SG030 data correction due to missing filter file (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					else
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No SG030 data correction. It is assumed that the loaded file contains corrected values. (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					end
-				catch
-					fprintf('Could not correct gravity\n');                 % send message to command line
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
-				end
-			end
+                catch error_message
+                    if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    else
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+                    end
+                    data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;        % set to zero if filtered data not available (except atmospheric effect, if computed than do not overwrite)
+                end
+                data.tide = [];time.tide = [];                              % remove used variable that are not of interest for plotting (they have been copied do other variables or used in other way)
+            end
+            
 			%% Resample
+            % plotGrav allows direct resampling of loaded iGrav/SG030 time
+            % series (only for 'Loading and stacking').
 			if igrav_loaded == 1 || igrav_loaded == 3
 				try
 					resample = str2double(get(findobj('Tag','plotGrav_edit_resample'),'String')); % get resampling value
-					if resample >= 2                                        % resample igrav data only if required sampling > 1 second
+					if resample >= 2                                        % resample igrav data only if required/userInput sampling > 1 second
 						set(findobj('Tag','plotGrav_text_status'),'String','Resampling iGrav data...');drawnow % send message to status bar
-						ntime = [time.igrav(1):resample/86400:time.igrav(end)]'; % create new time vector
-						dnew(1:length(ntime),1:size(data.igrav,2)) = 0;     % prepare new variable
-						for c = 1:size(data.igrav,2)                        % for each column
+						ntime = [time.igrav(1):resample/86400:time.igrav(end)]'; % create new time vector with future sampling
+						dnew(1:length(ntime),1:size(data.igrav,2)) = 0;     % prepare new variable for future (resampled) data matrix.
+						for c = 1:size(data.igrav,2)                        % interpolate for each column
 						   dnew(:,c) = interp1(time.igrav,data.igrav(:,c),ntime);
-						end
-						time.igrav = ntime;                                 % update time vector
-						data.igrav = dnew;                                  % update data matrix
-						clear c dnew ntime                                  % remove used variables
-						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'iGrav data resampled to %4.1f sec (%04d/%02d/%02d %02d:%02d)\n',resample,ty,tm,td,th,tmm); % logfile
+                        end
+                        clear c
+						time.igrav = ntime;clear ntime                      % update time vector and remove temporary variable
+						data.igrav = dnew; clear dnew                       % update data matrix
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data resampled to %4.1f sec (%04d/%02d/%02d %02d:%02d)\n',gravi_string,resample,ty,tm,td,th,tmm); % logfile
 					else
-						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'No iGrav data resampling (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
-					end
-
-				catch
-					set(findobj('Tag','plotGrav_text_status'),'String','Could not resample iGrav data.');drawnow % status
-					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not resample gravity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+						[ty,tm,td,th,tmm] = datevec(now); fprintf(fid,'No %s data resampling (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
+                    end
+                catch error_message
+                    if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not re-sample %s data due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
+                    else
+                        set(findobj('Tag','plotGrav_text_status'),'String',sprintf('Could not resample %s input data.',gravi_string));drawnow % status
+                    end
 				end
-				data.filt = [];time.filt = [];data.tide = [];time.tide = [];% remove used variable;
-				% Store the resampled data and time
-				set(findobj('Tag','plotGrav_text_status'),'UserData',time); % store time vector 
-				set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store data
-				clear data time                                             % remove variables
+				data.filt = [];time.filt = [];                              % remove used variable that are not of interest for plotting (they have been copied do other variables or used in other way)
 				set(findobj('Tag','plotGrav_text_status'),'String','The requested files have been loaded.');drawnow % status
-				plotGrav('uitable_push');                                   % visualize (see next section)
-				plotGrav('push_date');                                      % update time
-				fclose(fid);                                                % close logfile
 			elseif igrav_loaded == 2
-				set(findobj('Tag','plotGrav_text_status'),'UserData',time); % store the data 
-				set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store time
-				clear data time                                             % remove variables
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected file has been loaded.');drawnow % status
-				plotGrav('uitable_push');                                   % visualize (see next section)
-				plotGrav('push_date');                                      % update time
-				fclose(fid);                                                % close logfile 
-			else
-				set(findobj('Tag','plotGrav_text_status'),'UserData',time); % store the data 
-				set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store time
-				clear data time                                             % remove variables
+            else
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected files have been loaded.');drawnow % status
-				plotGrav('uitable_push');                                   % visualize (see next section)
-				plotGrav('push_date');                                      % update time
-				fclose(fid);                                                % close logfile 
 			end
-				
+			% Store the all loaded/corrected/resampled data and time.
+            % These data will be called for plotting/computing.
+            set(findobj('Tag','plotGrav_text_status'),'UserData',time);     % store time vector 
+            set(findobj('Tag','plotGrav_push_load'),'UserData',data);       % store data
+            clear data time                                                 % remove variables	
+            plotGrav('uitable_push');                                       % visualize loaded data (see next section)
+            plotGrav('push_date');                                          % update time = convert plotted matlab time to civil time (only plots not conversion of time.* vectors)
+            fclose(fid);                                                    % close logfile 
+            
 		case 'uitable_push'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
 			if ~isempty(data)
