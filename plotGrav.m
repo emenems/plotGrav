@@ -987,7 +987,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			else
 				time.tide = [];                                             % set to empty => no correction will be applied.
 				data.tide = [];
-			end
+            end
+            
+%%%%%%%%%%%%%%%%%%%%%%% C O R R E C T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			%% Correct time series
             % In this section, the loaded time series are corrected for
             % tides and atmosphere (pol effect optional, i.e., if tide
@@ -1122,7 +1124,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected file has been loaded.');drawnow % status
             else
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected files have been loaded.');drawnow % status
-			end
+            end
+            
+            %% Save/store data
 			% Store the all loaded/corrected/resampled data and time.
             % These data will be called for plotting/computing.
             set(findobj('Tag','plotGrav_text_status'),'UserData',time);     % store time vector 
@@ -1132,150 +1136,162 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             plotGrav('push_date');                                          % update time = convert plotted matlab time to civil time (only plots not conversion of time.* vectors)
             fclose(fid);                                                    % close logfile 
             
+%%%%%%%%%%%%%%%%%%%%%%% V I S U A L I Z I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
 		case 'uitable_push'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
-			if ~isempty(data)
-				%% Get data
+            %% Visualize data after pressing ui-table
+            % The following code section will be run after changing
+            % (checking/unchecking) one of the checkboxes on one of the
+            % panels (iGrav,TRiLOGi,Other1,Other2)
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data stored in the previous section. Time will be loaded in plotGrav_plotData.m function
+			if ~isempty(data)                                               % continue only if some data exist, i.e., run after loading data
+                % Get ui-tables and plot axes
 				set(findobj('Tag','plotGrav_text_status'),'String','Plotting...');drawnow % status 
-				data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-				data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi table
-				data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 table
-				data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 table
-				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-				cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);        % clear axes and remove legends and labels
-				cla(a1(2));legend(a1(2),'off');ylabel(a1(2),[]);        % clear axes and remove legends and labels
-				axis(a1(1),'auto');axis(a1(2),'auto');                  % Reset axis (not axes)
-				cla(a2(1));legend(a2(1),'off');ylabel(a2(1),[]);        % clear axes and remove legends and labels
-				cla(a2(2));legend(a2(2),'off');ylabel(a2(2),[]);        % clear axes and remove legends and labels
+				data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table, not data! All time series are stored in findobj('Tag','plotGrav_push_load'),'UserData').
+				data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table. These tables will be used to plot only 'checked' time series.
+				data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+				data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes of the First plot (left and right axes = L1 and R1)
+				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes of the Second plot (left and right axes = L2 and R2)
+				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes of the Third plot (left and right axes = L3 and R3)
+                % Clear all plots / reset all plots
+				cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);            % clear axes and remove legends and labels: First plot left (a1(1))
+				cla(a1(2));legend(a1(2),'off');ylabel(a1(2),[]);            % clear axes and remove legends and labels: First plot right (a1(2))
+				axis(a1(1),'auto');axis(a1(2),'auto');                      % Reset axis (not axes)
+				cla(a2(1));legend(a2(1),'off');ylabel(a2(1),[]);            % Do the same for other axes and axis
+				cla(a2(2));legend(a2(2),'off');ylabel(a2(2),[]);
 				axis(a2(1),'auto');axis(a2(2),'auto');
-				cla(a3(1));legend(a3(1),'off');ylabel(a3(1),[]);        % clear axes and remove legends and labels
-				cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);        % clear axes and remove legends and labels
+				cla(a3(1));legend(a3(1),'off');ylabel(a3(1),[]);
+				cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);
 				axis(a3(1),'auto');axis(a3(2),'auto');
-
-				plot_axesL1.igrav = find(cell2mat(data_igrav(:,1))==1); % get selected iGrav channels for L1
-				plot_axesL2.igrav = find(cell2mat(data_igrav(:,2))==1); % get selected iGrav channels for L2
-				plot_axesL3.igrav = find(cell2mat(data_igrav(:,3))==1);
-				plot_axesR1.igrav = find(cell2mat(data_igrav(:,5))==1);
-				plot_axesR2.igrav = find(cell2mat(data_igrav(:,6))==1);
-				plot_axesR3.igrav = find(cell2mat(data_igrav(:,7))==1);
-
+                % Find checked (selected) time series (columns of data
+                % matrices)
+                % Checked: igrav channels
+				plot_axesL1.igrav = find(cell2mat(data_igrav(:,1))==1);     % get selected iGrav channels for L1
+				plot_axesL2.igrav = find(cell2mat(data_igrav(:,2))==1);     % get selected iGrav channels for L2
+				plot_axesL3.igrav = find(cell2mat(data_igrav(:,3))==1);     % get selected iGrav channels for L3
+				plot_axesR1.igrav = find(cell2mat(data_igrav(:,5))==1);     % get selected iGrav channels for R1
+				plot_axesR2.igrav = find(cell2mat(data_igrav(:,6))==1);     % get selected iGrav channels for R2
+				plot_axesR3.igrav = find(cell2mat(data_igrav(:,7))==1);     % get selected iGrav channels for R3
+                % Checked: trilogi channels
 				plot_axesL1.trilogi = find(cell2mat(data_trilogi(:,1))==1); % get selected TRiLOGi channels for L1
 				plot_axesL2.trilogi = find(cell2mat(data_trilogi(:,2))==1);
 				plot_axesL3.trilogi = find(cell2mat(data_trilogi(:,3))==1);
 				plot_axesR1.trilogi = find(cell2mat(data_trilogi(:,5))==1);
 				plot_axesR2.trilogi = find(cell2mat(data_trilogi(:,6))==1);
 				plot_axesR3.trilogi = find(cell2mat(data_trilogi(:,7))==1);
-
-				plot_axesL1.other1 = find(cell2mat(data_other1(:,1))==1); % get selected Other1 channels for L1
+                % Checked: other1 channels
+				plot_axesL1.other1 = find(cell2mat(data_other1(:,1))==1);   % get selected Other1 channels for L1
 				plot_axesL2.other1 = find(cell2mat(data_other1(:,2))==1);
 				plot_axesL3.other1 = find(cell2mat(data_other1(:,3))==1);
 				plot_axesR1.other1 = find(cell2mat(data_other1(:,5))==1);
 				plot_axesR2.other1 = find(cell2mat(data_other1(:,6))==1);
 				plot_axesR3.other1 = find(cell2mat(data_other1(:,7))==1);
-
-				plot_axesL1.other2 = find(cell2mat(data_other2(:,1))==1); % get selected other2 channels for L1
+                % Checked: other2 channels
+				plot_axesL1.other2 = find(cell2mat(data_other2(:,1))==1);   % get selected other2 channels for L1
 				plot_axesL2.other2 = find(cell2mat(data_other2(:,2))==1);
 				plot_axesL3.other2 = find(cell2mat(data_other2(:,3))==1);
 				plot_axesR1.other2 = find(cell2mat(data_other2(:,5))==1);
 				plot_axesR2.other2 = find(cell2mat(data_other2(:,6))==1);
 				plot_axesR3.other2 = find(cell2mat(data_other2(:,7))==1);
 
-				plot_mode = [0 0 0];                                    % reset plot_mode = nothing is plotted by default (0 no plot, 1 - left only, 2 -right only, 3 - both)
+				plot_mode = [0 0 0];                                        % reset plot_mode = nothing is plotted by default (0 no plot, 1 - left only, 2 -right only, 3 - both, columns refer to Plots 1/2/3)
 				set(findobj('Tag','plotGrav_push_reset_view'),'UserData',plot_mode);% store the plot_mode 
 
-				%% Plot1
-				% L1 only
+				% Plot1: L1 only
+                % First check if some (at least one) time series/channel is
+                % selected for L1. Only if so, continue. Selected means
+                % that plot_axesL1.* is not empty.
 				if (~isempty(plot_axesL1.igrav) || ~isempty(plot_axesL1.trilogi) || ~isempty(plot_axesL1.other1) || ~isempty(plot_axesL1.other2)) &&...
 				   (isempty(plot_axesR1.igrav) && isempty(plot_axesR1.trilogi) && isempty(plot_axesR1.other1) && isempty(plot_axesR1.other2)) 
-					switch_plot = 1;                                    % 1 = left axes
-					plot_mode(1) = 1;                                   % 1 = left axes
-					plot_axesL = plot_axesL1;                           % see ploGrav_plotData function
-					plot_axesR = [];                                    % see ploGrav_plotData function
-					ref_axes = [];                                      % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
+					switch_plot = 1;                                        % 1 = left axes. See plotGrav_plotData.m function for details.
+					plot_mode(1) = 1;                                       % 1 = left axes, first plot
+					plot_axesL = plot_axesL1;                               % see ploGrav_plotData.m function
+					plot_axesR = [];                                        % see ploGrav_plotData.m function
+					ref_axes = [];                                          % ref_axes is used to synchronize all plots,i.e., to ensure than the XTicks and Limits are the same, Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
 					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
-					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
-					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
-				end
-
-				% R1 only
+					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printting
+					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
+                end
+				% Plot1: R1 only
+                % Same procedure as for Plot1: L1. The only difference is
+                % the plot_mode and switch_plot
 				if (~isempty(plot_axesR1.igrav) || ~isempty(plot_axesR1.trilogi) || ~isempty(plot_axesR1.other1) || ~isempty(plot_axesR1.other2)) &&... 
 				   (isempty(plot_axesL1.igrav) && isempty(plot_axesL1.trilogi) && isempty(plot_axesL1.other1) && isempty(plot_axesL1.other2)) 
-					switch_plot = 2;                                    % 2 = right axes
-					plot_mode(1) = 2;                                   % 1 = right axes
-					plot_axesL = [];                                    % see ploGrav_plotData function
-					plot_axesR = plot_axesR1;                           % see ploGrav_plotData function
-					ref_axes = [];                                      % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
+					switch_plot = 2;                                        % 2 = right axes
+					plot_mode(1) = 2;                                       % 1 = right axes, first plot
+					plot_axesL = [];                                        % see ploGrav_plotData function
+					plot_axesR = plot_axesR1;                               % see ploGrav_plotData function
+					ref_axes = [];                                          % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
 					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
-				end
-
-				% R1 and L1
+                end
+				% Plot1: R1 and L1
+                % In this case, both left and right axes are visible and
+                % used for plotting. Similar to plotyy function.
 				if (~isempty(plot_axesL1.igrav) || ~isempty(plot_axesL1.trilogi) || ~isempty(plot_axesL1.other1) || ~isempty(plot_axesL1.other2)) &&...
 				   (~isempty(plot_axesR1.igrav) || ~isempty(plot_axesR1.trilogi) || ~isempty(plot_axesR1.other1) || ~isempty(plot_axesR1.other2)) 
-					switch_plot = 3;                                    % 2 = right axes
-					plot_mode(1) = 3;                                   % 1 = right axes
-					plot_axesL = plot_axesL1;                           % see ploGrav_plotData function
-					plot_axesR = plot_axesR1;                           % see ploGrav_plotData function
-					ref_axes = [];                                      % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
+					switch_plot = 3;                                        % 3 = left + right axes
+					plot_mode(1) = 3;                                       % 1 = left + right axes, first plot                                      
+					plot_axesL = plot_axesL1;
+					plot_axesR = plot_axesR1;
+					ref_axes = [];
 					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
 				end
 				
-				%% Plot 2
-				% L2 only
+				% Plot 2: L2 only
 				if (~isempty(plot_axesL2.igrav) || ~isempty(plot_axesL2.trilogi) || ~isempty(plot_axesL2.other1) || ~isempty(plot_axesL2.other2)) &&... 
 				   (isempty(plot_axesR2.igrav) && isempty(plot_axesR2.trilogi) && isempty(plot_axesR2.other1) && isempty(plot_axesR2.other2)) 
-					switch_plot = 1;                                    % left axes only
-					plot_mode(2) = 1;                                   % left axes only
-					plot_axesL = plot_axesL2;                           % see ploGrav_plotData function                          
-					plot_axesR = [];                                    % see ploGrav_plotData function
-					if plot_mode(1) == 0                                % find out if plot1 exists
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) == 2                            % if plot1 exists and contains only right axes
+					switch_plot = 1;                                        % left axes only
+					plot_mode(2) = 1;                                       % left axes, second plot only
+					plot_axesL = plot_axesL2;                        
+					plot_axesR = [];
+					if plot_mode(1) == 0                                    % find out if plot1 exists. If not, create new reference.
+						ref_axes = [];
+					elseif plot_mode(1) == 2                                % if plot1 exists and contains only right axes (R1)
 						ref_axes = a1(2);
-					else                                                % otherwise use L1 axes
+                    else                                                    % otherwise use L1 axes. 
 						ref_axes = a1(1);
 					end
 					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend save   % remove settings
-				end
-				
-				% R2 only
+                end
+				% Plot 2: R2 only
+                % WARNING: The following code is not commented because the meaning
+                % of the code can be derived from previous plots
 				if (~isempty(plot_axesR2.igrav) || ~isempty(plot_axesR2.trilogi) || ~isempty(plot_axesR2.other1) || ~isempty(plot_axesR2.other2)) &&... 
 				   (isempty(plot_axesL2.igrav) && isempty(plot_axesL2.trilogi) && isempty(plot_axesL2.other1) && isempty(plot_axesL2.other2))  
-					switch_plot = 2;                                    % 2 = right axes
-					plot_mode(2) = 2;                                   % 1 = right axes
-					plot_axesL = [];                                    % see ploGrav_plotData function
-					plot_axesR = plot_axesR2;                           % see ploGrav_plotData function
-					if plot_mode(1) == 0                                % find out if plot1 exists
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) == 2                            % if plot1 exists and contains only right axes
+					switch_plot = 2;
+					plot_mode(2) = 2;
+					plot_axesL = [];
+					plot_axesR = plot_axesR2;
+					if plot_mode(1) == 0
+						ref_axes = [];
+					elseif plot_mode(1) == 2
 						ref_axes = a1(2);
-					else                                                % otherwise use L1 axes
+                    else
 						ref_axes = a1(1);
 					end                                     
 					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
-					clear switch_plot plot_axesL plot_axesR ref_axes legend_save    % remove used settings
-				end
-				
-				% R2 and L2
+					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
+                end
+				% Plot 2: R2 and L2
+                % See coments above.
 				if (~isempty(plot_axesL2.igrav) || ~isempty(plot_axesL2.trilogi) || ~isempty(plot_axesL2.other1) || ~isempty(plot_axesL2.other2)) &&...
 				   (~isempty(plot_axesR2.igrav) || ~isempty(plot_axesR2.trilogi) || ~isempty(plot_axesR2.other1) || ~isempty(plot_axesR2.other2)) 
-					switch_plot = 3;                                    % 2 = right axes
-					plot_mode(2) = 3;                                   % 1 = right axes
-					plot_axesL = plot_axesL2;                           % see ploGrav_plotData function
-					plot_axesR = plot_axesR2;                           % see ploGrav_plotData function
-					if plot_mode(1) == 0                                % find out if plot1 exists
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) == 2                            % if plot1 exists and contains only right axes
+					switch_plot = 3;
+					plot_mode(2) = 3;
+					plot_axesL = plot_axesL2;
+					plot_axesR = plot_axesR2;
+					if plot_mode(1) == 0
+						ref_axes = [];
+					elseif plot_mode(1) == 2 
 						ref_axes = a1(2);
-					else                                                % otherwise use L1 axes
+					else 
 						ref_axes = a1(1);
 					end  
 					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
@@ -1283,69 +1299,69 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save  % remove used settings
 				end
 				
-				%% Plot 3
-				% L3 only
+				% Plot 3: L3 only
+                % See coments above.
 				if (~isempty(plot_axesL3.igrav) || ~isempty(plot_axesL3.trilogi) || ~isempty(plot_axesL3.other1) || ~isempty(plot_axesL3.other2)) &&... 
 				   (isempty(plot_axesR3.igrav) && isempty(plot_axesR3.trilogi) && isempty(plot_axesR3.other1) && isempty(plot_axesR3.other2)) 
-					switch_plot = 1;                                    % left axes only
-					plot_mode(3) = 1;                                   % left axes only
-					plot_axesL = plot_axesL3;                           % see ploGrav_plotData function                          
-					plot_axesR = [];                                    % see ploGrav_plotData function
-					if plot_mode(1)+plot_mode(2) == 0                   % find out if plot1 or plot2 exist
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2        % if plot1 exists, but not only right axes
+					switch_plot = 1;
+					plot_mode(3) = 1;
+					plot_axesL = plot_axesL3;                     
+					plot_axesR = [];
+					if plot_mode(1)+plot_mode(2) == 0                       % find out if plot1 or plot2 exist
+						ref_axes = [];                                      % if not, no reference axes limits == L3 will not be synchronized (because it is the only plot)
+					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2            % if plot1 exists, more specificaly, L1 (even when L1+R1 exist at the same time)
 						ref_axes = a1(1);
-					elseif plot_mode(1) > 0 && plot_mode(1) == 2        % use R1
+					elseif plot_mode(1) > 0 && plot_mode(1) == 2            % use R1 only if L1 does not exist ( 2 = only right)
 						ref_axes = a1(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) == 2       % use R2
+					elseif plot_mode(1) == 0 && plot_mode(2) == 2           % use R2 only if plot1 and plot2:L2 do not exist
 						ref_axes = a2(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2       % user L2
+					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2           % use L2 otherwise
 						ref_axes = a2(1);
 					end
 					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes    % remove settings
-				end
-				
-				% R3 only
+                end
+				% Plot3: R3 only
+                % See coments above.
 				if (~isempty(plot_axesR3.igrav) || ~isempty(plot_axesR3.trilogi) || ~isempty(plot_axesR3.other1) || ~isempty(plot_axesR3.other2)) &&... 
 				   (isempty(plot_axesL3.igrav) && isempty(plot_axesL3.trilogi) && isempty(plot_axesL3.other1) && isempty(plot_axesL3.other2))  
-					switch_plot = 2;                                    % 2 = right axes
-					plot_mode(3) = 2;                                   % 1 = right axes
-					plot_axesL = [];                                    % see ploGrav_plotData function
-					plot_axesR = plot_axesR3;                           % see ploGrav_plotData function
-					if plot_mode(1)+plot_mode(2) == 0                   % find out if plot1 or plot2 exist
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2        % if plot1 exists, but not only right axes
+					switch_plot = 2;
+					plot_mode(3) = 2;
+					plot_axesL = [];
+					plot_axesR = plot_axesR3;
+					if plot_mode(1)+plot_mode(2) == 0
+						ref_axes = [];
+					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2
 						ref_axes = a1(1);
-					elseif plot_mode(1) > 0 && plot_mode(1) == 2        % use R1
+					elseif plot_mode(1) > 0 && plot_mode(1) == 2
 						ref_axes = a1(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) == 2       % use R2
+					elseif plot_mode(1) == 0 && plot_mode(2) == 2
 						ref_axes = a2(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2       % user L2
+					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end                                  
 					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
-				end
-				
-				% R3 and L3
+                end
+				% Plot3: R3 and L3
+                % See coments above.
 				if (~isempty(plot_axesL3.igrav) || ~isempty(plot_axesL3.trilogi) || ~isempty(plot_axesL3.other1) || ~isempty(plot_axesL3.other2)) &&...
 				   (~isempty(plot_axesR3.igrav) || ~isempty(plot_axesR3.trilogi) || ~isempty(plot_axesR3.other1) || ~isempty(plot_axesR3.other2)) 
-					switch_plot = 3;                                    % 2 = right axes
-					plot_mode(3) = 3;                                   % 1 = right axes
-					plot_axesL = plot_axesL3;                           % see ploGrav_plotData function
-					plot_axesR = plot_axesR3;                           % see ploGrav_plotData function
-					if plot_mode(1)+plot_mode(2) == 0                   % find out if plot1 or plot2 exist
-						ref_axes = [];                                  % if not, no reference axes limits
-					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2        % if plot1 exists, but not only right axes
+					switch_plot = 3;
+					plot_mode(3) = 3;
+					plot_axesL = plot_axesL3;
+					plot_axesR = plot_axesR3;
+					if plot_mode(1)+plot_mode(2) == 0
+						ref_axes = [];
+					elseif plot_mode(1) > 0 && plot_mode(1) ~= 2
 						ref_axes = a1(1);
-					elseif plot_mode(1) > 0 && plot_mode(1) == 2        % use R1
+					elseif plot_mode(1) > 0 && plot_mode(1) == 2
 						ref_axes = a1(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) == 2       % use R2
+					elseif plot_mode(1) == 0 && plot_mode(2) == 2
 						ref_axes = a2(2);
-					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2       % user L2
+					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end 
 					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
@@ -1362,147 +1378,170 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			
 		case 'push_date'
 			%% PUSH_DATE
-			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
+            % It is important to convert the plotted time values to civil
+            % format (by default in matlab datenum format). The following
+            % code is called after each plot. Newer matlab versions (>R2014)
+            % support automatic update of 'dateticks'. However, plotGrav was
+            % written and tested using matlab R2013a.
+            % First get axes to refer to the axisting plots.
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes one handles
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes two handles
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes three handles
 			plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-			% Plot1
-			switch plot_mode(1)                                         % switch between plot modes (PLOT 1)
-				case 1                                                  % Left plot only
-					ref_lim = get(a1(1),'XLim');                        % get current x limits and use them a reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a1(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					set(a1(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a1(2),'Visible','off');                         % turn of right axes
-					linkaxes([a1(1),a1(2)],'x');                        % link axes, just in case
-				case 2                                                  % Right plot only
-					ref_lim = get(a1(2),'XLim');                        % get current x limits and use them a reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a1(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					set(a1(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					datetick(a1(2),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a1(1),'Visible','off');                         % turn of right axes
-					linkaxes([a1(1),a1(2)],'x');                        % link axes, just in case
-				case 3                                                  % Right and Left plot
-					ref_lim = get(a1(1),'XLim');                        % use Left plot limits as reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % compute new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % create new labels (4 decimal places
-					end
-					set(a1(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % place new labels and ticks
-					set(a1(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks
-					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					linkaxes([a1(1),a1(2)],'x');                        % link axes, just in case
+			% Switch between plot modes. This is done to avoid overlaying
+			% of data ticks (e.g., of left and right axes)
+            % Plot1
+			switch plot_mode(1)                                
+				case 1                                                      % Left plot only
+					ref_lim = get(a1(1),'XLim');                            % get current x limits and use them a reference
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks. Use always 9 ticks! Such setting does not follow natural tick sampling (e.g., one tick per day or week)
+					set(a1(1),'XTick',xtick_value);                         % set new ticks (left)
+					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a1(2),'Visible','off');                             % turn of the right axes = make it not visible
+					linkaxes([a1(1),a1(2)],'x');                            % link axes = synchronize, just in case
+				case 2                                                      % Right plot only
+					ref_lim = get(a1(2),'XLim');                            % get current x limits and use them a reference
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					set(a1(2),'XTick',xtick_value);                         % set new ticks and labels (right)
+					datetick(a1(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a1(1),'Visible','off');                             % turn of right axes
+					linkaxes([a1(1),a1(2)],'x');                            % link axes, just in case
+				case 3                                                      % Right and Left plot
+					ref_lim = get(a1(1),'XLim');                            % use Left plot limits as reference
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					set(a1(1),'XTick',xtick_value); % place new labels and ticks
+					set(a1(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks + set transparency
+					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					linkaxes([a1(1),a1(2)],'x');                            % link axes, just in case
 				otherwise
 					ref_lim = [];                                       % no ref_lim if plot1 is not on
 			end
 			% Plot 2
-			switch plot_mode(2)                                         % switch between plot modes (PLOT 2)
-				case 1                                                  % Left plot only
+            % The following code is commented sparingly, because the
+            % meaning can be derived by looking at the previous (Plot1)
+            % comments
+			switch plot_mode(2)                                         	
+				case 1                                                      % Left plot only
 					if isempty(ref_lim)
-						ref_lim = get(a2(1),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a2(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a2(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					set(a2(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a2(2),'Visible','off');                         % turn of right axes
-					linkaxes([a2(1),a2(2)],'x');                        % link axes, just in case
-				case 2                                                  % Right plot only
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					set(a2(1),'XTick',xtick_value);                         % set new ticks and labels (left)
+					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a2(2),'Visible','off');                             % turn of right axes
+					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
+				case 2                                                      % Right plot only
 					if isempty(ref_lim)
-						ref_lim = get(a2(2),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a2(2),'XLim');                        % get superior x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a2(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					set(a2(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					datetick(a2(2),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a2(1),'Visible','off');                         % turn of right axes
-					linkaxes([a2(1),a2(2)],'x');                        % link axes, just in case
-				case 3                                                  % Right and Left plot
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					set(a2(2),'XTick',xtick_value);                         % set new ticks and labels (right)
+					datetick(a2(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a2(1),'Visible','off');                             % turn of left axes
+					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
+				case 3                                                      % Right and Left plot
 					if isempty(ref_lim)
-						ref_lim = get(a2(1),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a2(1),'XLim');                        % get superior x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % compute new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % create new labels (4 decimal places)
-					end
-					set(a2(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % place new labels and ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					set(a2(1),'XTick',xtick_value);                         % place new labels and ticks
 					set(a2(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks
-					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					linkaxes([a2(1),a2(2)],'x');                        % link axes, just in case
+					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
 				otherwise
-					ref_lim = [];                                       % no ref_lim if plot1 is not on
+					ref_lim = [];                                           % no ref_lim if plot2 is not on
 			end
 			% Plot 3
-			switch plot_mode(3)                                         % switch between plot modes (PLOT 3)
-				case 1                                                  % Left plot only
+			switch plot_mode(3)
+				case 1                                                      % Left plot only
 					if isempty(ref_lim)
-						ref_lim = get(a3(1),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a3(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);  % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a3(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					set(a3(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					datetick(a3(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a3(2),'Visible','off');                         % turn of right axes
-					linkaxes([a3(1),a3(2)],'x');                        % link axes, just in case
-				case 2                                                  % Right plot only
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					set(a3(1),'XTick',xtick_value);                         % set new ticks and labels (left)
+					datetick(a3(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a3(2),'Visible','off');                             % turn of right axes
+					linkaxes([a3(1),a3(2)],'x');                            % link axes, just in case
+				case 2                                                      % Right plot only
 					if isempty(ref_lim)
-						ref_lim = get(a3(2),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a3(2),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);  % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % tick labels (4 decimal places)
-					end
-					set(a3(2),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (right)
-					set(a3(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % set new ticks and labels (left)
-					datetick(a3(2),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
-					set(a3(1),'Visible','off');                         % turn of right axes
-					linkaxes([a3(1),a3(2)],'x');                        % link axes, just in case
-				case 3                                                  % Right and Left plot
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					set(a3(2),'XTick',xtick_value);                         % set new ticks and labels (right)
+					datetick(a3(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					set(a3(1),'Visible','off');                             % turn of right axes
+					linkaxes([a3(1),a3(2)],'x');                            % link axes, just in case
+				case 3                                                      % Right and Left plot
 					if isempty(ref_lim)
-						ref_lim = get(a3(1),'XLim');                    % get current x limits and use them a reference
+						ref_lim = get(a3(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);   % compute new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i)); % create new labels (4 decimal places)
-					end
-					set(a3(1),'XTick',xtick_value,'XTickLabel',xtick_lable); % place new labels and ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					set(a3(1),'XTick',xtick_value);                         % place new labels and ticks
 					set(a3(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks
 					datetick(a3(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
 					linkaxes([a3(1),a3(2)],'x');                        % link axes, just in case
-				otherwise
-					ref_lim = [];                                       % no ref_lim if plot1 is not on
-			end
+            end
+            
 		case 'reset_view'
-			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',[]);drawnow % status
-			plotGrav('uitable_push');
-			plotGrav('push_date');
-			%% ZOOM_IN
+            %% Reset view
+            % Reset view means update all plots = delete all information
+            % about current zoom level and re-plot selected channels.
+			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',[]);      % Remove all information related to zoom level (see ZOOM_IN section)
+			plotGrav('uitable_push');                                       % re-plot
+			plotGrav('push_date');                                          % update time (x)ticks
+            
+		case 'uncheck_all'
+            %% Uncheck all
+            % User can uncheck all selected time series at once. This is
+            % especially handy after selecting too many time series.
+            % Unchecking will also reset all plot settings, inclusing
+            % zooming level or inserted objects (lines, text...).
+            % First get necesary data
+			data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
+			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
+			data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+			data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get plot 1 handles
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get plot 2 handles
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get plot 3 handles
+            % Reset plot
+			cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);                % clear axes and remove legends and labels
+			cla(a1(2));legend(a1(2),'off');ylabel(a1(2),[]);                % clear axes and remove legends and labels
+			axis(a1(1),'auto');axis(a1(2),'auto');                          % Reset axis (not axes)
+			cla(a2(1));legend(a2(1),'off');ylabel(a2(1),[]);                % clear axes and remove legends and labels
+			cla(a2(2));legend(a2(2),'off');ylabel(a2(2),[]);                % clear axes and remove legends and labels
+			axis(a2(1),'auto');axis(a2(2),'auto');
+			cla(a3(1));legend(a3(1),'off');ylabel(a3(1),[]);                % clear axes and remove legends and labels
+			cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);                % clear axes and remove legends and labels
+			axis(a3(1),'auto');axis(a3(2),'auto');
+            % Reset ui-tables
+			data_igrav(:,[1,2,3,5,6,7]) = {false};                          % uncheck all fields
+			set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_igrav); % update the table
+			data_trilogi(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi);
+			data_other1(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1);
+			data_other2(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2);
+            
 		case 'push_zoom_in'
-			set(findobj('Tag','plotGrav_text_status'),'String','Select two points...');drawnow % status
-			[selected_x,selected_y] = ginput(2);
-			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes one handle
-			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-			plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-			selected_x = sort(selected_x);                              % sort = ascending
-			% Plot1
+			%% ZOOM_IN
+            % This part serves for changing the X Limits (time interval).
+            % The Y limits are set automatically (by matlab). This code
+            % therefore does not affect the Y limits, but creates always 5 
+            % Y ticks. This is done to ensure the y grid is synchronized
+            % for left and right axes.
+            % In order to set the new zoom level (X limits), get the axes
+            % handles.
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes one handle
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes two handle
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes three handle
+            
+			set(findobj('Tag','plotGrav_text_status'),'String','Select two points...');drawnow % send message to status bar with instructions
+			[selected_x,~] = ginput(2);                                     % get the the coordinates of two selected points. The Y coordinates are not important. Zooming only in X direction
+			selected_x = sort(selected_x);                                  % sort the user input = ascending (this is required by matlab's xlim function)
+            % Continue only if difference between selected points is > 0.
+            % Otherwise, result in error.
 			if diff(selected_x) > 0
 				set(a1(1),'XLim',selected_x);                               % set xlimits for left axes (not important if visible or not)
 				set(a1(2),'XLim',selected_x);                               % set xlimits for right axes 
@@ -1525,76 +1564,42 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a3(1),'YTick',linspace(rL1(1),rL1(2),5));               % set new ylimits (left)
 				set(a3(2),'YTick',linspace(rR1(1),rR1(2),5));               % set new ylimits (right)
 			end
-			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',selected_x);drawnow % status
+			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',selected_x); % Store the zoom level
 			set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status
-			plotGrav('push_date');
-			
-		case 'select_point'
-			%% Select point
-			set(findobj('Tag','plotGrav_text_status'),'String','Select a point...');drawnow % status
-			[selected_x,selected_y] = ginput(1);                        % get one point
-			selected_x = datevec(selected_x);                           % convert to calendar date+time
-			set(findobj('Tag','plotGrav_text_status'),'String',...      % write message
-				sprintf('Point selected: %04d/%02d/%02d %02d:%02d:%02d = %7.3f',...
-				selected_x(1),selected_x(2),selected_x(3),selected_x(4),selected_x(5),round(selected_x(6)),selected_y));drawnow % status
-			try
-				fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-			catch
-				fid = fopen('plotGrav_LOG_FILE.log','a');
-			end
-			[ty,tm,td,th,tmm] = datevec(now);
-			fprintf(fid,'Point selected: %04d/%02d/%02d %02d:%02d:%02d = %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
-				selected_x(1),selected_x(2),selected_x(3),selected_x(4),selected_x(5),round(selected_x(6)),selected_y,ty,tm,td,th,tmm);
-			fclose(fid);
-		case 'compute_difference'
-			%% Comute difference
-			set(findobj('Tag','plotGrav_text_status'),'String','Select first point...');drawnow % status
-			[selected_x(1),selected_y(1)] = ginput(1);                        % get one point
-			set(findobj('Tag','plotGrav_text_status'),'String','Select second point...');drawnow % status
-			[selected_x(2),selected_y(2)] = ginput(1);                        % get one point
-			set(findobj('Tag','plotGrav_text_status'),'String',...      % write message
-				sprintf('X diff (1-2): %8.4f hours,   Y diff (1-2):  %8.4f',...
-				(selected_x(1)-selected_x(2))*24,selected_y(1)-selected_y(2)));drawnow % status
-			try
-				fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-			catch
-				fid = fopen('plotGrav_LOG_FILE.log','a');
-			end
-			[ty,tm,td,th,tmm] = datevec(now);
-			[ty1,tm1,td1,th1,tmm1,ts1] = datevec(selected_x(1));
-			[ty2,tm2,td2,th2,tmm2,ts2] = datevec(selected_x(2));
-			fprintf(fid,'Difference computed (1-2): dX = %8.4f hours, dY = %8.4f. First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
-				(selected_x(1)-selected_x(2))*24,selected_y(1)-selected_y(2),ty1,tm1,td1,th1,tmm1,ts1,selected_y(1),...
-				ty2,tm2,td2,th2,tmm2,ts2,selected_y(2),ty,tm,td,th,tmm);
-			fclose(fid);
+			plotGrav('push_date');                                          % update time ticks = always constant number of ticks at the time axis.
+            
 		case 'push_webcam'
 			%% Select Webcam data
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % get all data 
+            % User can select an arbirary time epoch and this function will
+            % look up the corresponding webcam snapshot, providing the path
+            % to the snapshots is set correctly.
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data. Only to check if data already loaded! Not used or modified.
 			if ~isempty(data)
-				try
-					set(findobj('Tag','plotGrav_text_status'),'String','Select a point...');drawnow % status
-					[selected_x,selected_y] = ginput(1);                        % get one point
-					set(findobj('Tag','plotGrav_text_status'),'String','Searching image...');drawnow % status 
-					[year,month,day] = datevec(selected_x);
-					ls = dir(fullfile(get(findobj('Tag','plotGrav_menu_webcam'),'UserData'),sprintf('Schedule_%04d%02d%02d*',year,month,day)));
-					if ~isempty(ls)
-						for i = 1:length(ls)
-							temp = ls(i).name;
-							if length(temp)>2                                 % only for files with reasonable name length
-								date_webcam(i,1) = datenum(str2double(temp(10:13)),str2double(temp(14:15)),str2double(temp(16:17)),...
+				try                                                         % use try/catch: lot of snaphots are missing + take into account gross sampling
+					set(findobj('Tag','plotGrav_text_status'),'String','Select a point...');drawnow % send message to status bar with instructions
+					[selected_x,~] = ginput(1);                             % get one point. Only X/time cooridnate is important
+					set(findobj('Tag','plotGrav_text_status'),'String','Searching image...');drawnow % send message
+					[year,month,day] = datevec(selected_x);                 % convert the selected time epoch to civil time format. Snapshot file names contain information about time and date.
+					ls = dir(fullfile(get(findobj('Tag','plotGrav_menu_webcam'),'UserData'),sprintf('Schedule_%04d%02d%02d*',year,month,day))); % get the list of all files in the Webcam folder taken on selected day 
+					if ~isempty(ls)                                         % continue only if the webcam folder contains some Photos fulfillin the previous requirement
+						for i = 1:length(ls)                                % run a loop to filter out files/folder (especially '..' strings) not related to snapshot
+							temp = ls(i).name;                              % store the current file/folder (dir output) in temporary variable.
+							if length(temp)>2                               % only for files with reasonable name length
+								date_webcam(i,1) = datenum(str2double(temp(10:13)),str2double(temp(14:15)),str2double(temp(16:17)),... % convert the file name to matlab time format for future searching of snapshot taken closest to the selected point.
 													  str2double(temp(19:20)),str2double(temp(21:22)),str2double(temp(23:24)));
 							else
-								date_webcam(i,1) = -9e+10;
+								date_webcam(i,1) = -9e+10;                  % dummy
 							end
-						end
-						r = find(abs(selected_x - date_webcam) == min(abs(selected_x - date_webcam)));
-						if ~isempty(r)
+                        end
+                        % Find where the difference between selected point
+                        % and snapshot time stamp is minimum.
+						r = find(abs(selected_x - date_webcam) == min(abs(selected_x - date_webcam))); 
+						if ~isempty(r)                                      % continue if such file has been found
 							set(findobj('Tag','plotGrav_text_status'),'String','Loading image...');drawnow % status 
-							A = imread(fullfile(get(findobj('Tag','plotGrav_menu_webcam'),'UserData'),ls(r(1)).name));
-							figure
-							image(A)
-							title(ls(r(1)).name,'interpreter','none');
-							set(gca,'XTick',[],'YTick',[]);
+							A = imread(fullfile(get(findobj('Tag','plotGrav_menu_webcam'),'UserData'),ls(r(1)).name)); % get the image
+							figure;image(A)                                 % Plot the loaded image into new window. It wouldn't look good when plotted into plotGrav plots/axes.
+							title(ls(r(1)).name,'interpreter','none');      % Add a title with the file name.
+							set(gca,'XTick',[],'YTick',[]);                 % remove the ticks = pixel indices.
 						else
 							set(findobj('Tag','plotGrav_text_status'),'String','No webcam image found.');drawnow % status 
 						end
@@ -1611,16 +1616,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			
 		case 'reverse_l1'
 			%% Reverse Y axis
-			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle,...
-			if get(findobj('Tag','plotGrav_menu_reverse_l1'),'UserData') == 1 % check current axis status
+            % Reversing Y axis allows better visualisation of
+            % anti-correlated time series.
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes one handle,...
+			if get(findobj('Tag','plotGrav_menu_reverse_l1'),'UserData') == 1 % check current axis status (0 = Normal, 1 = reverse). Always switch to the oposit.
 			   set(findobj('Tag','plotGrav_menu_reverse_l1'),'UserData',0); % update status
-				set(a1(1),'YDir','reverse');                            % reverse direction
+				set(a1(1),'YDir','reverse');                                % reverse direction
 			else
 			   set(findobj('Tag','plotGrav_menu_reverse_l1'),'UserData',1); % update status
-				set(a1(1),'YDir','normal');                             % set to normal
+				set(a1(1),'YDir','normal');                                 % set to normal
 			end
 		case 'reverse_r1'
-			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes one handle,...
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % same as for 'reverse_l1'
 			if get(findobj('Tag','plotGrav_menu_reverse_r1'),'UserData') == 1
 			   set(findobj('Tag','plotGrav_menu_reverse_r1'),'UserData',0);
 				set(a1(2),'YDir','reverse');
@@ -1629,7 +1636,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a1(2),'YDir','normal');
 			end
 		case 'reverse_l2'
-			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle,...
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % same as for 'reverse_l1'
 			if get(findobj('Tag','plotGrav_menu_reverse_l2'),'UserData') == 1
 			   set(findobj('Tag','plotGrav_menu_reverse_l2'),'UserData',0);
 				set(a2(1),'YDir','reverse');
@@ -1638,7 +1645,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a2(1),'YDir','normal');
 			end
 		case 'reverse_r2'
-			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');  % get axes two handle,...
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % same as for 'reverse_l1'
 			if get(findobj('Tag','plotGrav_menu_reverse_r2'),'UserData') == 1
 			   set(findobj('Tag','plotGrav_menu_reverse_r2'),'UserData',0);
 				set(a2(2),'YDir','reverse');
@@ -1647,7 +1654,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a2(2),'YDir','normal');
 			end
 		case 'reverse_l3'
-			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle,...
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % same as for 'reverse_l1'
 			if get(findobj('Tag','plotGrav_menu_reverse_l3'),'UserData') == 1
 			   set(findobj('Tag','plotGrav_menu_reverse_l3'),'UserData',0);
 				set(a3(1),'YDir','reverse');
@@ -1656,19 +1663,76 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a3(1),'YDir','normal');
 			end
 		case 'reverse_r3'
-			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle,...
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % same as for 'reverse_l1'
 			if get(findobj('Tag','plotGrav_menu_reverse_r3'),'UserData') == 1
 			   set(findobj('Tag','plotGrav_menu_reverse_r3'),'UserData',0);
 				set(a3(2),'YDir','reverse');
 			else
 			   set(findobj('Tag','plotGrav_menu_reverse_r3'),'UserData',1);
 				set(a3(2),'YDir','normal');
+            end
+            
+        case 'show_filter'
+			%% Plot filter impulse
+            set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
+            filter_file = get(findobj('Tag','plotGrav_edit_filter_file'),'String'); % get filter filename
+            if ~isempty(filter_file)                                        % try to load the filter file/response if some string is given
+                try 
+                    Num = load(filter_file);                                % load filter file = in ETERNA format - header
+                    Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));         % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                    figure('Name','plotGrav: filter impulse response','Toolbar','figure'); % open new figure
+                    a0_spectral = axes('FontSize',9);                       % create new axes
+                    hold(a0_spectral,'on');                                 % all results in one window
+                    grid(a0_spectral,'on');                                 % grid on
+                    plot(a0_spectral,Num);                                  % plot the impulse response as function of indices
+                    set(findobj('Tag','plotGrav_text_status'),'String','Select channel.');drawnow % send message to status bar
+                catch error_message
+                    if strcmp(error_message.identifier,'MATLAB:FileIO:InvalidFid')
+                         set(findobj('Tag','plotGrav_text_status'),'String','Filer file not found.');drawnow % send message to status bar
+                    else
+                         set(findobj('Tag','plotGrav_text_status'),'String','Could not load the filter file.');drawnow % send message to status bar
+                    end
+                end
+            else
+                set(findobj('Tag','plotGrav_text_status'),'String','No filter file selected.');drawnow % status
+            end
+            
+		case 'show_grid'
+			%% Label/Legend/Grid
+            % User can add or remove legends, grids and labels. In this
+            % case, the legends and labels are created using loaded channel
+            % names and units, i.e., user cannot modify them using this
+            % section!
+			temp = get(findobj('Tag','plotGrav_check_grid'),'Value');       % get grid swicth = GUI checkbox (0 = off, 1 = on)
+			if temp == 1                                                    % always swithch to the opposit
+				set(findobj('Tag','plotGrav_check_grid'),'Value',0);
+			else
+				set(findobj('Tag','plotGrav_check_grid'),'Value',1);
+            end
+            plotGrav('uitable_push');                                       % re-plot (otherwise would be visible after user checks one of the time series). It would be pointless/redundant to add the part of the code responsible for showing grid to this section.
+		case 'show_label'                                                   % Do the same as for 'show_grid'
+			temp = get(findobj('Tag','plotGrav_check_labels'),'Value');
+			if temp == 1
+				set(findobj('Tag','plotGrav_check_labels'),'Value',0);
+			else
+				set(findobj('Tag','plotGrav_check_labels'),'Value',1);
+            end
+            plotGrav('uitable_push');
+		case 'show_legend'                                                   % Do the same as for 'show_grid'
+			temp = get(findobj('Tag','plotGrav_check_legend'),'Value');
+			if temp == 1
+				set(findobj('Tag','plotGrav_check_legend'),'Value',0);
+			else
+				set(findobj('Tag','plotGrav_check_legend'),'Value',1);
 			end
-			%% EXPORT DATA
+            plotGrav('uitable_push');
+            
+%%%%%%%%%%%%%%%%%%%%%%%%% E X P O R T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%           
 		case 'export_igrav_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % get time
-			units_igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units
+			%% EXPORT DATA
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data (this variable store iGrav together with other time series)
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time (includes iGrav time vector)
+			units_igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units. Will be included in the output.
 			channels_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
 			try 
 				[name,path,selection] = uiputfile({'*.tsf';'*.mat'},'Select your iGrav output file'); % get output file
@@ -1869,33 +1933,292 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				fprintf(fid,'Could not write TRiLOGi data (%04d/%02d/%02d %02d:%02d)\n',...
 					ty,tm,td,th,tmm);
 				fclose(fid);
+            end
+       		case 'print_all'
+			%% Printing all plots
+			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+			if name == 0                                               % If cancelled-> no output
+				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
+				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
+				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
+				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
+				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
+				scrs = get(0,'screensize');                             % get monitor resolution
+				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
+					'Resize','off','Menubar','none','ToolBar','none',...
+					'NumberTitle','off','Color',[0.941 0.941 0.941],...
+					'Name','plotGrav: plot iGrav data','visible','off');
+				if plot_mode(1) > 0
+					a1c(1) = copyobj(a1(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a1c(2) = copyobj(a1(2),F2c);                        
+					set(a1c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
+					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
+					rL1 = get(a1c(1),'YLim'); 
+					set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					% Create legend (is not copied automatically)
+					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
+					l = legend(a1c(1),temp{1});                             % set left legend
+					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					l = legend(a1c(2),temp{2});                             % set legend on right
+					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				end
+				if plot_mode(2) > 0
+					a2c(1) = copyobj(a2(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a2c(2) = copyobj(a2(2),F2c);
+					set(a2c(1),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
+					set(a2c(2),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
+					rL1 = get(a2c(1),'YLim'); 
+					set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					temp = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % get legend
+					l = legend(a2c(1),temp{1});                             % set left legend
+					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					l = legend(a2c(2),temp{2});                             % set legend on right
+					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				end
+				if plot_mode(3) > 0
+					a3c(1) = copyobj(a3(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a3c(2) = copyobj(a3(2),F2c);
+					set(a3c(1),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
+					set(a3c(2),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
+					rL1 = get(a3c(1),'YLim'); 
+					set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					temp = get(findobj('Tag','plotGrav_menu_print_three'),'UserData');
+					l = legend(a3c(1),temp{1});                             % left legend
+					set(l,'interpreter','none','FontSize',8,'Location','NorthWest');
+					l = legend(a3c(2),temp{2});                             % legend on right
+					set(l,'interpreter','none','FontSize',8,'Location','NorthEast');
+				end
+%                     temp = get(findobj('Tag','plotGrav_insert_recangle'),'UserData');
+%                     if ~isempty(temp);
+%                         for an = 1:length(temp)
+%                             a = annotation('rectangle');
+%                             set(a,'Position',get(temp(an),'Position'));
+%                             set(a,'Color',get(temp(an),'Color'));
+%                             set(a,'LineStyle',get(temp(an),'LineStyle'));
+%                             set(a,'LineWidth',get(temp(an),'LineWidth'));
+%                         end
+%                     end
+				% Print
+				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
+				try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+				end
+				[ty,tm,td,th,tmm] = datevec(now);
+				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
+					[path,name],ty,tm,td,th,tmm);
+				fclose(fid);
+				switch filteridex
+					case 2                                              % eps
+						print(F2c,'-depsc','-r400',[path,name]);
+					case 1                                              % jpg
+						print(F2c,'-djpeg','-r400',[path,name]);
+				end
+				close(F2c)                                              % close the window
+				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
+				
 			end
-		case 'uncheck_all'
-			data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi table
-			data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 table
-			data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 table
-			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-			cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);            % clear axes and remove legends and labels
-			cla(a1(2));legend(a1(2),'off');ylabel(a1(2),[]);            % clear axes and remove legends and labels
-			axis(a1(1),'auto');axis(a1(2),'auto');                      % Reset axis (not axes)
-			cla(a2(1));legend(a2(1),'off');ylabel(a2(1),[]);            % clear axes and remove legends and labels
-			cla(a2(2));legend(a2(2),'off');ylabel(a2(2),[]);            % clear axes and remove legends and labels
-			axis(a2(1),'auto');axis(a2(2),'auto');
-			cla(a3(1));legend(a3(1),'off');ylabel(a3(1),[]);            % clear axes and remove legends and labels
-			cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);            % clear axes and remove legends and labels
-			axis(a3(1),'auto');axis(a3(2),'auto');
-			data_igrav(:,[1,2,3,5,6,7]) = {false};                      % uncheck all fields
-			set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_igrav); % update the table
-			data_trilogi(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi);
-			data_other1(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1);
-			data_other2(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2);
 			
+		case 'print_one'
+			%% Print first plot
+			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+			if name == 0                                               % If cancelled-> no output
+				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
+				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
+				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
+				scrs = get(0,'screensize');                             % get monitor resolution
+				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
+					'Resize','off','Menubar','none','ToolBar','none',...
+					'NumberTitle','off','Color',[0.941 0.941 0.941],...
+					'Name','plotGrav: plot iGrav data','visible','off');
+				if plot_mode(1) > 0
+					a1c(1) = copyobj(a1(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a1c(2) = copyobj(a1(2),F2c);                        
+					set(a1c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
+					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
+				end
+				rL1 = get(a1c(1),'YLim'); 
+				set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				   
+				% Create legend (is not copied automatically)
+				temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
+				l = legend(a1c(1),temp{1});                             % set left legend
+				set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+				l = legend(a1c(2),temp{2});                             % set legend on right
+				set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				
+				% Print
+				try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+				end
+				[ty,tm,td,th,tmm] = datevec(now);
+				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
+					[path,name],ty,tm,td,th,tmm);
+				fclose(fid);
+				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
+				switch filteridex
+					case 2                                              % eps
+						print(F2c,'-depsc',[path,name]);
+					case 1                                              % jpg
+						print(F2c,'-djpeg','-r400',[path,name]);
+				end
+				close(F2c)                                              % close the window
+				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
+				
+			end
+		case 'print_two'
+			%% Print second plot
+			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+			if name == 0                                               % If cancelled-> no output
+				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
+				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes one handle
+				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
+				scrs = get(0,'screensize');                             % get monitor resolution
+				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
+					'Resize','off','Menubar','none','ToolBar','none',...
+					'NumberTitle','off','Color',[0.941 0.941 0.941],...
+					'Name','plotGrav: plot iGrav data','visible','off');
+				if plot_mode(1) > 0
+					a2c(1) = copyobj(a2(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a2c(2) = copyobj(a2(2),F2c);                        
+					set(a2c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
+					set(a2c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
+					% Create legend (is not copied automatically)
+					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
+					l = legend(a2c(1),temp{1});                             % set left legend
+					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					l = legend(a2c(2),temp{2});                             % set legend on right
+					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				end
+				rL1 = get(a2c(1),'YLim'); 
+				set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				   
+				
+				% Print
+				try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+				end
+				[ty,tm,td,th,tmm] = datevec(now);
+				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
+					[path,name],ty,tm,td,th,tmm);
+				fclose(fid);
+				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
+				switch filteridex
+					case 2                                              % eps
+						print(F2c,'-depsc',[path,name]);
+					case 1                                              % jpg
+						print(F2c,'-djpeg','-r400',[path,name]);
+				end
+				close(F2c)                                              % close the window
+				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
+				
+			end
+		case 'print_three'
+			%% Print third plot
+			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+			if name == 0                                               % If cancelled-> no output
+				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
+				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes one handle
+				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
+				scrs = get(0,'screensize');                             % get monitor resolution
+				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
+					'Resize','off','Menubar','none','ToolBar','none',...
+					'NumberTitle','off','Color',[0.941 0.941 0.941],...
+					'Name','plotGrav: plot iGrav data','visible','off');
+				if plot_mode(1) > 0
+					a3c(1) = copyobj(a3(1),F2c);                        % copy axes to the new figure (only if something is plotted)
+					a3c(2) = copyobj(a3(2),F2c);                        
+					set(a3c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
+					set(a3c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
+					% Create legend (is not copied automatically)
+					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
+					l = legend(a3c(1),temp{1});                             % set left legend
+					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					l = legend(a3c(2),temp{2});                             % set legend on right
+					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				end
+				rL1 = get(a3c(1),'YLim'); 
+				set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				   
+				% Print
+				try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+				end
+				[ty,tm,td,th,tmm] = datevec(now);
+				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
+					[path,name],ty,tm,td,th,tmm);
+				fclose(fid);
+				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
+				switch filteridex
+					case 2                                              % eps
+						print(F2c,'-depsc',[path,name]);
+					case 1                                              % jpg
+						print(F2c,'-djpeg','-r400',[path,name]);
+				end
+				close(F2c)                                              % close the window
+				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
+            end
+            
+%%%%%%%%%%%%%%%%%%%%%%%%% C O M P U T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
+        case 'select_point'
+			%% Select point
+            % This part allows user to select a point and writes the
+            % numeric values to status bar and logfile.
+			set(findobj('Tag','plotGrav_text_status'),'String','Select a point...');drawnow % send message to status bar with instructions
+			[selected_x,selected_y] = ginput(1);                            % get one point (both x and y values)
+			selected_x = datevec(selected_x);                               % convert to calendar date+time
+			set(findobj('Tag','plotGrav_text_status'),'String',...          % write message to status line
+				sprintf('Point selected: %04d/%02d/%02d %02d:%02d:%02d = %7.3f',...
+				selected_x(1),selected_x(2),selected_x(3),selected_x(4),selected_x(5),round(selected_x(6)),selected_y));drawnow % status
+			try                                                             % try if some logfile is selected/exists
+				fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Always append ('a') the new comments!
+            catch                                                           % If not, create a new one.
+				fid = fopen('plotGrav_LOG_FILE.log','a');                           
+			end
+			[ty,tm,td,th,tmm] = datevec(now);                               % get current time for the logfile
+			fprintf(fid,'Point selected: %04d/%02d/%02d %02d:%02d:%02d = %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
+				selected_x(1),selected_x(2),selected_x(3),selected_x(4),selected_x(5),round(selected_x(6)),selected_y,ty,tm,td,th,tmm);
+			fclose(fid);                                                    % close the logfile
+            
+		case 'compute_difference'
+			%% Comute difference
+            % Similar to 'select_point' but with computation of the
+            % difference between the selected points.
+			set(findobj('Tag','plotGrav_text_status'),'String','Select first point...');drawnow % send message to status bar with instructions
+			[selected_x(1),selected_y(1)] = ginput(1);                      % get first point
+			set(findobj('Tag','plotGrav_text_status'),'String','Select second point...');drawnow % send message to status bar with instructions
+			[selected_x(2),selected_y(2)] = ginput(1);                      % get second point
+			set(findobj('Tag','plotGrav_text_status'),'String',...          % write message to status line
+				sprintf('X diff (1-2): %8.4f hours,   Y diff (1-2):  %8.4f',...
+				(selected_x(1)-selected_x(2))*24,selected_y(1)-selected_y(2)));drawnow % status
+			try                                                             % try if some logfile is selected/exists
+				fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Always append ('a') the new comments!
+			catch                                                           % If not, create a new one.
+				fid = fopen('plotGrav_LOG_FILE.log','a');
+			end
+			[ty,tm,td,th,tmm] = datevec(now);                               % get current time for the logfile
+			[ty1,tm1,td1,th1,tmm1,ts1] = datevec(selected_x(1));            % convert to calendar date+time        
+			[ty2,tm2,td2,th2,tmm2,ts2] = datevec(selected_x(2));            % convert to calendar date+time
+			fprintf(fid,'Difference computed (1-2): dX = %8.4f hours, dY = %8.4f. First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
+				(selected_x(1)-selected_x(2))*24,selected_y(1)-selected_y(2),ty1,tm1,td1,th1,tmm1,ts1,selected_y(1),...
+				ty2,tm2,td2,th2,tmm2,ts2,selected_y(2),ty,tm,td,th,tmm);
+			fclose(fid);                                                    % close the logfile
+            
 		case 'compute_statistics'
 			%% COMPUTE histogram
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
@@ -2199,7 +2522,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status 
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
-			end
+            end
+            
+%%%%%%%%%%%%%%%%%%%  F I L E   S E L E C T I O N %%%%%%%%%%%%%%%%%%%%%%%%%%
 		case 'select_other1'
 			%% Select files/paths interactively
 			[name,path] = uigetfile({'*.tsf';'*.dat';'*.mat'},'Select Other1 TSoft/DAT (Soil moisure) or MAT file');
@@ -2289,287 +2614,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_edit_logfile_file'),'String',[path,name]);drawnow % status
 				set(findobj('Tag','plotGrav_text_status'),'String','Unzip file selected.');drawnow % status
 			end
-		case 'print_all'
-			%% Printing all plots
-			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
-			if name == 0                                               % If cancelled-> no output
-				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
-			else
-				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
-				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-				scrs = get(0,'screensize');                             % get monitor resolution
-				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
-					'Resize','off','Menubar','none','ToolBar','none',...
-					'NumberTitle','off','Color',[0.941 0.941 0.941],...
-					'Name','plotGrav: plot iGrav data','visible','off');
-				if plot_mode(1) > 0
-					a1c(1) = copyobj(a1(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a1c(2) = copyobj(a1(2),F2c);                        
-					set(a1c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
-					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
-					rL1 = get(a1c(1),'YLim'); 
-					set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-					% Create legend (is not copied automatically)
-					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
-					l = legend(a1c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
-					l = legend(a1c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
-				end
-				if plot_mode(2) > 0
-					a2c(1) = copyobj(a2(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a2c(2) = copyobj(a2(2),F2c);
-					set(a2c(1),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
-					set(a2c(2),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
-					rL1 = get(a2c(1),'YLim'); 
-					set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-					temp = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % get legend
-					l = legend(a2c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
-					l = legend(a2c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
-				end
-				if plot_mode(3) > 0
-					a3c(1) = copyobj(a3(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a3c(2) = copyobj(a3(2),F2c);
-					set(a3c(1),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
-					set(a3c(2),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
-					rL1 = get(a3c(1),'YLim'); 
-					set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-					temp = get(findobj('Tag','plotGrav_menu_print_three'),'UserData');
-					l = legend(a3c(1),temp{1});                             % left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest');
-					l = legend(a3c(2),temp{2});                             % legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast');
-				end
-%                     temp = get(findobj('Tag','plotGrav_insert_recangle'),'UserData');
-%                     if ~isempty(temp);
-%                         for an = 1:length(temp)
-%                             a = annotation('rectangle');
-%                             set(a,'Position',get(temp(an),'Position'));
-%                             set(a,'Color',get(temp(an),'Color'));
-%                             set(a,'LineStyle',get(temp(an),'LineStyle'));
-%                             set(a,'LineWidth',get(temp(an),'LineWidth'));
-%                         end
-%                     end
-				% Print
-				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
-					[path,name],ty,tm,td,th,tmm);
-				fclose(fid);
-				switch filteridex
-					case 2                                              % eps
-						print(F2c,'-depsc','-r400',[path,name]);
-					case 1                                              % jpg
-						print(F2c,'-djpeg','-r400',[path,name]);
-				end
-				close(F2c)                                              % close the window
-				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
-				
-			end
-			
-		case 'print_one'
-			%% Print first plot
-			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
-			if name == 0                                               % If cancelled-> no output
-				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
-			else
-				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
-				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-				scrs = get(0,'screensize');                             % get monitor resolution
-				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
-					'Resize','off','Menubar','none','ToolBar','none',...
-					'NumberTitle','off','Color',[0.941 0.941 0.941],...
-					'Name','plotGrav: plot iGrav data','visible','off');
-				if plot_mode(1) > 0
-					a1c(1) = copyobj(a1(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a1c(2) = copyobj(a1(2),F2c);                        
-					set(a1c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
-					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
-				end
-				rL1 = get(a1c(1),'YLim'); 
-				set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-				   
-				% Create legend (is not copied automatically)
-				temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
-				l = legend(a1c(1),temp{1});                             % set left legend
-				set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
-				l = legend(a1c(2),temp{2});                             % set legend on right
-				set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
-				
-				% Print
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
-					[path,name],ty,tm,td,th,tmm);
-				fclose(fid);
-				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
-				switch filteridex
-					case 2                                              % eps
-						print(F2c,'-depsc',[path,name]);
-					case 1                                              % jpg
-						print(F2c,'-djpeg','-r400',[path,name]);
-				end
-				close(F2c)                                              % close the window
-				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
-				
-			end
-		case 'print_two'
-			%% Print second plot
-			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
-			if name == 0                                               % If cancelled-> no output
-				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
-			else
-				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
-				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes one handle
-				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-				scrs = get(0,'screensize');                             % get monitor resolution
-				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
-					'Resize','off','Menubar','none','ToolBar','none',...
-					'NumberTitle','off','Color',[0.941 0.941 0.941],...
-					'Name','plotGrav: plot iGrav data','visible','off');
-				if plot_mode(1) > 0
-					a2c(1) = copyobj(a2(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a2c(2) = copyobj(a2(2),F2c);                        
-					set(a2c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
-					set(a2c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
-					% Create legend (is not copied automatically)
-					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
-					l = legend(a2c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
-					l = legend(a2c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
-				end
-				rL1 = get(a2c(1),'YLim'); 
-				set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-				   
-				
-				% Print
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
-					[path,name],ty,tm,td,th,tmm);
-				fclose(fid);
-				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
-				switch filteridex
-					case 2                                              % eps
-						print(F2c,'-depsc',[path,name]);
-					case 1                                              % jpg
-						print(F2c,'-djpeg','-r400',[path,name]);
-				end
-				close(F2c)                                              % close the window
-				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
-				
-			end
-		case 'print_three'
-			%% Print third plot
-			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
-			if name == 0                                               % If cancelled-> no output
-				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
-			else
-				set(findobj('Tag','plotGrav_text_status'),'String','Printing...');drawnow % status
-				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes one handle
-				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
-				scrs = get(0,'screensize');                             % get monitor resolution
-				F2c = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],... % create new invisible window for printing
-					'Resize','off','Menubar','none','ToolBar','none',...
-					'NumberTitle','off','Color',[0.941 0.941 0.941],...
-					'Name','plotGrav: plot iGrav data','visible','off');
-				if plot_mode(1) > 0
-					a3c(1) = copyobj(a3(1),F2c);                        % copy axes to the new figure (only if something is plotted)
-					a3c(2) = copyobj(a3(2),F2c);                        
-					set(a3c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
-					set(a3c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
-					% Create legend (is not copied automatically)
-					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
-					l = legend(a3c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
-					l = legend(a3c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
-				end
-				rL1 = get(a3c(1),'YLim'); 
-				set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
-				   
-				% Print
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
-					[path,name],ty,tm,td,th,tmm);
-				fclose(fid);
-				set(F2c,'paperpositionmode','auto');                    % the printed file will have the same dimensions as figure
-				switch filteridex
-					case 2                                              % eps
-						print(F2c,'-depsc',[path,name]);
-					case 1                                              % jpg
-						print(F2c,'-djpeg','-r400',[path,name]);
-				end
-				close(F2c)                                              % close the window
-				set(findobj('Tag','plotGrav_text_status'),'String','The figure has been printed.');drawnow % status
-			end
-		case 'show_filter'
-			%% Plot filter impulse
-			try
-				set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
-				filter_file = get(findobj('Tag','plotGrav_edit_filter_file'),'String'); % get filter filename
-				if ~isempty(filter_file)                                % try to load the filter file/response if some string is given
-					Num = load(filter_file);                            % load filter file = in ETERNA format - header
-					Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));     % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
-					f0_filter = figure('Name','plotGrav: filter impulse response','Toolbar','figure'); % open new figure
-					a0_spectral = axes('FontSize',9);                       % create new axes
-					hold(a0_spectral,'on');                                 % all results in one window
-					grid(a0_spectral,'on');                                 % grid on
-					plot(a0_spectral,Num);
-					set(findobj('Tag','plotGrav_text_status'),'String','Select channel.');drawnow % send message to status bar
-				else
-					set(findobj('Tag','plotGrav_text_status'),'String','No filter file selected.');drawnow % status
-				end
-			catch
-				fprintf('Could not load filter: %s\n',filter_file);       % send message to command line that filter file could not be loaded
-			end
-			%% Label/Legend/Grid
-		case 'show_grid'
-			temp = get(findobj('Tag','plotGrav_check_grid'),'Value');
-			if temp == 1
-				set(findobj('Tag','plotGrav_check_grid'),'Value',0);
-			else
-				set(findobj('Tag','plotGrav_check_grid'),'Value',1);
-			end
-		case 'show_label'
-			temp = get(findobj('Tag','plotGrav_check_labels'),'Value');
-			if temp == 1
-				set(findobj('Tag','plotGrav_check_labels'),'Value',0);
-			else
-				set(findobj('Tag','plotGrav_check_labels'),'Value',1);
-			end
-		case 'show_legend'
-			temp = get(findobj('Tag','plotGrav_check_legend'),'Value');
-			if temp == 1
-				set(findobj('Tag','plotGrav_check_legend'),'Value',0);
-			else
-				set(findobj('Tag','plotGrav_check_legend'),'Value',1);
-			end
+
 		case 'compute_filter_channel'
 			%% Filter channels
 			% Load filter
