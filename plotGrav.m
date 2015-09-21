@@ -14,6 +14,8 @@ function plotGrav(in_switch)
 %   plotGrav_fit.m
 %   plotGrav_FTP.m
 %   plotGrav_loadtsf.m
+%   plotGrav_loadData.m
+%   plotGrav_exportData.m
 %   plotGrav_plotData.m
 %   plotGrav_readcsv.m
 %   plotGrav_spectralAnalysis.m
@@ -108,12 +110,18 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m10,'Label','Webcam path','CallBack','plotGrav select_webcam');
 				uimenu(m10,'Label','7zip exe','CallBack','plotGrav select_unzip');
 				uimenu(m10,'Label','Log File','CallBack','plotGrav select_logfile');
-				m121 = 	uimenu(m12,'Label','Stacked iGrav data');
+				m121 = 	uimenu(m12,'Label','iGrav data');
 					uimenu(m121,'Label','All channels','Callback','plotGrav export_igrav_all');
 					uimenu(m121,'Label','Selected channels (L1)','Callback','plotGrav export_igrav_sel');
-				m122  = uimenu(m12,'Label','Stacked TRiLOGi data');
+				m122  = uimenu(m12,'Label','TRiLOGi data');
 					uimenu(m122,'Label','All channels','Callback','plotGrav export_trilogi_all');
 					uimenu(m122,'Label','Selected channels (L1)','Callback','plotGrav export_trilogi_sel');
+				m123 = 	uimenu(m12,'Label','Other1 data');
+					uimenu(m123,'Label','All channels','Callback','plotGrav export_other1_all');
+					uimenu(m123,'Label','Selected channels (L1)','Callback','plotGrav export_other1_sel');
+				m124  = uimenu(m12,'Label','Other2 data');
+					uimenu(m124,'Label','All channels','Callback','plotGrav export_other2_all');
+					uimenu(m124,'Label','Selected channels (L1)','Callback','plotGrav export_other2_sel');
 			m13 = 	uimenu(m1,'Label','Print');
 				uimenu(m13,'Label','All plots','CallBack','plotGrav print_all',...	
 					'Tag','plotGrav_menu_print_all','UserData',[]); 		% this uimenu will be used to store file name for printing output (plot all)
@@ -134,120 +142,154 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         m2 = uimenu('Label','View');
             % uimenu(m2,'Label','Convert/Update date','Callback','plotGrav push_date'); % use for setting exact X limits
 			% Sub-VIEW menu
-			m20 = uimenu(m2,'Label','Earthquakes');
-				% Sub-Sub-VIEW meanu
-				uimenu(m20,'Label','List','CallBack','plotGrav show_earthquake',... % this uimenu contains link to earthquake web page
-					'UserData',earthquake_web,'Tag','plotGrav_menu_show_earthquake');
-				uimenu(m20,'Label','Plot (last 20)','CallBack','plotGrav plot_earthquake',... % contains link to earthquake data
-					'Tag','plotGrav_menu_plot_earthquake','UserData',earthquake_data);
-			uimenu(m2,'Label','File paths','CallBack','plotGrav show_paths');
-			uimenu(m2,'Label','Filter','CallBack','plotGrav show_filter');
-			uimenu(m2,'Label','Reset view','Callback','plotGrav reset_view');
-			m22 = uimenu(m2,'Label','Label/Legend');
-				uimenu(m22,'Label','Label','Callback','plotGrav show_label');
-				uimenu(m22,'Label','Legend','Callback','plotGrav show_legend');
-				uimenu(m22,'Label','Grid','Callback','plotGrav show_grid');
-			m21 = uimenu(m2,'Label','Reverse Y axis');
-				uimenu(m21,'Label','L1','Callback','plotGrav reverse_l1','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_l1');
-				uimenu(m21,'Label','R1','Callback','plotGrav reverse_r1','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_r1');
-				uimenu(m21,'Label','L2','Callback','plotGrav reverse_l2','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_l2');
-				uimenu(m21,'Label','R2','Callback','plotGrav reverse_r2','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_r2');
-				uimenu(m21,'Label','L3','Callback','plotGrav reverse_l3','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_l3');
-				uimenu(m21,'Label','R3','Callback','plotGrav reverse_r3','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
-					'Tag','plotGrav_menu_reverse_r3');
-			m23 = uimenu(m2,'Label','Set Y axis');
-				uimenu(m23,'Label','L1','Callback','plotGrav set_y_L1');
-				uimenu(m23,'Label','R1','Callback','plotGrav set_y_R1');
-				uimenu(m23,'Label','L2','Callback','plotGrav set_y_L2');
-				uimenu(m23,'Label','R2','Callback','plotGrav set_y_R2');
-				uimenu(m23,'Label','L3','Callback','plotGrav set_y_L3');
-				uimenu(m23,'Label','R3','Callback','plotGrav set_y_R3');
+			uimenu(m2,'Label','Font Size','CallBack','plotGrav set_font_size','UserData',9,...
+                    'Tag','plotGrav_menu_set_font_size');
+            uimenu(m2,'Label','Grid On/Off','Callback','plotGrav show_grid');
+			m22 = uimenu(m2,'Label','Label');
+				uimenu(m22,'Label','On/Off','Callback','plotGrav show_label');
+				m221 = uimenu(m22,'Label','Set');
+                    uimenu(m221,'Label','L1','Callback','plotGrav set_label_L1');
+                    uimenu(m221,'Label','R1','Callback','plotGrav set_label_R1');
+                    uimenu(m221,'Label','L2','Callback','plotGrav set_label_L2');
+                    uimenu(m221,'Label','R2','Callback','plotGrav set_label_R2');
+                    uimenu(m221,'Label','L3','Callback','plotGrav set_label_L3');
+                    uimenu(m221,'Label','R3','Callback','plotGrav set_label_R3');
+            m23 = uimenu(m2,'Label','Legend');
+				uimenu(m23,'Label','On/Off','Callback','plotGrav show_legend');
+				m231 = uimenu(m23,'Label','Set');
+                    uimenu(m231,'Label','L1','Callback','plotGrav set_legend_L1');
+                    uimenu(m231,'Label','R1','Callback','plotGrav set_legend_R1');
+                    uimenu(m231,'Label','L2','Callback','plotGrav set_legend_L2');
+                    uimenu(m231,'Label','R2','Callback','plotGrav set_legend_R2');
+                    uimenu(m231,'Label','L3','Callback','plotGrav set_legend_L3');
+                    uimenu(m231,'Label','R3','Callback','plotGrav set_legend_R3');
+            uimenu(m2,'Label','Line width','Callback','plotGrav set_line_width','Tag','plotGrav_menu_line_width',...
+                        'UserData',[0.5 0.5 0.5 0.5 0.5 0.5]);              % Store line width
+            m24 = uimenu(m2,'Label','X axis');
+                m241 = uimenu(m24,'Label','Range');
+                    uimenu(m241,'Label','Select (zoom in)','Callback','plotGrav push_zoom_in');
+                    uimenu(m241,'Label','Set (date)','Callback','plotGrav push_zoom_in_set');
+                    uimenu(m24,'Label','Num. of ticks','Tag','plotGrav_menu_num_of_ticks_x','UserData',9,...
+                        'CallBack','plotGrav set_num_of_ticks_x');
+                    m2411 = uimenu(m24,'Label','Date format','Tag','plotGrav_menu_date_format','UserData',1);
+                        uimenu(m2411,'Label','Set','CallBack','plotGrav set_date_1');
+                        uimenu(m2411,'Label','Help','CallBack','plotGrav set_date_2');
+			m21 = uimenu(m2,'Label','Y axis');
+                uimenu(m21,'Label','Num. of ticks','Tag','plotGrav_menu_num_of_ticks_y','UserData',5,...
+                        'CallBack','plotGrav set_num_of_ticks_y');
+                m211 = uimenu(m21,'Label','Reverse');
+                    uimenu(m211,'Label','L1','Callback','plotGrav reverse_l1','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_l1');
+                    uimenu(m211,'Label','R1','Callback','plotGrav reverse_r1','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_r1');
+                    uimenu(m211,'Label','L2','Callback','plotGrav reverse_l2','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_l2');
+                    uimenu(m211,'Label','R2','Callback','plotGrav reverse_r2','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_r2');
+                    uimenu(m211,'Label','L3','Callback','plotGrav reverse_l3','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_l3');
+                    uimenu(m211,'Label','R3','Callback','plotGrav reverse_r3','UserData',1,... % UserData is used as information for reversions (1 == normal, 0 == reverse)
+                        'Tag','plotGrav_menu_reverse_r3');
+                m212 = uimenu(m21,'Label','Range');
+                    m2121 = uimenu(m212,'Label','Set');
+                        uimenu(m2121,'Label','L1','Callback','plotGrav set_y_L1');
+                        uimenu(m2121,'Label','R1','Callback','plotGrav set_y_R1');
+                        uimenu(m2121,'Label','L2','Callback','plotGrav set_y_L2');
+                        uimenu(m2121,'Label','R2','Callback','plotGrav set_y_R2');
+                        uimenu(m2121,'Label','L3','Callback','plotGrav set_y_L3');
+                        uimenu(m2121,'Label','R3','Callback','plotGrav set_y_R3');
+                    uimenu(m212,'Label','Select','Callback','plotGrav push_zoom_y');
+                uimenu(m2,'Label','Reset view','Callback','plotGrav reset_view');
 				uimenu(m2,'Label','Select point','Callback','plotGrav select_point');
-				uimenu(m2,'Label','Webcam','Callback','plotGrav push_webcam',...
+        % Main SHOW menu (plot/show additional informations)
+        m3 = uimenu('Label','Show');
+            % Sub-SHOW menu
+			m30 = uimenu(m3,'Label','Earthquakes');
+				% Sub-Sub-VIEW meanu
+				uimenu(m30,'Label','List','CallBack','plotGrav show_earthquake',... % this uimenu contains link to earthquake web page
+					'UserData',earthquake_web,'Tag','plotGrav_menu_show_earthquake');
+				uimenu(m30,'Label','Plot (last 20)','CallBack','plotGrav plot_earthquake',... % contains link to earthquake data
+					'Tag','plotGrav_menu_plot_earthquake','UserData',earthquake_data);
+			uimenu(m3,'Label','File paths','CallBack','plotGrav show_paths');
+			uimenu(m3,'Label','Filter','CallBack','plotGrav show_filter');
+            uimenu(m3,'Label','Webcam','Callback','plotGrav push_webcam',...
 					'Tag','plotGrav_menu_webcam','UserData',path_webcam); 	% Store file path with webcam snapshot
-				uimenu(m2,'Label','Zoom in','Callback','plotGrav push_zoom_in');
-            
         % Main COMPUTE menu (perform analysis on visualized time series)
-        m3 = uimenu('Label','Compute');
+        m4 = uimenu('Label','Compute');
 			% Sub-COMPUTE menu
-			uimenu(m3,'Label','Algebra','CallBack','plotGrav simple_algebra'); 
-			uimenu(m3,'Label','Atmacs','CallBack','plotGrav get_atmacs'); 	% the Atmacs URL will be set by user via string input
-			m30 = uimenu(m3,'Label','Correlation');
-				uimenu(m30,'Label','Simple all','CallBack','plotGrav correlation_matrix');
-				uimenu(m30,'Label','Simple select','CallBack','plotGrav correlation_matrix_select');
-				uimenu(m30,'Label','Cross','CallBack','plotGrav correlation_cross');
-				uimenu(m3,'Label','Difference','CallBack','plotGrav compute_difference');
-			m32 = uimenu(m3,'Label','EOF/PCA (beta)'); 						% EOF/PCA in beta version
-				uimenu(m32,'Label','Compute','CallBack','plotGrav compute_eof',...
+			uimenu(m4,'Label','Algebra','CallBack','plotGrav simple_algebra'); 
+			uimenu(m4,'Label','Atmacs','CallBack','plotGrav get_atmacs'); 	% the Atmacs URL will be set by user via string input
+			m40 = uimenu(m4,'Label','Correlation');
+				uimenu(m40,'Label','Simple all','CallBack','plotGrav correlation_matrix');
+				uimenu(m40,'Label','Simple select','CallBack','plotGrav correlation_matrix_select');
+				uimenu(m40,'Label','Cross','CallBack','plotGrav correlation_cross');
+				uimenu(m4,'Label','Difference','CallBack','plotGrav compute_difference');
+			m42 = uimenu(m4,'Label','EOF/PCA (beta)'); 						% EOF/PCA in beta version
+				uimenu(m42,'Label','Compute','CallBack','plotGrav compute_eof',...
 					'Tag','plotGrav_menu_compute_eof','UserData',[]); 		% UserData container will be used to store EOF results
-				uimenu(m32,'Label','Export PCs','CallBack','plotGrav export_pcs');
-				uimenu(m32,'Label','Export reconstructed time.series','CallBack','plotGrav export_rec_time_series');
-				uimenu(m32,'Label','Export EOP pattern','CallBack','plotGrav export_eop_pattern');
-			uimenu(m3,'Label','Filter channel','CallBack','plotGrav compute_filter_channel');
-			m31 =  uimenu(m3,'Label','Spectral analysis');
-				uimenu(m31,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
-				uimenu(m31,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
-				uimenu(m3,'Label','Statistics','Callback','plotGrav compute_statistics');
-			m33 = uimenu(m3,'Label','Fit');
-				uimenu(m33,'Label','Subtract mean','CallBack','plotGrav fit_constant');
-				uimenu(m33,'Label','Linear','CallBack','plotGrav fit_linear');
-				uimenu(m33,'Label','Quadratic','CallBack','plotGrav fit_quadratic');
-				uimenu(m33,'Label','Cubic','CallBack','plotGrav fit_cubic');
-				uimenu(m33,'Label','Set coefficients','CallBack','plotGrav fit_user_set');
-%        		m331 = uimenu(m33,'Label','Sine');
-%               	uimenu(m331,'Label','One','CallBack','plotGrav fit_sine1');
-			m33 = uimenu(m3,'Label','Fit locally');
-				uimenu(m33,'Label','Linear','CallBack','plotGrav fit_linear_local');
-				uimenu(m33,'Label','Quadratic','CallBack','plotGrav fit_quadrat_local');
-				uimenu(m33,'Label','Cubic','CallBack','plotGrav fit_cubic_local');
-            uimenu(m3,'Label','Pol+LOD','CallBack','plotGrav get_polar');
-			uimenu(m3,'Label','Regression','CallBack','plotGrav regression_simple');
-			uimenu(m3,'Label','Re-sample','CallBack','plotGrav compute_decimate');
+				uimenu(m42,'Label','Export PCs','CallBack','plotGrav export_pcs');
+				uimenu(m42,'Label','Export reconstructed time.series','CallBack','plotGrav export_rec_time_series');
+				uimenu(m42,'Label','Export EOP pattern','CallBack','plotGrav export_eop_pattern');
+			uimenu(m4,'Label','Filter channel','CallBack','plotGrav compute_filter_channel');
+			m41 =  uimenu(m4,'Label','Spectral analysis');
+				uimenu(m41,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
+				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
+				uimenu(m4,'Label','Statistics','Callback','plotGrav compute_statistics');
+			m43 = uimenu(m4,'Label','Fit');
+				uimenu(m43,'Label','Subtract mean','CallBack','plotGrav fit_constant');
+				uimenu(m43,'Label','Linear','CallBack','plotGrav fit_linear');
+				uimenu(m43,'Label','Quadratic','CallBack','plotGrav fit_quadratic');
+				uimenu(m43,'Label','Cubic','CallBack','plotGrav fit_cubic');
+				uimenu(m43,'Label','Set coefficients','CallBack','plotGrav fit_user_set');
+%        		m431 = uimenu(m43,'Label','Sine');
+%               	uimenu(m431,'Label','One','CallBack','plotGrav fit_sine1');
+			m43 = uimenu(m4,'Label','Fit locally');
+				uimenu(m43,'Label','Linear','CallBack','plotGrav fit_linear_local');
+				uimenu(m43,'Label','Quadratic','CallBack','plotGrav fit_quadrat_local');
+				uimenu(m43,'Label','Cubic','CallBack','plotGrav fit_cubic_local');
+            uimenu(m4,'Label','Pol+LOD','CallBack','plotGrav get_polar');
+			uimenu(m4,'Label','Regression','CallBack','plotGrav regression_simple');
+			uimenu(m4,'Label','Re-sample','CallBack','plotGrav compute_decimate');
 			
 		% Main EDIT menu (add/remove features to time series/plot)
-        m4  = uimenu('Label','Edit');
+        m5  = uimenu('Label','Edit');
 			% Sub-Menu EDIT
-			m42  = uimenu(m4,'Label','Insert');
+			m52  = uimenu(m5,'Label','Insert');
 				% Sub-Sub-EDIT menu
-				uimenu(m42,'Label','Rectangle','CallBack','plotGrav insert_rectangle',...
+				uimenu(m52,'Label','Rectangle','CallBack','plotGrav insert_rectangle',...
 					'Tag','plotGrav_insert_rectangle','UserData',[]); 		% UserData will be used to store references to inserted rectangles (to have the option to delete them)
-				uimenu(m42,'Label','Ellipse','CallBack','plotGrav insert_circle',...
+				uimenu(m52,'Label','Ellipse','CallBack','plotGrav insert_circle',...
 					'Tag','plotGrav_insert_circle','UserData',[]); 			% UserData will be used to store references to inserted circles (to have the option to delete them)
-				uimenu(m42,'Label','Line','CallBack','plotGrav insert_line',...
+				uimenu(m52,'Label','Line','CallBack','plotGrav insert_line',...
 					'Tag','plotGrav_insert_line','UserData',[]); 			% UserData will be used to store references to inserted lines (to have the option to delete them)
-				uimenu(m42,'Label','Text','CallBack','plotGrav insert_text',...
+				uimenu(m52,'Label','Text','CallBack','plotGrav insert_text',...
 					'Tag','plotGrav_insert_text','UserData',[]);			% UserData will be used to store references to inserted text (to have the option to delete it)
-			m41 = uimenu(m4,'Label','Remove');
-				uimenu(m41,'Label','Channel','CallBack','plotGrav compute_remove_channel');
+			m51 = uimenu(m5,'Label','Remove');
+				uimenu(m51,'Label','Channel','CallBack','plotGrav compute_remove_channel');
 					% Sub-Sub-Sub EDIT menu
-				m414 = uimenu(m41,'Label','Inserted');
-					m4141 = uimenu(m414,'Label','Ellipse');
+				m514 = uimenu(m51,'Label','Inserted');
+					m5141 = uimenu(m514,'Label','Ellipse');
 						% Sub-Sub-Sub-SUB EDIT menu
-						uimenu(m4141,'Label','All','CallBack','plotGrav remove_circle');
-						uimenu(m4141,'Label','Last','CallBack','plotGrav remove_circle_last');
-					m4142 = uimenu(m414,'Label','Line');
-						uimenu(m4142,'Label','All','CallBack','plotGrav remove_line');
-						uimenu(m4142,'Label','Last','CallBack','plotGrav remove_line_last');
-					m4143 = uimenu(m414,'Label','Rectangles');
-						uimenu(m4143,'Label','All','CallBack','plotGrav remove_rectangle');
-						uimenu(m4143,'Label','Last','CallBack','plotGrav remove_rectangle_last');
-					m4144 = uimenu(m414,'Label','Text');
-						uimenu(m4144,'Label','All','CallBack','plotGrav remove_text');
-						uimenu(m4144,'Label','Last','CallBack','plotGrav remove_text_last');
-			m411 = uimenu(m41,'Label','Interval');
-				uimenu(m411,'Label','Selected channel','CallBack','plotGrav remove_interval_selected');
-				uimenu(m411,'Label','All channels','CallBack','plotGrav remove_interval_all');
-			m413 = uimenu(m41,'Label','Spikes');
-				uimenu(m413,'Label','> 3 SD','CallBack','plotGrav remove_3sd');
-				uimenu(m413,'Label','> 2 SD','CallBack','plotGrav remove_2sd');
-			m412 = uimenu(m41,'Label','Step');
-				uimenu(m412,'Label','Selected channel','CallBack','plotGrav remove_step_selected');
-				uimenu(m412,'Label','All gravity channels','CallBack','plotGrav remove_step_all');
+						uimenu(m5141,'Label','All','CallBack','plotGrav remove_circle');
+						uimenu(m5141,'Label','Last','CallBack','plotGrav remove_circle_last');
+					m5142 = uimenu(m514,'Label','Line');
+						uimenu(m5142,'Label','All','CallBack','plotGrav remove_line');
+						uimenu(m5142,'Label','Last','CallBack','plotGrav remove_line_last');
+					m5143 = uimenu(m514,'Label','Rectangles');
+						uimenu(m5143,'Label','All','CallBack','plotGrav remove_rectangle');
+						uimenu(m5143,'Label','Last','CallBack','plotGrav remove_rectangle_last');
+					m5144 = uimenu(m514,'Label','Text');
+						uimenu(m5144,'Label','All','CallBack','plotGrav remove_text');
+						uimenu(m5144,'Label','Last','CallBack','plotGrav remove_text_last');
+			m511 = uimenu(m51,'Label','Interval');
+				uimenu(m511,'Label','Selected channel','CallBack','plotGrav remove_interval_selected');
+				uimenu(m511,'Label','All channels','CallBack','plotGrav remove_interval_all');
+			m513 = uimenu(m51,'Label','Spikes');
+				uimenu(m513,'Label','> 3 SD','CallBack','plotGrav remove_3sd');
+				uimenu(m513,'Label','> 2 SD','CallBack','plotGrav remove_2sd');
+			m512 = uimenu(m51,'Label','Step');
+				uimenu(m512,'Label','Selected channel','CallBack','plotGrav remove_step_selected');
+				uimenu(m512,'Label','All gravity channels','CallBack','plotGrav remove_step_all');
 			%m43 = uimenu(m4,'Label','Copy');
               %uimenu(m43,'Label','Channel','CallBack','plotGrav compute_copy_channel');
         
@@ -700,7 +742,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					else
 						data.igrav = [];                                    % otherwise empty
 						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm);
 					end
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % store the ui-table data
 						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
@@ -1133,7 +1175,6 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             set(findobj('Tag','plotGrav_push_load'),'UserData',data);       % store data
             clear data time                                                 % remove variables	
             plotGrav('uitable_push');                                       % visualize loaded data (see next section)
-            plotGrav('push_date');                                          % update time = convert plotted matlab time to civil time (only plots not conversion of time.* vectors)
             fclose(fid);                                                    % close logfile 
             
 %%%%%%%%%%%%%%%%%%%%%%% V I S U A L I Z I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
@@ -1153,6 +1194,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes of the First plot (left and right axes = L1 and R1)
 				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes of the Second plot (left and right axes = L2 and R2)
 				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes of the Third plot (left and right axes = L3 and R3)
+                line_width = get(findobj('Tag','plotGrav_menu_line_width'),'UserData'); % get line width
+                
                 % Clear all plots / reset all plots
 				cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);            % clear axes and remove legends and labels: First plot left (a1(1))
 				cla(a1(2));legend(a1(2),'off');ylabel(a1(2),[]);            % clear axes and remove legends and labels: First plot right (a1(2))
@@ -1208,7 +1251,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = plot_axesL1;                               % see ploGrav_plotData.m function
 					plot_axesR = [];                                        % see ploGrav_plotData.m function
 					ref_axes = [];                                          % ref_axes is used to synchronize all plots,i.e., to ensure than the XTicks and Limits are the same, Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printting
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
                 end
@@ -1222,7 +1265,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = [];                                        % see ploGrav_plotData function
 					plot_axesR = plot_axesR1;                               % see ploGrav_plotData function
 					ref_axes = [];                                          % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(2)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
                 end
@@ -1236,7 +1279,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = plot_axesL1;
 					plot_axesR = plot_axesR1;
 					ref_axes = [];
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1:2)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
 				end
@@ -1255,7 +1298,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     else                                                    % otherwise use L1 axes. 
 						ref_axes = a1(1);
 					end
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3)); % call the function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend save   % remove settings
                 end
@@ -1275,7 +1318,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     else
 						ref_axes = a1(1);
 					end                                     
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(4)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
                 end
@@ -1294,7 +1337,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					else 
 						ref_axes = a1(1);
 					end  
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3:4)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save  % remove used settings
 				end
@@ -1318,7 +1361,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2           % use L2 otherwise
 						ref_axes = a2(1);
 					end
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5)); % call the function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes    % remove settings
                 end
@@ -1341,7 +1384,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end                                  
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(6)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
                 end
@@ -1364,7 +1407,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end 
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5:6)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes    % remove used settings
 				end
@@ -1388,30 +1431,32 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes two handles
 			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes three handles
 			plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData'); % get plot mode
+            date_format = get(findobj('Tag','plotGrav_menu_date_format'),'UserData'); % get date format switch. See numeric identificator: http://de.mathworks.com/help/matlab/ref/datetick.html#inputarg_dateFormat
+            num_of_ticks_x = get(findobj('Tag','plotGrav_menu_num_of_ticks_x'),'UserData'); % get number of tick for x axis
 			% Switch between plot modes. This is done to avoid overlaying
 			% of data ticks (e.g., of left and right axes)
             % Plot1
 			switch plot_mode(1)                                
 				case 1                                                      % Left plot only
 					ref_lim = get(a1(1),'XLim');                            % get current x limits and use them a reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks. Use always 9 ticks! Such setting does not follow natural tick sampling (e.g., one tick per day or week)
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks. Use always 9 ticks! Such setting does not follow natural tick sampling (e.g., one tick per day or week)
 					set(a1(1),'XTick',xtick_value);                         % set new ticks (left)
-					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a1(1),'x',date_format,'keepticks');            % time in required format
 					set(a1(2),'Visible','off');                             % turn of the right axes = make it not visible
 					linkaxes([a1(1),a1(2)],'x');                            % link axes = synchronize, just in case
 				case 2                                                      % Right plot only
 					ref_lim = get(a1(2),'XLim');                            % get current x limits and use them a reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks
 					set(a1(2),'XTick',xtick_value);                         % set new ticks and labels (right)
-					datetick(a1(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a1(2),'x',date_format,'keepticks');            % time in required format
 					set(a1(1),'Visible','off');                             % turn of right axes
 					linkaxes([a1(1),a1(2)],'x');                            % link axes, just in case
 				case 3                                                      % Right and Left plot
 					ref_lim = get(a1(1),'XLim');                            % use Left plot limits as reference
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % compute new ticks
 					set(a1(1),'XTick',xtick_value); % place new labels and ticks
 					set(a1(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks + set transparency
-					datetick(a1(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a1(1),'x',date_format,'keepticks');            % time in required format
 					linkaxes([a1(1),a1(2)],'x');                            % link axes, just in case
 				otherwise
 					ref_lim = [];                                       % no ref_lim if plot1 is not on
@@ -1425,28 +1470,28 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if isempty(ref_lim)
 						ref_lim = get(a2(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks
 					set(a2(1),'XTick',xtick_value);                         % set new ticks and labels (left)
-					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a2(1),'x',date_format,'keepticks');            % time in required format
 					set(a2(2),'Visible','off');                             % turn of right axes
 					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
 				case 2                                                      % Right plot only
 					if isempty(ref_lim)
 						ref_lim = get(a2(2),'XLim');                        % get superior x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks
 					set(a2(2),'XTick',xtick_value);                         % set new ticks and labels (right)
-					datetick(a2(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a2(2),'x',date_format,'keepticks');            % time in required format
 					set(a2(1),'Visible','off');                             % turn of left axes
 					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
 				case 3                                                      % Right and Left plot
 					if isempty(ref_lim)
 						ref_lim = get(a2(1),'XLim');                        % get superior x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % compute new ticks
 					set(a2(1),'XTick',xtick_value);                         % place new labels and ticks
 					set(a2(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks
-					datetick(a2(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a2(1),'x',date_format,'keepticks');            % time in required format
 					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
 				otherwise
 					ref_lim = [];                                           % no ref_lim if plot2 is not on
@@ -1457,38 +1502,143 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if isempty(ref_lim)
 						ref_lim = get(a3(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks
 					set(a3(1),'XTick',xtick_value);                         % set new ticks and labels (left)
-					datetick(a3(1),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a3(1),'x',date_format,'keepticks');            % time in required format
 					set(a3(2),'Visible','off');                             % turn of right axes
 					linkaxes([a3(1),a3(2)],'x');                            % link axes, just in case
 				case 2                                                      % Right plot only
 					if isempty(ref_lim)
 						ref_lim = get(a3(2),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % create new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % create new ticks
 					set(a3(2),'XTick',xtick_value);                         % set new ticks and labels (right)
-					datetick(a3(2),'x','yyyy/mm/dd HH:MM','keepticks');     % time in YYYY/MM/DD HH:MM format
+					datetick(a3(2),'x',date_format,'keepticks');            % time in required format
 					set(a3(1),'Visible','off');                             % turn of right axes
 					linkaxes([a3(1),a3(2)],'x');                            % link axes, just in case
 				case 3                                                      % Right and Left plot
 					if isempty(ref_lim)
 						ref_lim = get(a3(1),'XLim');                        % get current x limits and use them a reference
 					end
-					xtick_value = linspace(ref_lim(1),ref_lim(2),9);        % compute new ticks
+					xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);        % compute new ticks
 					set(a3(1),'XTick',xtick_value);                         % place new labels and ticks
 					set(a3(2),'XTick',xtick_value,'Visible','on','color','none','XTickLabel',[]); % make Right plot visible but remove ticks
-					datetick(a3(1),'x','yyyy/mm/dd HH:MM','keepticks'); % time in YYYY/MM/DD HH:MM format
+					datetick(a3(1),'x',date_format,'keepticks'); % time in YYYY/MM/DD HH:MM format
 					linkaxes([a3(1),a3(2)],'x');                        % link axes, just in case
             end
+            %% Date format
+        case 'set_date_1'
+            % User can set the date format, i.e. the appearance of X Ticks.
+            % The ticks are set using datetick function (see 'push_date').
+            % In the following part, user set and date format switch that
+            % is then stored and used afterwards for all plots.
+            set(findobj('Tag','plotGrav_text_status'),'String','Set Numeric Identifier (e.g., 1)...waiting 8 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Make user input dialog visible 
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',1);  % Make user editable field visible + set default value
+			pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            try
+                date_format = str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String')); % get the user input string and convert it directly to double
+                if date_format >31 || date_format < 0                       % Continue only if reasonable value has been inserted (see 'http://de.mathworks.com/help/matlab/ref/datetick.html#inputarg_dateFormat')
+                    set(findobj('Tag','plotGrav_text_status'),'String','Date Identifier must be between 0 - 31.');drawnow % status
+                else
+                    set(findobj('Tag','plotGrav_menu_date_format'),'UserData',date_format); % Store the new format. Will be used by 'push_date' and plotGrav_plotData.m function
+                    plotGrav('push_date');                                  % call the section responsible for converting data formats (this section serves only for date switch insertion)
+                    set(findobj('Tag','plotGrav_text_status'),'String','Date Format set.');drawnow % status
+                end
+            catch
+                set(findobj('Tag','plotGrav_menu_date_format'),'UserData',1); % set default if som error occurs
+                plotGrav('push_date');
+            end
+        case 'set_date_2'
+            % This part opens a web browser to show help related to matlab
+            % datetick function including desctiption of the date switch.
+            web('http://de.mathworks.com/help/matlab/ref/datetick.html#inputarg_dateFormat');
+            set(findobj('Tag','plotGrav_text_status'),'String','See web: matlab datetick Numeric Identifier.');drawnow % send message to status bar with instructions
             
+            %% Number of Ticks
+        case 'set_num_of_ticks_x'
+            % User can set number of ticks for X and Y axis. This will
+            % affect all plots (1,2 and 3). Currently plotted time range
+            % will be linearly divided into given parts with ticks.
+            set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 9)...waiting 8 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Make user input dialog visible  
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',9); % Make user editable field visible and set the default value
+			pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn of the user input dialogs 
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            try
+                num_of_ticks = str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String')); % get the input and covert it to double (matlab required a number as input for 'XLim' and 'XTick')
+                if num_of_ticks >30 || num_of_ticks < 1                     % Check if reasonable value hase been inserted
+                    set(findobj('Tag','plotGrav_text_status'),'String','Number of ticks must be between 1 - 30.');drawnow % status
+                else
+                    set(findobj('Tag','plotGrav_menu_num_of_ticks_x'),'UserData',num_of_ticks); % store the input for future plotting (including printing)
+                    plotGrav('uitable_push');                               % re-plot to make changes directly visible
+                    set(findobj('Tag','plotGrav_text_status'),'String','Number of ticks set.');drawnow % status
+                end
+            catch
+                set(findobj('Tag','plotGrav_menu_num_of_ticks_x'),'UserData',9); % set default
+                plotGrav('uitable_push');
+            end
+        case 'set_num_of_ticks_y'
+            % Same as previous but for Y ticks, see comments in there.
+            set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 5)...waiting 8 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Make user input dialog visible    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',5); % Make user editable field visible and set the default value 
+			pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            try
+                num_of_ticks = str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String')); % get user input and convert it to double (matlab required a number as input for 'YLim' and 'YTick')
+                if num_of_ticks >30 || num_of_ticks < 1                     % Check if reasonable value hase been inserted
+                    set(findobj('Tag','plotGrav_text_status'),'String','Number of ticks must be between 1 - 30.');drawnow % status
+                else
+                    set(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData',num_of_ticks);
+                    plotGrav('uitable_push');
+                    set(findobj('Tag','plotGrav_text_status'),'String','Number of ticks set.');drawnow % status
+                end
+            catch
+                set(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData',5); % set default
+                plotGrav('uitable_push');
+            end
+            
+        case 'set_font_size'
+            %% Set font size
+            % User can set the font size for all axes,legends,labels.
+            % Thereby, standard matlab font size numbering is used, i.e.,
+            % font units = points.
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes of the First plot (left and right axes = L1 and R1). These handles will be use to change the font
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes of the Second plot (left and right axes = L2 and R2)
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes of the Third plot (left and right axes = L3 and R3)
+            set(findobj('Tag','plotGrav_text_status'),'String','Set font size (e.g., 9)...waiting 8 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',9); % Make user editable field visible and set the default value 
+			pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off user input fields
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            try
+                font_size = str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String')); % get user input and convert it to double (matlab required a number as input for 'FontSize')
+                if font_size >30 || font_size < 1
+                    set(findobj('Tag','plotGrav_text_status'),'String','Font size must be between 1 - 30.');drawnow % status
+                else
+                    set(findobj('Tag','plotGrav_menu_set_font_size'),'UserData',font_size);
+                    plotGrav('uitable_push');                               % re-plot all (plotGrav_plotData.m function uses fontsize)
+                    set(findobj('Tag','plotGrav_text_status'),'String','Font size set.');drawnow % status
+                    set(a1(1),'FontSize',font_size);set(a1(2),'FontSize',font_size);
+                    set(a2(1),'FontSize',font_size);set(a2(2),'FontSize',font_size);
+                    set(a3(1),'FontSize',font_size);set(a3(2),'FontSize',font_size);
+                end
+            catch
+                set(findobj('Tag','plotGrav_menu_set_font_size'),'UserData',9); % set default
+                plotGrav('uitable_push');                                   % re-plot
+            end
 		case 'reset_view'
             %% Reset view
             % Reset view means update all plots = delete all information
             % about current zoom level and re-plot selected channels.
 			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',[]);      % Remove all information related to zoom level (see ZOOM_IN section)
 			plotGrav('uitable_push');                                       % re-plot
-			plotGrav('push_date');                                          % update time (x)ticks
             
 		case 'uncheck_all'
             %% Uncheck all
@@ -1525,10 +1675,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2);
             
 		case 'push_zoom_in'
-			%% ZOOM_IN
+			%% ZOOM = set Axis range
             % This part serves for changing the X Limits (time interval).
             % The Y limits are set automatically (by matlab). This code
-            % therefore does not affect the Y limits, but creates always 5 
+            % therefore does not affect the Y limits, but creates always 
+            % fixed number of (can be set by user, see 'set_y_L1' to 'set_y_R3') 
             % Y ticks. This is done to ensure the y grid is synchronized
             % for left and right axes.
             % In order to set the new zoom level (X limits), get the axes
@@ -1536,6 +1687,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes one handle
 			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes two handle
 			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes three handle
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
             
 			set(findobj('Tag','plotGrav_text_status'),'String','Select two points...');drawnow % send message to status bar with instructions
 			[selected_x,~] = ginput(2);                                     % get the the coordinates of two selected points. The Y coordinates are not important. Zooming only in X direction
@@ -1547,24 +1699,99 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(a1(2),'XLim',selected_x);                               % set xlimits for right axes 
 				rL1 = get(a1(1),'YLim');                                    % get new ylimits (left)
 				rR1 = get(a1(2),'YLim');                                    % get new ylimits (right)
-				set(a1(1),'YTick',linspace(rL1(1),rL1(2),5));               % set new ylimits (left)
-				set(a1(2),'YTick',linspace(rR1(1),rR1(2),5));               % set new ylimits (right)
+				set(a1(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));  % set new ylimits (left)
+				set(a1(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y));  % set new ylimits (right)
 				% Plot2
 				set(a2(1),'XLim',selected_x);                               % set xlimits for left axes (not important if visible or not)
 				set(a2(2),'XLim',selected_x);                               % set xlimits for right axes 
 				rL1 = get(a2(1),'YLim');                                    % get new ylimits (left)
 				rR1 = get(a2(2),'YLim');                                    % get new ylimits (right)
-				set(a2(1),'YTick',linspace(rL1(1),rL1(2),5));               % set new ylimits (left)
-				set(a2(2),'YTick',linspace(rR1(1),rR1(2),5));               % set new ylimits (right)
+				set(a2(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));  % set new ylimits (left)
+				set(a2(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y));  % set new ylimits (right)
 				% Plot3
 				set(a3(1),'XLim',selected_x);                               % set xlimits for left axes (not important if visible or not)
 				set(a3(2),'XLim',selected_x);                               % set xlimits for right axes 
 				rL1 = get(a3(1),'YLim');                                    % get new ylimits (left)
 				rR1 = get(a3(2),'YLim');                                    % get new ylimits (right)
-				set(a3(1),'YTick',linspace(rL1(1),rL1(2),5));               % set new ylimits (left)
-				set(a3(2),'YTick',linspace(rR1(1),rR1(2),5));               % set new ylimits (right)
+				set(a3(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));  % set new ylimits (left)
+				set(a3(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y));  % set new ylimits (right)
 			end
 			set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',selected_x); % Store the zoom level
+			set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status
+			plotGrav('push_date');                                          % update time ticks = always constant number of ticks at the time axis. 
+        case 'push_zoom_in_set'
+            % Same as previous, but user sets the range via command line.
+			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get axes one handle. Will be used to make the changes directly visible
+			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes two handle
+			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes three handle
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
+            % Get first (starting point) input from user
+            set(findobj('Tag','plotGrav_text_status'),'String','Set first date (YYYY MM DD HH MM SS)...waiting 15 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Show user input dialog. 
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',''); % by default, set to empty 
+			pause(15);                                                      % Wait longer as user muts set 6 numbers (it takes some time). Keep in mind no pushbutton is used for confirming the isertion.
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            selected_date1 = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % read the FIRST input. Read only, will be converted to matlab datenum format later.
+            % Get second (ending point) input from user
+            set(findobj('Tag','plotGrav_text_status'),'String','Set second date (YYYY MM DD HH MM SS)...waiting 15 seconds');drawnow % send message to status bar with instructions
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',''); 
+			pause(15);
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            selected_date2 = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % read the SECOND input. Read only, will be converted to matlab datenum format later.
+            % Try to set new range (same as for 'push_zoom_in')
+            try
+                selected_x(1) = datenum(selected_date1,'yyyy mm dd HH MM SS'); % convert user input to matlab format
+                selected_x(2) = datenum(selected_date2,'yyyy mm dd HH MM SS');
+                selected_x = sort(selected_x);                              % sort the user input = ascending (this is required by matlab's xlim function)
+                % Continue only if difference between selected points is > 0.
+                % Otherwise, result in error.
+                if diff(selected_x) > 0
+                    set(a1(1),'XLim',selected_x);                           % set xlimits for left axes (not important if visible or not)
+                    set(a1(2),'XLim',selected_x);                           % set xlimits for right axes 
+                    rL1 = get(a1(1),'YLim');                                % get new ylimits (left)
+                    rR1 = get(a1(2),'YLim');                                % get new ylimits (right)
+                    set(a1(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set new ylimits (left)
+                    set(a1(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y)); % set new ylimits (right)
+                    % Plot2
+                    set(a2(1),'XLim',selected_x);                           % set xlimits for left axes (not important if visible or not)
+                    set(a2(2),'XLim',selected_x);                           % set xlimits for right axes 
+                    rL1 = get(a2(1),'YLim');                                % get new ylimits (left)
+                    rR1 = get(a2(2),'YLim');                                % get new ylimits (right)
+                    set(a2(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set new ylimits (left)
+                    set(a2(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y)); % set new ylimits (right)
+                    % Plot3
+                    set(a3(1),'XLim',selected_x);                           % set xlimits for left axes (not important if visible or not)
+                    set(a3(2),'XLim',selected_x);                           % set xlimits for right axes 
+                    rL1 = get(a3(1),'YLim');                                % get new ylimits (left)
+                    rR1 = get(a3(2),'YLim');                                % get new ylimits (right)
+                    set(a3(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set new ylimits (left)
+                    set(a3(2),'YTick',linspace(rR1(1),rR1(2),num_of_ticks_y)); % set new ylimits (right)
+                end
+                set(findobj('Tag','plotGrav_push_zoom_in'),'UserData',selected_x); % Store the zoom level. These values are used in plotGrav_plotData.m function
+                set(findobj('Tag','plotGrav_text_status'),'String','X tick range set.');drawnow % status
+                plotGrav('push_date');                                       % update time ticks = always constant number of ticks at the time axis. 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','X tick not set. Check input format (e.g., 2015 03 13 12 00 00).');drawnow % status
+            end
+		case 'push_zoom_y'
+            % Silimar to push_zoom_in but for y axis only. This function is
+            % no as useful as the zooming in X direction, because of the
+            % axes handling. In this part, only current axes handle will be affectd.
+            % Mostly, the right axes (R1,R2,R3) are 'current' as they are
+            % superimposing the left axes.
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % first, get the numer of Y Ticks. See 'set_num_of_ticks_y' section
+			set(findobj('Tag','plotGrav_text_status'),'String','Select two points...');drawnow % send message to status bar with instructions
+			[~,selected_y] = ginput(2);                                     % get the the coordinates of two selected points. The X coordinates are not important. Zooming only in Y direction
+			selected_y = sort(selected_y);                                  % sort the user input = ascending (this is required by matlab's ylim function)
+            % Continue only if difference between selected points is > 0.
+            % Otherwise, result in error.
+			if diff(selected_y) > 0
+				set(gca,'YLim',selected_y);                                 % set ylimits for current axis 
+				set(gca,'YTick',linspace(selected_y(1),selected_y(2),num_of_ticks_y));               % set new ylimits (left)
+            end
 			set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status
 			plotGrav('push_date');                                          % update time ticks = always constant number of ticks at the time axis.
             
@@ -1671,19 +1898,150 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			   set(findobj('Tag','plotGrav_menu_reverse_r3'),'UserData',1);
 				set(a3(2),'YDir','normal');
             end
-            
+           %% Set Y axis limits
+		case 'set_y_L1'
+            % Just like for X axis, user can set the plotted range.
+            % However, the limits are set for each axis separaterly! The
+            % code bellow repeats for each axis. See comments in the first
+            % one.
+			try
+				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get plot one handles (L1,R1)
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
+				pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
+				st = strsplit(st);                                          % split the user input (min max)
+				yl(1) = str2double(st(1));                                  % convert string to double = min value (is required for 'YLim' settings)
+				yl(2) = str2double(st(2));                                  % convert string to double = max value (is required for 'YLim' settings)
+				set(a1(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y)); % set new limits and ticks
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+			end
+		case 'set_y_R1'
+			try
+				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % see comments 'set_y_L1'
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData');
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limits (e.g. -10 10)...waiting 8 seconds');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
+				pause(10);                                                  
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); 
+				st = strsplit(st);                                      
+				yl(1) = str2double(st(1));                              
+				yl(2) = str2double(st(2));                              
+				set(a1(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y)); 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            end
+		case 'set_y_L2'
+			try
+				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');  % see comments 'set_y_L1'
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on');
+				pause(10);                                                  
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); 
+				st = strsplit(st);                                      
+				yl(1) = str2double(st(1));                              
+				yl(2) = str2double(st(2));                              
+				set(a2(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y));   
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+			end
+		case 'set_y_R2'
+			try
+				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');  % see comments 'set_y_L1'
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData');
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   
+				pause(10);                                                  
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String');
+				st = strsplit(st);
+				yl(1) = str2double(st(1));
+				yl(2) = str2double(st(2));                              
+				set(a2(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y)); 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+			end
+		case 'set_y_L3'
+			try
+				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');  % see comments 'set_y_L1'
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+				pause(10);                                                  
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); 
+				st = strsplit(st);                                      
+				yl(1) = str2double(st(1));                              
+				yl(2) = str2double(st(2));                              
+				set(a3(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y)); 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+			end
+		case 'set_y_R3'
+			try
+				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');  % see comments 'set_y_L1'
+                num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
+				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on'); 
+				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   
+				pause(10);                                                  
+				st = get(findobj('Tag','plotGrav_edit_text_input'),'String');
+				st = strsplit(st);                                      
+				yl(1) = str2double(st(1));                             
+				yl(2) = str2double(st(2));                              
+				set(a3(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),num_of_ticks_y)); 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Y limits set.');
+			catch
+				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow 
+				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+			end 
         case 'show_filter'
 			%% Plot filter impulse
             set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
             filter_file = get(findobj('Tag','plotGrav_edit_filter_file'),'String'); % get filter filename
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size. Will be used for new figure/plot with filter inpulse
             if ~isempty(filter_file)                                        % try to load the filter file/response if some string is given
                 try 
                     Num = load(filter_file);                                % load filter file = in ETERNA format - header
                     Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));         % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
                     figure('Name','plotGrav: filter impulse response','Toolbar','figure'); % open new figure
-                    a0_spectral = axes('FontSize',9);                       % create new axes
+                    a0_spectral = axes('FontSize',font_size);               % create new axes using default or user-set font size 
                     hold(a0_spectral,'on');                                 % all results in one window
-                    grid(a0_spectral,'on');                                 % grid on
+                    grid(a0_spectral,'on');                                 % grid on always on, regardless main plotGrav setting
                     plot(a0_spectral,Num);                                  % plot the impulse response as function of indices
                     set(findobj('Tag','plotGrav_text_status'),'String','Select channel.');drawnow % send message to status bar
                 catch error_message
@@ -1727,216 +2085,343 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
             plotGrav('uitable_push');
             
-%%%%%%%%%%%%%%%%%%%%%%%%% E X P O R T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%           
+        case 'set_label_L1'
+            %% Set labels manually
+            % By default, plotGrav set the 'units' as labels for all axes
+            % automatically. Nevertheless, user can set the label manually
+            % using this function. The following code contains setting of
+            % labels for all Y axes individually.
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a1(1),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+        case 'set_label_R1'
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a1(2),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+        case 'set_label_L2'
+            a2 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a2(1),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+        case 'set_label_R2'
+            a2 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a2(2),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+        case 'set_label_L3'
+            a3 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a3(1),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+        case 'set_label_R3'
+            a3 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a3(2),user_label,'FontSize',font_size);
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
+            end
+            
+        case 'set_legend_L1'
+            %% Set legend manually
+            % By default, plotGrav set the 'channels' as legend for all axes
+            % automatically. Nevertheless, user can set the legend manually
+            % using this function. The following code contains setting of
+            % legend for all axes individually.
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{1} = user_legend;                               % store the legend. Overwrite only L1 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a1(1),user_legend);
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        case 'set_legend_R1'
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % Existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{2} = user_legend;                               % store the legend. Overwrite only R1 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a1(2),user_legend);
+                set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.','Location','NorthEast');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        case 'set_legend_L2'
+            a2 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % Existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{1} = user_legend;                               % store the legend. Overwrite only L2 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a2(1),user_legend);
+                set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        case 'set_legend_R2'
+            a2 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % Existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{2} = user_legend;                               % store the legend. Overwrite only R2 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a2(2),user_legend);
+                set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        case 'set_legend_L3'
+            a3 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_three'),'UserData'); % Existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{1} = user_legend;                               % store the legend. Overwrite only L3 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a3(1),user_legend);
+                set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        case 'set_legend_R3'
+            a3 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set strings with new legend separated by space ...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag','plotGrav_menu_print_three'),'UserData'); % Existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,' ');
+                legend_save{2} = user_legend;                               % store the legend. Overwrite only R3 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a3(2),user_legend);
+                set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String','Legend set.');drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+            
+        case 'set_line_width'
+            %% Set line with manually
+            % By default, plotGrav set the linewith to 0.5 all axes
+            % automatically. Nevertheless, user can set the line width manually
+            % using this function. The following code contains setting of
+            % line width for all axes at onece.
+            set(findobj('Tag','plotGrav_text_status'),'String','Set L1 R1 L2 R2 L3 R3 line width...waiting 15 seconds');drawnow % Sent instructions to status bar
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0.5 0.5 0.5 0.5 0.5 0.5');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+            set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+            pause(15);                                                      % wait 15 for user input    
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_line = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                user_line = strsplit(user_line,' ');                        % Split the input = for each axes 
+                if length(user_line) == 6                                   % continue only if user sets line width for all axes (regardless number of plotted ones)
+%                     line_handle = get(a1(1),'Children');                    % get handle for each line
+                    for i = 1:length(user_line)
+                        line_save(i) = str2double(user_line(i));
+                    end
+                    set(findobj('Tag','plotGrav_menu_line_width'),'UserData',line_save); % store new line widths
+                    plotGrav('uitable_push');                               % re-plot to make changes visible
+                else
+                    set(findobj('Tag','plotGrav_text_status'),'String','Six values must be set.');drawnow % 
+                end
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set line width.');drawnow % Set status
+            end
+            
+%%%%%%%%%%%%%%%%%%%%%%%%% E X P O R T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+        %% EXPORT DATA       
 		case 'export_igrav_all'
-			%% EXPORT DATA
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data (this variable store iGrav together with other time series)
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time (includes iGrav time vector)
-			units_igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units. Will be included in the output.
-			channels_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
-			try 
-				[name,path,selection] = uiputfile({'*.tsf';'*.mat'},'Select your iGrav output file'); % get output file
-				if name == 0                                            % If cancelled-> no output
-					set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file!');drawnow % status
-				else
-					set(findobj('Tag','plotGrav_text_status'),'String','Writing iGrav data...');drawnow % status
-					switch selection
-						case 2
-							dataout.time = time.igrav;
-							dataout.data = data.igrav;
-							dataout.channels = channels_igrav;
-							dataout.units = units_igrav;
-							save([path,name],'dataout','-v7.3');
-							clear dataout
-						otherwise
-							dataout = [datevec(time.igrav),data.igrav];             % standard input for plotGrav_writetsf function
-							for i = 1:length(units_igrav)
-								comment(i,1:4) = {'Wettzell','iGrav006',char(channels_igrav(i)),char(units_igrav(i))};  % create tsf header (input for plotGrav_writetsf function)
-							end
-							plotGrav_writetsf(dataout,comment,[path,name],3);            % write to tsf (2 decimal places)
-					end
-					set(findobj('Tag','plotGrav_text_status'),'String','iGrav data have been written to selected file.');drawnow % status
-					try
-						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-					catch
-						fid = fopen('plotGrav_LOG_FILE.log','a');
-					end
-					[ty,tm,td,th,tmm] = datevec(now);
-					fprintf(fid,'iGrav data written to %s (%04d/%02d/%02d %02d:%02d)\n',...
-						[path,name],ty,tm,td,th,tmm);
-					fclose(fid);
-				end
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not write the iGrav data!');drawnow % status
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Could not write iGrav data (%04d/%02d/%02d %02d:%02d)\n',...
-					ty,tm,td,th,tmm);
-				fclose(fid);
-			end
+			units = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units. Will be included in the output.
+			channels = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+			plotGrav_exportData(time.igrav,data.igrav,channels,units,[],[],'iGrav');
 		case 'export_igrav_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % get time
-			units_igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units
-			channels_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_igrav'),'UserData');   % get iGrav units
+			channels = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
 			data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-			plot_axesL1.igrav = find(cell2mat(data_igrav(:,1))==1);     % get selected iGrav channels for L1
-			try 
-				[name,path,selection] = uiputfile({'*.tsf';'*.mat'},'Select your iGrav output file'); % get output file
-				if name == 0                                            % If cancelled-> no output
-					set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file!');drawnow % status
-				else
-					set(findobj('Tag','plotGrav_text_status'),'String','Writing iGrav data...');drawnow % status
-					switch selection
-						case 2
-							dataout.time = time.igrav;
-							dataout.data = data.igrav(:,plot_axesL1.igrav);
-							dataout.channels = channels_igrav(plot_axesL1.igrav);
-							dataout.units = units_igrav(plot_axesL1.igrav);
-							save([path,name],'dataout','-v7.3');
-							clear dataout
-						otherwise
-							dataout = [datevec(time.igrav),data.igrav(:,plot_axesL1.igrav)]; % standard input for plotGrav_writetsf function
-							channels_igrav = channels_igrav(plot_axesL1.igrav);     % remove unselected channels
-							units_igrav = units_igrav(plot_axesL1.igrav);           % remove unselected channels
-							for i = 1:length(units_igrav)
-								comment(i,1:4) = {'Wettzell','iGrav006',char(channels_igrav(i)),char(units_igrav(i))};  % create tsf header (input for plotGrav_writetsf function)
-							end
-							plotGrav_writetsf(dataout,comment,[path,name],3);            % write to tsf (3 decimal places)
-					end
-					set(findobj('Tag','plotGrav_text_status'),'String','iGrav data have been written to selected file.');drawnow % status
-					try
-						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-					catch
-						fid = fopen('plotGrav_LOG_FILE.log','a');
-					end
-					[ty,tm,td,th,tmm] = datevec(now);
-					fprintf(fid,'iGrav data written to %s (%04d/%02d/%02d %02d:%02d)\n',...
-						[path,name],ty,tm,td,th,tmm);
-					fclose(fid);
-				end
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not write the iGrav data.');drawnow % status
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Could not write iGrav data (%04d/%02d/%02d %02d:%02d)\n',...
-					ty,tm,td,th,tmm);
-				fclose(fid);
-			end
-		case 'export_trilogi_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % get time
-			units_trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
-			channels_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
-			try 
-				[name,path,selection] = uiputfile({'*.tsf';'*.mat'},'Select your TRiLOGi output file'); % get output file
-				if name == 0                                            % If cancelled-> no output
-					set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file!');drawnow % status
-				else
-					set(findobj('Tag','plotGrav_text_status'),'String','Writing TRiLOGi data...');drawnow % status
-					switch selection
-						case 2
-							dataout.time = time.trilogi;
-							dataout.data = data.trilogi;
-							dataout.channels = channels_trilogi;
-							dataout.units = units_trilogi;
-							save([path,name],'dataout','-v7.3');
-							clear dataout
-						otherwise
-							dataout = [datevec(time.trilogi),data.trilogi];         % standard input for plotGrav_writetsf function
-							for i = 1:length(units_trilogi)
-								comment(i,1:4) = {'Wettzell','iGrav006',char(channels_trilogi(i)),char(units_trilogi(i))};  % create tsf header (input for plotGrav_writetsf function)
-							end
-							plotGrav_writetsf(dataout,comment,[path,name],3);   % write to tsf (3 decimal places)
-					end
-					set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi data have been written to selected file.');drawnow % status
-					try
-						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-					catch
-						fid = fopen('plotGrav_LOG_FILE.log','a');
-					end
-					[ty,tm,td,th,tmm] = datevec(now);
-					fprintf(fid,'TRiLOGi data written to %s (%04d/%02d/%02d %02d:%02d)\n',...
-						[path,name],ty,tm,td,th,tmm);
-					fclose(fid);
-				end
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not write the TRiLOGi data!');drawnow % status
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Could not write TRiLOGi data (%04d/%02d/%02d %02d:%02d)\n',...
-					ty,tm,td,th,tmm);
-				fclose(fid);
-			end
-		case 'export_trilogi_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % get time
-			units_trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
-			channels_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
-			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the trilogi table
-			plot_axesL1.trilogi = find(cell2mat(data_trilogi(:,1))==1);     % get selected trilogi channels for L1
-			try 
-				
-				[name,path,selection] = uiputfile({'*.tsf';'*.mat'},'Select your TRiLOGi output file'); % get output file
-				if name == 0                                                % If cancelled-> no output
-					set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file!');drawnow % status
-				else
-					set(findobj('Tag','plotGrav_text_status'),'String','Writing TRiLOGi data...');drawnow % status
-					switch selection
-						case 2
-							dataout.time = time.trilogi;
-							dataout.data = data.trilogi(:,plot_axesL1.trilogi);
-							dataout.channels = channels_trilogi(plot_axesL1.trilogi);
-							dataout.units = units_trilogi(plot_axesL1.trilogi);
-							save([path,name],'dataout','-v7.3');
-							clear dataout
-						otherwise
-							dataout = [datevec(time.trilogi),data.trilogi(:,plot_axesL1.trilogi)]; % standard input for plotGrav_writetsf function
-							channels_trilogi = channels_trilogi(plot_axesL1.trilogi); % remove unselected channels
-							units_trilogi = units_trilogi(plot_axesL1.trilogi);     % remove unselected channels
-							for i = 1:length(units_trilogi)
-								comment(i,1:4) = {'Wettzell','iGrav006',char(channels_trilogi(i)),char(units_trilogi(i))};  % create tsf header (input for plotGrav_writetsf function)
-							end
-							plotGrav_writetsf(dataout,comment,[path,name],3);            % write to tsf (2 decimal places)
-					end
-					set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi data have been written to selected file.');drawnow % status
-					try
-						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-					catch
-						fid = fopen('plotGrav_LOG_FILE.log','a');
-					end
-					[ty,tm,td,th,tmm] = datevec(now);
-					fprintf(fid,'TRiLOGi data written to %s (%04d/%02d/%02d %02d:%02d)\n',...
-						[path,name],ty,tm,td,th,tmm);
-					fclose(fid);
-				end
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not write the TRiLOGi data.');drawnow % status
-				try
-					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-				catch
-					fid = fopen('plotGrav_LOG_FILE.log','a');
-				end
-				[ty,tm,td,th,tmm] = datevec(now);
-				fprintf(fid,'Could not write TRiLOGi data (%04d/%02d/%02d %02d:%02d)\n',...
-					ty,tm,td,th,tmm);
-				fclose(fid);
+			select = find(cell2mat(data_igrav(:,1))==1);                    % get selected iGrav channels for L1
+            if isempty(select)
+                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
+            else
+                plotGrav_exportData(time.igrav,data.igrav,channels,units,select,[],'iGrav');
             end
-       		case 'print_all'
-			%% Printing all plots
+		case 'export_trilogi_all'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
+			channels = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
+			plotGrav_exportData(time.trilogi,data.trilogi,channels,units,[],[],'TRiLOGi');
+		case 'export_trilogi_sel'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
+			channels = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
+			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the trilogi table
+			select = find(cell2mat(data_trilogi(:,1))==1);                  % get selected trilogi channels for L1            
+            if isempty(select)
+                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
+            else
+                plotGrav_exportData(time.trilogi,data.trilogi,channels,units,select,[],'TRiLOGi');
+            end
+		case 'export_other1_all'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_other1'),'UserData');  % get other1 units
+			channels = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get other1 channels (names)
+			plotGrav_exportData(time.other1,data.other1,channels,units,[],[],'Other1');
+		case 'export_other1_sel'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_other1'),'UserData');  % get other1 units
+			channels = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get other1 channels (names)
+			data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the other1 table
+			select = find(cell2mat(data_other1(:,1))==1);                   % get selected other1 channels for L1
+            if isempty(select)
+                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
+            else
+                plotGrav_exportData(time.other1,data.other1,channels,units,select,[],'Other1');
+            end
+		case 'export_other2_all'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_other2'),'UserData');  % get other2 units
+			channels = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get other2 channels (names)
+			plotGrav_exportData(time.other2,data.other2,channels,units,[],[],'Other2');
+		case 'export_other2_sel'
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
+			units = get(findobj('Tag','plotGrav_text_other2'),'UserData');  % get other2 units
+			channels = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get other2 channels (names)
+			data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the other2 table
+			select = find(cell2mat(data_other2(:,1))==1);                   % get selected other2 channels for L1
+            if isempty(select)
+                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
+            else
+                plotGrav_exportData(time.other2,data.other2,channels,units,select,[],'Other2');
+            end
+            
+        %% PRINTING
+        case 'print_all'
 			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
 			if name == 0                                               % If cancelled-> no output
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
 			else
@@ -1956,13 +2441,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(a1c(1),'units','normalized','Position',[0.185,0.71,0.63,0.26]); % move the axes in the center of the figure
 					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
 					rL1 = get(a1c(1),'YLim'); 
-					set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					set(a1c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 					% Create legend (is not copied automatically)
 					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
 					l = legend(a1c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
 					l = legend(a1c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
 				end
 				if plot_mode(2) > 0
 					a2c(1) = copyobj(a2(1),F2c);                        % copy axes to the new figure (only if something is plotted)
@@ -1970,12 +2455,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(a2c(1),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
 					set(a2c(2),'units','normalized','Position',[0.185,0.39,0.63,0.26]); % move the axes to the center of the figure
 					rL1 = get(a2c(1),'YLim'); 
-					set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					set(a2c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 					temp = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % get legend
 					l = legend(a2c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
 					l = legend(a2c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
 				end
 				if plot_mode(3) > 0
 					a3c(1) = copyobj(a3(1),F2c);                        % copy axes to the new figure (only if something is plotted)
@@ -1983,12 +2468,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(a3c(1),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
 					set(a3c(2),'units','normalized','Position',[0.185,0.06,0.63,0.26]); % move the axes to the center of the figure
 					rL1 = get(a3c(1),'YLim'); 
-					set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+					set(a3c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 					temp = get(findobj('Tag','plotGrav_menu_print_three'),'UserData');
 					l = legend(a3c(1),temp{1});                             % left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest');
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');
 					l = legend(a3c(2),temp{2});                             % legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast');
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');
 				end
 %                     temp = get(findobj('Tag','plotGrav_insert_recangle'),'UserData');
 %                     if ~isempty(temp);
@@ -2025,6 +2510,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'print_one'
 			%% Print first plot
 			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
 			if name == 0                                               % If cancelled-> no output
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
 			else
@@ -2043,14 +2530,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(a1c(2),'units','normalized','Position',[0.185,0.71,0.63,0.26]);
 				end
 				rL1 = get(a1c(1),'YLim'); 
-				set(a1c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				set(a1c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 				   
 				% Create legend (is not copied automatically)
 				temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
 				l = legend(a1c(1),temp{1});                             % set left legend
-				set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+				set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
 				l = legend(a1c(2),temp{2});                             % set legend on right
-				set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+				set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
 				
 				% Print
 				try
@@ -2076,6 +2563,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'print_two'
 			%% Print second plot
 			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
 			if name == 0                                               % If cancelled-> no output
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
 			else
@@ -2095,12 +2584,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					% Create legend (is not copied automatically)
 					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
 					l = legend(a2c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
 					l = legend(a2c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
 				end
 				rL1 = get(a2c(1),'YLim'); 
-				set(a2c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				set(a2c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 				   
 				
 				% Print
@@ -2127,6 +2616,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'print_three'
 			%% Print third plot
 			[name,path,filteridex] = uiputfile({'*.jpg';'*.eps'},'Select output file (extension: jpg or eps)');
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
 			if name == 0                                               % If cancelled-> no output
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
 			else
@@ -2146,12 +2637,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					% Create legend (is not copied automatically)
 					temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
 					l = legend(a3c(1),temp{1});                             % set left legend
-					set(l,'interpreter','none','FontSize',8,'Location','NorthWest'); % set font 
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
 					l = legend(a3c(2),temp{2});                             % set legend on right
-					set(l,'interpreter','none','FontSize',8,'Location','NorthEast'); % set font
+					set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
 				end
 				rL1 = get(a3c(1),'YLim'); 
-				set(a3c(1),'YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
+				set(a3c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')       
 				   
 				% Print
 				try
@@ -2328,7 +2819,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
 		case 'compute_spectral_valid'
 			%% Compute spectral analysis using hann window
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size 
 			if ~isempty(data)
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
@@ -2348,7 +2840,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				plot_axesL1.other2 = find(cell2mat(data_other2(:,1))==1); % get selected other2 channels for L1
 				
 				f0_spectral = figure('Name','plotGrav: spectral analysis','Toolbar','figure'); % open new figure
-				a0_spectral = axes('FontSize',9);                       % create new axes
+				a0_spectral = axes('FontSize',font_size);                       % create new axes
 				hold(a0_spectral,'on');                                 % all results in one window
 				grid(a0_spectral,'on');                                 % grid on
 				color_num = 1;legend_spectral = [];                     % prepare variables
@@ -2410,7 +2902,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				clear f amp pha y h r timeout dataout id i
 				
 				l = legend(a0_spectral,legend_spectral);                % show legend
-				set(l,'FontSize',8,'interpreter','none');               % set legend properties
+				set(l,'FontSize',font_size,'interpreter','none');               % set legend properties
 				set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status 
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
@@ -2418,6 +2910,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'compute_spectral_interp'
 			%% Compute spectral analysis using hann window + interpolation
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			if ~isempty(data)
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
@@ -2437,7 +2930,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				plot_axesL1.other2 = find(cell2mat(data_other2(:,1))==1); % get selected other2 channels for L1
 				
 				f0_spectral = figure('Name','plotGrav: spectral analysis','Toolbar','figure'); % open new figure
-				a0_spectral = axes('FontSize',9);                       % create new axes
+				a0_spectral = axes('FontSize',font_size);                       % create new axes
 				hold(a0_spectral,'on');                                 % all results in one window
 				grid(a0_spectral,'on');                                 % grid on
 				color_num = 1;legend_spectral = [];                     % prepare variables
@@ -2518,7 +3011,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				clear f amp pha y h r timeout dataout id i
 				
 				l = legend(a0_spectral,legend_spectral);                % show legend
-				set(l,'FontSize',8,'interpreter','none');               % set legend properties
+				set(l,'FontSize',font_size,'interpreter','none');               % set legend properties
 				set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status 
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
@@ -3073,6 +3566,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			cla(a3(1));legend(a3(1),'off');ylabel(a3(1),[]);        % clear axes and remove legends and labels
 			cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);        % clear axes and remove legends and labels
 			axis(a3(1),'auto');axis(a3(2),'auto');
+            
+            num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			
 			eof.ref_time = [datenum(start_time):1/24:datenum(end_time)]';
 			eof.F = [];
@@ -3175,14 +3671,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					end
 					if get(findobj('Tag','plotGrav_check_legend'),'Value') ==1  % show legend if required
 						l = legend(a2(1),eof.cur_legend);
-						set(l,'interpreter','none','FontSize',8);           % change font and interpreter (because channels contain spacial sybols like _)
+						set(l,'interpreter','none','FontSize',font_size);           % change font and interpreter (because channels contain spacial sybols like _)
 						legend(a2(2),'off');                                % legend for left axes      
 					else
 						legend(a2(1),'off');                                % turn of legends
 						legend(a2(2),'off');
 					end
 					if get(findobj('Tag','plotGrav_check_labels'),'Value')==1  % show labels if required
-						ylabel(a2(1),'EOF time series','FontSize',8);  % label only for left axes
+						ylabel(a2(1),'EOF time series','FontSize',font_size);  % label only for left axes
 						ylabel(a2(2),[]);
 					else
 						ylabel(a2(1),[]);
@@ -3191,12 +3687,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					% Set limits                                            % get current YLimits
 					ref_lim = get(a1(1),'XLim');                            % get current L1 X limits and use them a reference
 					xtick_value = linspace(ref_lim(1),ref_lim(2),9);                   % create new ticks
-					for i = 1:9
-						xtick_lable{i} = sprintf('%11.4f',xtick_value(i));              % tick labels (4 decimal places)
-					end
-					set(a2(1),'YLimMode','auto','XLim',ref_lim,'XTick',xtick_value,'XTickLabel',xtick_lable,'Visible','on'); % set X limits
+					set(a2(1),'YLimMode','auto','XLim',ref_lim,'XTick',xtick_value,'Visible','on'); % set X limits
 					rL1 = get(a2(1),'YLim'); 
-					set(a2(1),'YLimMode','auto','YTick',linspace(rL1(1),rL1(2),5)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')
+					set(a2(1),'YLimMode','auto','YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')
 					set(a2(2),'Visible','off','XLim',ref_lim,'XTick',xtick_value,'XTickLabel',xtick_lable); % set new X ticks (left)
 					linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
 					plot_mode(2:3) = [1 0];
@@ -4105,6 +4598,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				str2double(get(findobj('Tag','plotGrav_edit_time_stop_month'),'String')),... % month
 				str2double(get(findobj('Tag','plotGrav_edit_time_stop_day'),'String')),...   % day
 				str2double(get(findobj('Tag','plotGrav_edit_time_stop_hour'),'String')),0,0];% hour (minutes and seconds == 0)
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			
 			eof.ref_time = [datenum(start_time):1/24:datenum(end_time)]'; % new time (hourly resolution)
 			eof.F = [];
@@ -4187,7 +4681,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4202,7 +4696,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4218,7 +4712,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4230,8 +4724,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for j = 1:size(r_pers,2)
 						subplot(size(r_pers,1),size(r_pers,2),si)
 						hist(r_boots(:,si),round(sqrt(boot_num)));      % show each bootstrap histrogram
-						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',7,'interpreter','none');
-						xlabel('corr.','FontSize',6);
+						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
+						xlabel('corr.','FontSize',font_size-2);
 						set(gca,'FontSize',7);
 						si = si + 1;
 					end
@@ -4248,6 +4742,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			[selected_x,~] = ginput(2);
 			start_time = datevec(selected_x(1));
 			end_time = datevec(selected_x(2));
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			
 			eof.ref_time = [datenum(start_time):1/24:datenum(end_time)]'; % new time (hourly resolution)
 			eof.F = [];
@@ -4330,7 +4825,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4345,7 +4840,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4361,7 +4856,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				colorbar;                                               % show colorbar
 				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
 					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',8);                                      % font size
+					'FontSize',font_size);                                      % font size
 				if mversion>=8.4
 					set(gca,'TickLabelInterpreter','none');
 				end
@@ -4373,9 +4868,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for j = 1:size(r_pers,2)
 						subplot(size(r_pers,1),size(r_pers,2),si)
 						hist(r_boots(:,si),round(sqrt(boot_num)));      % show each bootstrap histrogram
-						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',7,'interpreter','none');
-						xlabel('corr.','FontSize',6);
-						set(gca,'FontSize',7);
+						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
+						xlabel('corr.','FontSize',font_size-2);
+						set(gca,'FontSize',font_size-1);
 						si = si + 1;
 					end
 				end
@@ -4390,6 +4885,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			web(url);
 		case 'plot_earthquake'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data 
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			if ~isempty(data)                                           % remove only if exists
 				try
 					set(findobj('Tag','plotGrav_edit_text_input'),'String',6);
@@ -4443,7 +4939,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						for i = 1:length(quake_time)
 							if quake_time(i) > x(1) && quake_time(i) < x(2)
 								plot([quake_time(i),quake_time(i)],y,'k--');
-								text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',8)
+								text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size)
 							end
 						end
 						axes(a1(2));
@@ -4456,7 +4952,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						for i = 1:length(quake_time)
 							if quake_time(i) > x(1) && quake_time(i) < x(2)
 								plot([quake_time(i),quake_time(i)],y,'k--');
-%                                 text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',7)
+%                                 text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size)
 							end
 						end
 						axes(a2(2));
@@ -4469,7 +4965,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						for i = 1:length(quake_time)
 							if quake_time(i) > x(1) && quake_time(i) < x(2)
 								plot([quake_time(i),quake_time(i)],y,'k--');
-%                                 text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',7)
+%                                 text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size)
 							end
 						end
 					end
@@ -5112,6 +5608,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
 			
 		case 'insert_text'
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			set(findobj('Tag','plotGrav_text_status'),'String','Start writing...');drawnow % status
 			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');
 			set(findobj('Tag','plotGrav_text_input'),'Visible','on');
@@ -5119,7 +5616,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			set(findobj('Tag','plotGrav_text_status'),'String','Select position (centre)...');drawnow % status
 			[select_x(1),select_y(1)] = ginput(1);
 			r = text(select_x,select_y,get(findobj('Tag','plotGrav_edit_text_input'),'String'),'HorizontalAlignment','center',...
-					'FontSize',10,'FontWeight','bold');
+					'FontSize',font_size,'FontWeight','bold');
 			set(r,'Color','k');
 			cur = get(findobj('Tag','plotGrav_insert_text'),'UserData');
 			cur = [cur,r];
@@ -5417,122 +5914,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			uicontrol(p3,'Style','Edit','String',file_logfile,'units','normalized',...
 					  'Position',[0.17,0.41-0.07,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
 					  'Enable','off','HorizontalAlignment','left');
-		  %% Set Y axis limits
-		case 'set_y_L1'
-			try
-				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 8 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a1(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
-		case 'set_y_R1'
-			try
-				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limits (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 8 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a1(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
-			
-		case 'set_y_L2'
-			try
-				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 8 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a2(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
-		case 'set_y_R2'
-			try
-				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes two handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 8 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a2(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
-		case 'set_y_L3'
-			try
-				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 8 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a3(1),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
-		case 'set_y_R3'
-			try
-				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes three handle
-				set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 8 seconds');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-				set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-				pause(8);                                                   % wait 5 seconds for user input
-				st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-				st = strsplit(st);                                      % split the user input (min max)
-				yl(1) = str2double(st(1));                              % convert string to double
-				yl(2) = str2double(st(2));                              % convert string to double
-				set(a3(2),'YLim',yl,'YTick',linspace(yl(1),yl(2),5));   % set new limits and ticks
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			catch
-				set(findobj('Tag','plotGrav_text_status'),'String','Could not set new y limits');drawnow % message
-				set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
-				set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			end
+		  
 		%% Simple regression analysis
 		case 'regression_simple'
 			try
@@ -6104,6 +6486,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			[name,path] = uigetfile({'*.txt'},'Select Correction file');
 			set(findobj('Tag','plotGrav_text_status'),'String','Select correction file.');drawnow % status
 			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get axes one handle
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
 			if name == 0                                            % If cancelled-> no input
 				set(findobj('Tag','plotGrav_text_status'),'String','No correction file selected.');drawnow % status
 			else
@@ -6124,12 +6507,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								case 1                                      % remove step
 									axes(a1(1));
 									plot([x1(i),x1(i)],y,'k-');hold on
-									text(x1(i),y(1)+range(y)*0.05,sprintf('Step channel %02d = %3.1f',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',11,'VerticalAlignment','bottom')
+									text(x1(i),y(1)+range(y)*0.05,sprintf('Step channel %02d = %3.1f',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',font_size,'VerticalAlignment','bottom')
 									axes(a1(2));
 								case 2                                      % remove interval      
 %                                         axes(a1(1));
 %                                         plot([x1(i),x2(i),x2(i),x1(i),x1(i)],[y(1),y(1),y(2),y(2),y(1)],'k--');
-% %                                         text(mean(x1(1),x2(i)),y(1)+range(y)*0.05,sprintf('Interval',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',8)
+% %                                         text(mean(x1(1),x2(i)),y(1)+range(y)*0.05,sprintf('Interval',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',font_size)
 %                                         axes(a1(2));
 							end
 						end

@@ -122,5 +122,5 @@ for i = 1:r
     fprintf(vypis,'\n');
 end
 
-fclose('all');
+fclose(vypis);
 end
