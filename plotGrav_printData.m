@@ -40,6 +40,7 @@ else
             otherwise
                 filteridex = 9999;
         end
+    end
 end
 if name == 0                                                                % If cancelled-> no output
     set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file.');drawnow % status
