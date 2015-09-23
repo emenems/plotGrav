@@ -61,7 +61,7 @@ try
     panels = {'igrav','trilogi','other1','other2'};  
     % First find all selected channels
     for i = 1:length(panels)
-        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected iGrav channels (L1)
+        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
     end
     %% Fit data
     for i = 1:length(panels)
@@ -139,9 +139,13 @@ try
     end
     message_out = 'Data fitted (providing one channle was selected).';
     fclose(fid);
-catch
+catch error_message
+    if strcmp(error_message.identifier,'MATLAB:license:checkouterror')
+        message_out = 'Upps, no licence (Fitting Toolbox?)';
+    else
+        message_out = 'An (unkonwn) error occur during fitting.';
+    end
     fclose(fid);
-    message_out = 'Could not fit data.';
 end
 
 end % Function
