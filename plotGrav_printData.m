@@ -1,13 +1,14 @@
-function plotGrav_printData(plot_id,scrs,output_file,varargin)
+function plotGrav_printData(plot_id,output_file,output_resol,scrs,varargin)
 %PLOTGRAV_PRINTDATA print plotted data
 % Input:
 %   plot_id     ... scalar switch:  1 = first plot, 
 %                                   2 = first and second plot
 %                                   3 = all three plots
 %                                   4 = open new figure for editing
-%   scrs        ... screen reasolution, e.g., [1,1,1920,1080]
+%   output_resol... DPI of output print (e.g., 300) 
 %   output_file ... output file name (print to this file). If [], a dialog
 %                   window will be called.
+%   scrs        ... screen reasolution, e.g., [1,1,1920,1080]
 %
 
 %% Get required parameters
@@ -30,6 +31,7 @@ else
         [name,path,filteridex] = uiputfile({'*.jpg';'*.eps';'*.tif'},'Select output file (extension: jpg, eps, tif))'); 
         output_file = fullfile(path,name);                                  % full output file name
     else
+        name = 1;
         switch output_file(end-3:end)                                       % determine the filterindex only if output file not selected manually
             case '.jpg'
                 filteridex = 1;
@@ -134,15 +136,18 @@ else
             [ty,tm,td,th,tmm] = datevec(now);
             fprintf(fid,'Data plotted: %s (%04d/%02d/%02d %02d:%02d)\n',...
                 output_file,ty,tm,td,th,tmm);
-            fclose(fid);                                                        % Close logfile
+            fclose(fid);                                                    % Close logfile
+            if isempty(output_resol)
+                output_resol = 300;                                         % By default, all plots are printed with 300 DPI
+            end
             % Switch between output formats: print the file with respect to
             % selected output format.
             switch filteridex
-                case 1                                                          % jpg
-                    print(F2c,'-djpeg','-r300',output_file);                    % By default, all plots are printed with 300 DPI
-                case 2                                                          % eps
-                    print(F2c,'-depsc','-r300',output_file);
-                case 3                                                          % no compression tiff
+                case 1                                                      % jpg
+                    print(F2c,'-djpeg',sprintf('-r%d',round(output_resol)),output_file);                    
+                case 2                                                      % eps
+                    print(F2c,'-depsc',sprintf('-r%d',round(output_resol)),output_file);
+                case 3                                                       % no compression tiff
                     print(F2c,'-dtiffn',output_file);
             end
             close(F2c)                                                      % close the window only if not printed, i.e., has not been exported to editable figure

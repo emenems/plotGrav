@@ -1,4 +1,4 @@
-function plotGrav_exportData(time,data,channels,units,select,fid,panel_name,varargin)
+function plotGrav_exportData(time,data,channels,units,select,fid,panel_name,output_file,varargin)
 %PLOTGRAV_EXPORTDATA Export loaded plodGrav data to supported format
 % Export data sotred temporary in plotGrav memory
 %
@@ -16,6 +16,8 @@ function plotGrav_exportData(time,data,channels,units,select,fid,panel_name,vara
 %   panel_name. string used as prefix to write in logfile. This
 %               string should describe the input file. Will not be
 %               used if fid is empty. e.g., 'iGrav'
+%   output_file full file name of output file. If [], will open a dialog
+%               window for selection.
 %
 
 % Prepare logfile
@@ -31,7 +33,20 @@ end
 if isempty(data) || isempty(time)
     set(findobj('Tag','plotGrav_text_status'),'String',sprintf('No data in %s',panel_name));drawnow % continue only if some data has been loaded
 else
-    [name,path,file_switch] = uiputfile({'*.tsf';'*.mat'},sprintf('Select your %s output file',panel_name)); % get output file. Store also 'file_switch' = tsf or mat
+    if isempty(output_file)                                                 % if no input
+        [name,path,file_switch] = uiputfile({'*.tsf';'*.mat'},sprintf('Select your %s output file',panel_name)); % get output file. Store also 'file_switch' = tsf or mat
+        output_file = fullfile(path,name);
+    else
+        name = 1;
+        switch output_file(end-3:end)
+            case '.tsf'
+                file_switch = 1;
+            case '.mat'
+                file_switch = 2;
+            otherwise
+                file_switch = 9999;
+        end
+    end
     if name == 0                                                            % If cancelled-> no output/do not continue
         set(findobj('Tag','plotGrav_text_status'),'String','You must select an output file!');drawnow % send to status bar
     else
@@ -44,18 +59,18 @@ else
                         for i = 1:length(units)
                             comment(i,1:4) = {'plotGrav',panel_name,char(channels(i)),char(units(i))};  % create tsf header (input for plotGrav_writetsf function)
                         end
-                        plotGrav_writetsf(dataout,comment,[path,name],3);       % write to tsf 
+                        plotGrav_writetsf(dataout,comment,output_file,3);       % write to tsf 
                         set(findobj('Tag','plotGrav_text_status'),'String',sprintf('%s data have been written to selected file.',panel_name));drawnow % status
-                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,[path,name],ty,tm,td,th,tmm);
+                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,output_file,ty,tm,td,th,tmm);
                     case 2                                                      % MAT export (double precision)
                         dataout.time = time;
                         dataout.data = data;
                         dataout.channels = channels;
                         dataout.units = units;
-                        save([path,name],'dataout','-v7.3');
+                        save(output_file,'dataout','-v7.3');
                         clear dataout
                         set(findobj('Tag','plotGrav_text_status'),'String',sprintf('%s data have been written to selected file.',panel_name));drawnow % status
-                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,[path,name],ty,tm,td,th,tmm);
+                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,output_file,ty,tm,td,th,tmm);
                     otherwise
                         set(findobj('Tag','plotGrav_text_status'),'String','You have selected not supported file format!');drawnow % send to status bar
                 end
@@ -74,18 +89,18 @@ else
                         for i = 1:length(units)
                             comment(i,1:4) = {'plotGrav',panel_name,char(channels(i)),char(units(i))};  % create tsf header (input for plotGrav_writetsf function)
                         end
-                        plotGrav_writetsf(dataout,comment,[path,name],3);       % write to tsf 
+                        plotGrav_writetsf(dataout,comment,output_file,3);       % write to tsf 
                         set(findobj('Tag','plotGrav_text_status'),'String',sprintf('%s data have been written to selected file.',panel_name));drawnow % status
-                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,[path,name],ty,tm,td,th,tmm);
+                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,output_file,ty,tm,td,th,tmm);
                     case 2                                                      % MAT export (double precision)
                         dataout.time = time;
                         dataout.data = data(:,select);
                         dataout.channels = channels(:,select);
                         dataout.units = units(:,select);
-                        save([path,name],'dataout','-v7.3');
+                        save(output_file,'dataout','-v7.3');
                         clear dataout
                         set(findobj('Tag','plotGrav_text_status'),'String',sprintf('%s data have been written to selected file.',panel_name));drawnow % status
-                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,[path,name],ty,tm,td,th,tmm);
+                        fprintf(fid,'%s data written to %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,output_file,ty,tm,td,th,tmm);
                     otherwise
                         set(findobj('Tag','plotGrav_text_status'),'String','You have selected not supported file format!');drawnow % send to status bar
                 end

@@ -197,7 +197,7 @@ try
 %         row = fgetl(fid);
 %     end
 catch
-    fclose('all');
+    fclose(fid);
     error('plotGrav_loadtsf:FRD','Fail to read data');
 %     fprintf('Could not load the required file. Checkt the format (file must contain: COUNTINFO, CHANNEL, UNITS, UNDETVAL)\n');
 end

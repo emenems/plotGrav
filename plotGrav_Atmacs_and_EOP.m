@@ -2,7 +2,7 @@ function [pol_corr,lod_corr,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and
 %FUNCTION PLOTGRAV_ATMACS_AND_EOP Polar motion, LOD and atmo correction
 % This function computes the polar motion correction, length of day 
 % correction and Atmacs atmospheric correction (add to time series to
-% correct them).
+% correct them). This function also predicts the polar motion effect!
 % 
 % Input:
 %   ref_time            ...     input time vector (in matlab format)
