@@ -1,6 +1,6 @@
 % This is an example script for plotGrav
 % plotGrav reads this script chronologically (one line after another). 
-% The command switch is stated first (with capitalized letters). The actual settings/commands are in the next line. Some switches, however, do not contain settings/commands (e.g., LOAD_DATA).
+% The command switch (capitalized letters) is stated first. The actual settings/commands are in the next line. Some switches, however, do not contain settings/commands (e.g., LOAD_DATA).
 % Inputs in the command/setting line are separated with ; symbol. Throughout this script, [] can be used as No input.
 % To comment a certain line, just add % symbol at the beginning of the line. No empty lines are allowed in the script!
 % Following table lists all supported commands including their description and input examples. 
@@ -65,6 +65,7 @@
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
 % FILTER_SELECTED		Filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
 % RESAMPLE_ALL 			re-samples all time series to new temporal resolution. Input: new resolution in seconds, e.g., 3600 (=one hour)
+% CHANNELS_ALGEBRA		perform simple mathematical operation (+;-;*;/) on TWO iGrav channels (does not work with other panels). Input example: 1 + 2 => first plus second channel. The result will be appended at the end of the data matrix (=new last channel).
 % SCRIPT_END			terminates the script run. No input.
 %
 % 25.09.2015, M. Mikolaj, mikolaj@gfz-potsdam.de
@@ -75,11 +76,11 @@ GUI_ON
 FILE_IN_IGRAV
 \\dms\hygra\iGrav\iGrav006 Data\
 FILE_IN_TRILOGI
-\\dms\hygra\iGrav\iGrav006 Data\Controller Data\
+U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
 FILE_IN_OTHER1
-[]
+U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
 FILE_IN_OTHER2
-[]
+U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
 FILE_IN_TIDES
 \\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
 FILE_IN_FILTER
@@ -167,7 +168,7 @@ PAUSE
 REMOVE_SPIKES
 3
 EXPORT_DATA
-F:\mikolaj\Desktop\Test_Script_Export.tsf
+1;1;F:\mikolaj\Desktop\Test_Script_Export.tsf
 SHOW_EARTHQUAKES
 6
 UNCHECK_ALL
@@ -176,4 +177,6 @@ UITABLE_IGRAV_L
 RESAMPLE_ALL
 1
 FILTER_SELECTED
+CHANNELS_ALGEBRA
+1 + 2
 SCRIPT_END

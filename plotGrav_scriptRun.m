@@ -163,10 +163,10 @@ try                                                                         % ca
                     end
                 case 'DRIFT_SWITCH'
                     row = fgetl(fid);count = count + 1;
-                    coef = strsplit(row,';');                                    % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
-                    if ~strcmp(char(coef),'[]')                                        % proceed/set only if required
+                    coef = strsplit(row,';');                                % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
+                    if ~strcmp(char(coef),'[]')                             % proceed/set only if required
                         set(findobj('Tag','plotGrav_pupup_drift'),'Value',str2double(coef(1))); 
-                        if strcmp(char(coef(1)),'6')                             % 6 = user defined polynomial ceoffients
+                        if strcmp(char(coef(1)),'6')                        % 6 = user defined polynomial ceoffients
                             set(findobj('Tag','plotGrav_edit_drift_manual'),'String',char(coef(2:end)));  % set coefficients
                             set(findobj('Tag','plotGrav_edit_drift_manual'),'Visible','on'); % turn on (by default off) editable field with polynomial coefficients
                         else
@@ -433,8 +433,13 @@ try                                                                         % ca
                 case 'RESAMPLE_ALL'
                     row = fgetl(fid);count = count + 1;                     % only one input expected = time resolution in secods
                     if ~strcmp(char(row),'[]')
-                        char(row)
                         plotGrav('compute_decimate',char(row));
+                    end
+                %% Channels algebra
+                case 'CHANNELS_ALGEBRA'
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical operation on two channels
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('simple_algebra',char(row));
                     end
                 %% View: fonts, labels, legends, grid
                 case 'SET_DATE_FORMAT'                                      % set date format = x tick labels
@@ -687,7 +692,7 @@ catch
     set(findobj('Tag','plotGrav_text_input'),'Visible','off');
     set(findobj('Tag','plotGrav_text_status'),'String',sprintf('An error at line %3.0f occured during script run.',count));
     t = toc;
-    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid_log,'An error at line %3.0f occured during script run. Duration = %6.1f sec., input file: %s (%04d/%02d/%02d %02d:%02d)\n',count,t,in_script,ty,tm,td,th,tmm);
+    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid_log,'An error at line %3.0f occurred during script run. Duration = %6.1f sec., input file: %s (%04d/%02d/%02d %02d:%02d)\n',count,t,in_script,ty,tm,td,th,tmm);
     fclose(fid);
     fclose(fid_log);
 end

@@ -327,81 +327,81 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         
 		% Settings panel: Time
         uicontrol(p3,'Style','Text','String','Time min.:','units','normalized',...
-                  'Position',[0.02,0.56+0.29,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.02,0.56+0.27,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Text','String','Time max.:','units','normalized',...
-                  'Position',[0.02,0.44+0.29,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');   
+                  'Position',[0.02,0.44+0.27,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');   
         uicontrol(p3,'Style','Text','String','year','units','normalized',...
-                  'Position',[0.16,0.61+0.32,0.10,0.09],'FontSize',8);
+                  'Position',[0.16,0.61+0.30,0.10,0.09],'FontSize',8);
         uicontrol(p3,'Style','Text','String','month','units','normalized',...
-                  'Position',[0.26,0.61+0.32,0.10,0.09],'FontSize',8);
+                  'Position',[0.26,0.61+0.30,0.10,0.09],'FontSize',8);
         uicontrol(p3,'Style','Text','String','day','units','normalized',...
-                  'Position',[0.345,0.61+0.32,0.10,0.09],'FontSize',8);
+                  'Position',[0.345,0.61+0.30,0.10,0.09],'FontSize',8);
         uicontrol(p3,'Style','Text','String','hour','units','normalized',...
-                  'Position',[0.44,0.61+0.32,0.10,0.09],'FontSize',8);
+                  'Position',[0.44,0.61+0.30,0.10,0.09],'FontSize',8);
         temp = now;temp = datevec(temp-8);                                  % get current time and covert it to calendar/time - 8 days. Use this date for default time setting
         uicontrol(p3,'Style','Edit','String',sprintf('%04d',temp(1)),'units','normalized',...
-                  'Position',[0.17,0.565+0.29,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.17,0.565+0.27,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_year');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(2)),'units','normalized',...
-                  'Position',[0.27,0.565+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.27,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_month');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(3)),'units','normalized',...
-                  'Position',[0.36,0.565+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.36,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_day');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',00),'units','normalized',...
-                  'Position',[0.45,0.565+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.45,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_hour');
         temp = now;temp = datevec(temp-1);                                  % get current time and covert it to calendar/time - 1 days. Use this date for default time setting
         uicontrol(p3,'Style','Edit','String',sprintf('%04d',temp(1)),'units','normalized',...
-                  'Position',[0.17,0.445+0.29,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.17,0.445+0.27,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_year');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(2)),'units','normalized',...
-                  'Position',[0.27,0.445+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.27,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_month');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(3)),'units','normalized',...
-                  'Position',[0.36,0.445+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.36,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_day');
         uicontrol(p3,'Style','Edit','String',sprintf('%02d',23),'units','normalized',...
-                  'Position',[0.45,0.445+0.29,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.45,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_hour');
 				  
 		% Settings panel: calibration and admittance
         uicontrol(p3,'Style','Text','String','Calibration:','units','normalized',...
-                  'Position',[0.54,0.56+0.29,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.54,0.565+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Edit','String','-914.78','units','normalized',...	% default calibration factor (iGrav)
-                  'Position',[0.70,0.56+0.29,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.70,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_factor');
         uicontrol(p3,'Style','Edit','String','-14.2','units','normalized',...	% default phase delay (iGrav)	
-                  'Position',[0.83,0.56+0.29,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.83,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_delay');
         uicontrol(p3,'Style','Text','String','nm/s^2 / V','units','normalized',...
-                  'Position',[0.70,0.61+0.33,0.15,0.09],'FontSize',8,'HorizontalAlignment','left',...
+                  'Position',[0.705,0.630+0.30,0.12,0.07],'FontSize',8,'HorizontalAlignment','left',...
                   'Tag','plotGrav_text_nms2','UserData',[]);
         uicontrol(p3,'Style','Text','String','seconds','units','normalized',...
-                  'Position',[0.85,0.61+0.33,0.13,0.09],'FontSize',8,'HorizontalAlignment','left');
+                  'Position',[0.845,0.630+0.30,0.12,0.07],'FontSize',8,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Text','String','Admittance:','units','normalized',...
-                  'Position',[0.54,0.44+0.29,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.54,0.44+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Edit','String','-2.9','units','normalized',...	% default single admittance factor			
-                  'Position',[0.70,0.445+0.29,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.70,0.445+0.28,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_admit_factor');
         uicontrol(p3,'Style','Text','String','nm/s^2 / hPa','units','normalized',...
-                  'Position',[0.83,0.44+0.29,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.83,0.44+0.27,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
 				  
 		% Settings: Drift + Re-sampling
         uicontrol(p3,'Style','Text','String','Drift fit:','units','normalized',...
-                  'Position',[0.02,0.60,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.02,0.59,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Popupmenu','String','none|constant value|linear|quadratic|cubic|set','units','normalized',...
-                  'Position',[0.17,0.66,0.18,0.05],'FontSize',9,'Tag','plotGrav_pupup_drift','backgroundcolor','w',...
+                  'Position',[0.17,0.65,0.18,0.05],'FontSize',9,'Tag','plotGrav_pupup_drift','backgroundcolor','w',...
                   'Value',1,'Callback','plotGrav set_manual_drift');		% default drift = none (zero)
         uicontrol(p3,'Style','Edit','String','0.41 0','units','normalized',...	% default user drift setting			
-                  'Position',[0.36,0.60,0.17,0.10],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.36,0.59,0.17,0.10],'FontSize',9,'BackgroundColor','w',...
                   'Tag','plotGrav_edit_drift_manual','Visible','off');
         uicontrol(p3,'Style','Text','String','Re-sample:','units','normalized',...
-                  'Position',[0.54,0.60,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.54,0.59,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Edit','String','60','units','normalized',...		% default re-sampling interval (of iGrav/SG030). Will not be used for TRiLOGi, Other1 and Other2 time series
-                  'Position',[0.7,0.605,0.12,0.09],'FontSize',9,'Tag','plotGrav_edit_resample','backgroundcolor','w');
+                  'Position',[0.7,0.595,0.12,0.09],'FontSize',9,'Tag','plotGrav_edit_resample','backgroundcolor','w');
         uicontrol(p3,'Style','Text','String','seconds','units','normalized',...
-                  'Position',[0.83,0.60,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
+                  'Position',[0.83,0.59,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
 				  
 		% Settings: legend/grid
         uicontrol(p3,'Style','Checkbox','String','Grid','units','normalized',...
@@ -768,7 +768,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			%% Load TRiLOGi data
             trilogi_loaded = 0;                                             % aux. variable to check if at least one file has been loaded
             % Switch beween file formats
-            if strcmp(file_path_trilogi(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
+            if isempty(file_path_trilogi)
+                fprintf(fid,'No TRiLOGi data loaded\n');                    % if no or empty TRiLOGi path has been selected
+                time.trilogi = [];
+                data.trilogi = [];
+                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                    {false,false,false,'NotAvailable',false,false,false});  % update ui-table
+            elseif strcmp(file_path_trilogi(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
                 % LOAD Tsoft file: the file contains the whole time series. 'Just loading, no stacking'
                 % Only condition is, the file is stored in tsoft format
                 % with standard header. The TRiLOGi data are NEVER corrected/calibrated/filtered!
@@ -3292,11 +3298,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 															sprintf('[%2d] %s (%s)',channel_number,char(channels_igrav(channel_number)),char(units_igrav((plot_axesL1.igrav(j))))),...
 																false,false,false};
 						data.igrav(:,channel_number) = interp1(time_filt,data_filt,time.igrav); % append the filtered time series
-						channel_number = channel_number + 1;                % increase the number for next channel
 						clear data_filt time_filt timeout dataout id        % Clear variables used in each for loop
 						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'iGrav channel %d filtered (%04d/%02d/%02d %02d:%02d)\n',...
-							plot_axesL1.igrav(j),ty,tm,td,th,tmm);
+						fprintf(fid,'iGrav channel %d filtered -> %d (%04d/%02d/%02d %02d:%02d)\n',...
+							plot_axesL1.igrav(j),channel_number,ty,tm,td,th,tmm);
+						channel_number = channel_number + 1;                % increase the number for next channel
 					end
 					
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_igrav); % update the iGrav ui-table
@@ -3331,16 +3337,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 															sprintf('[%2d] %s (%s)',channel_number,char(channels_trilogi(channel_number)),char(units_trilogi((plot_axesL1.trilogi(j))))),...
 																false,false,false};
 						data.trilogi(:,channel_number) = interp1(time_filt,data_filt,time.trilogi); % add data
-						channel_number = channel_number + 1;            % next channel
 						clear data_filt time_filt timeout dataout id
 						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'TRiLOGi channel %d filtered (%04d/%02d/%02d %02d:%02d)\n',...
-							plot_axesL1.trilogi(j),ty,tm,td,th,tmm);
+						fprintf(fid,'TRiLOGi channel %d filtered -> %d(%04d/%02d/%02d %02d:%02d)\n',...
+							plot_axesL1.trilogi(j),channel_number,ty,tm,td,th,tmm);
+						channel_number = channel_number + 1;            % next channel
 					end
 					set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi); % update table
 					set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % update trilogi units
 					set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % update trilogi channels (names)
-					clear data time time_resolution                     % remove variables
+					clear time time_resolution                     % remove variables
 				end
 				
 				% Do the same for Other1 time series. For comments, see
@@ -3369,16 +3375,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 															sprintf('[%2d] %s (%s)',channel_number,char(channels_other1(channel_number)),char(units_other1((plot_axesL1.other1(j))))),...
 																false,false,false};
 						data.other1(:,channel_number) = interp1(time_filt,data_filt,time.other1); 
-						channel_number = channel_number + 1;         
 						clear data_filt time_filt timeout dataout id
 						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'Other1 channel %d filtered (%04d/%02d/%02d %02d:%02d)\n',...
-							plot_axesL1.other1(j),ty,tm,td,th,tmm);
+						fprintf(fid,'Other1 channel %d filtered -> %d (%04d/%02d/%02d %02d:%02d)\n',...
+							plot_axesL1.other1(j),channel_number,ty,tm,td,th,tmm);
+						channel_number = channel_number + 1;         
 					end
 					set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1);
 					set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1);
 					set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels_other1); 
-					clear data time time_resolution                    
+					clear time time_resolution                    
 				end 
 				
 				% Do the same for Other2 time series. For comments, see
@@ -3407,16 +3413,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 															sprintf('[%2d] %s (%s)',channel_number,char(channels_other2(channel_number)),char(units_other2((plot_axesL1.other2(j))))),...
 																false,false,false};
 						data.other2(:,channel_number) = interp1(time_filt,data_filt,time.other2); 
-						channel_number = channel_number + 1;           
 						clear data_filt time_filt timeout dataout id
 						[ty,tm,td,th,tmm] = datevec(now);
-						fprintf(fid,'Other2 channel %d filtered (%04d/%02d/%02d %02d:%02d)\n',...
-							plot_axesL1.other2(j),ty,tm,td,th,tmm);
+						fprintf(fid,'Other2 channel %d filtered -> %d (%04d/%02d/%02d %02d:%02d)\n',...
+							plot_axesL1.other2(j),channel_number,ty,tm,td,th,tmm);
+						channel_number = channel_number + 1;           
 					end
 					set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2); 
 					set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2); 
 					set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels_other2); 
-					clear data time time_resolution                     
+					clear time time_resolution                     
 					
                 end
                 fclose(fid);                                                % Close the logfile
@@ -4508,10 +4514,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
 				% Get user input
-                set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','23 - 26'); % Show editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                pause(10);
+                if nargin == 1
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','23 - 26'); % Show editable field
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                    pause(10);
+                else
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % turn off
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
                 st0 = get(findobj('Tag','plotGrav_edit_text_input'),'String');   % get string
@@ -4545,11 +4555,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         if ~isempty(temp)                                   % proceed only if valid operation has been carried out
                             data.igrav(:,num_channels+1) = temp;            % append to the end of the data matrix
-                            data_table.igrav(c+1,1:7) = {false,false,false,...    % add to ui-table
-                                                        sprintf('[%2d] %s (%s)',num_channels+1,char(channels.igrav(c+1)),char(units.igrav(c+1))),false,false,false}; 
+                            data_table.igrav(num_channels+1,1:7) = {false,false,false,...    % add to ui-table
+                                                        sprintf('[%2d] %s (%s)',num_channels+1,char(channels.igrav(num_channels+1)),char(units.igrav(num_channels+1))),false,false,false}; 
                             % Write to logfile
                             [ty,tm,td,th,tmm] = datevec(now);               % time for logfile
-                            fprintf(fid,'iGrav channel %d = %s (%04d/%02d/%02d %02d:%02d)\n',c+1,st0,ty,tm,td,th,tmm);
+                            fprintf(fid,'iGrav channel %d = %s (%04d/%02d/%02d %02d:%02d)\n',num_channels+1,st0,ty,tm,td,th,tmm);
                             % Store the data and channels
                             set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % update ui-table
                             set(findobj('Tag','plotGrav_push_load'),'UserData',data);  

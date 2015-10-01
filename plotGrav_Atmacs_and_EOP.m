@@ -3,6 +3,7 @@ function [pol_corr,lod_corr,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and
 % This function computes the polar motion correction, length of day 
 % correction and Atmacs atmospheric correction (add to time series to
 % correct them). This function also predicts the polar motion effect!
+% Prediction works only with time series starting 2003!
 % 
 % Input:
 %   ref_time            ...     input time vector (in matlab format)
@@ -75,7 +76,40 @@ try
 
         pol_corr = -1.16*R*w^2*sind(2*Lat)*(x*cosd(Lon) - y*sind(Lon))*10^9;        % polar motion CORRECTION
         lod_corr = 1.16*2*w*R*cosd(Lat)^2*domega*10^9;                              % LOD CORRECTION
-        pol_corr = interp1(time_eop,pol_corr,ref_time);
+        
+        %% Predict polar motion (EOP have one month delay)
+        if ref_time(end) > (now - 32)                                       % predict only if necesary 
+            ref_time_fit = [now - 365*12:1:now]';                           % time for Polar motion prediction (longer time series so better fit parameters can be estimated)
+            ref_pol_fit = interp1(time_eop,pol_corr,ref_time_fit);          % y-values for further fitting (must have same resolution as ref_time_fit)
+            % Prepare date for matlab 'fit' function 
+            mean_val_fit = mean(ref_pol_fit(~isnan(ref_pol_fit)));          % Remove mean as sine fitting will be used (sine oscilates arount 0).
+            [xData, yData] = prepareCurveData(ref_time_fit,ref_pol_fit - mean_val_fit); 
+            % fit 5 sine waves. This was obtained after manual expriment with 
+            % real data (12 years) seeking minimum residual error. Obtained
+            % Residuals (max error) < 7.1 nm/s^2, RMSE = 2.6 nm/s^2. 
+            ft = fittype('sin5');  
+            opts = fitoptions(ft);
+    %         opts = fitoptions('Method','NonlinearLeastSquares');          % additional fit options (R2014b). 
+            opts.Display = 'Off';
+            try
+                [fitresult, ~] = fit(xData,yData,ft,opts);                  % In some matlab versions, 'fit', in others 'Fit'=> try out.
+            catch error_message
+                if strcmp(error_message.identifier,'MATLAB:dispatcher:InexactCaseMatch')
+                    [fitresult, ~] = Fit(xData,yData,ft,opts);
+                end
+            end
+            out_fit = feval(fitresult,ref_time_fit);                        % covert estimated parameters back to time series
+            % Adjust the fit to input time (shift to fit/merge the
+            % last value)
+            pol_corr = vertcat(yData(1:end-1),out_fit(ref_time_fit >= xData(end)) - (out_fit(ref_time_fit == xData(end)) - yData(end)));
+            % Re-interpolate to new resolution (iGrav)
+            pol_corr = interp1(ref_time_fit,pol_corr,ref_time)+mean_val_fit;
+        else
+            pol_corr = interp1(time_eop,pol_corr,ref_time);
+        end
+                    
+        %% Interpolate LOD to output time 
+        % No prediction (too complicated and effect too small)
         lod_corr = interp1(time_eop,lod_corr,ref_time);
         corr_check(1:2) = 1;
         clear year month day x y lod domega str str_mat x_str y_str w R li lod_str url_link url_header url_rows
