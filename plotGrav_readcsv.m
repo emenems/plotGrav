@@ -50,22 +50,38 @@ else
     header = [];
 end
 
-%% Get data
-count = 1;                                                                  % data row number
-data = [];                                                                  % prepare variable
-row = fgetl(fid);                                                       % read line
-while ischar(row)                                                           % continue until end of file
-    split = strsplit(row,delim);                                            % split row using given delimiter(s)
-    time(count,1) = datenum(split(date_column),date_format);                % get time info
-    if ischar(data_column)
-        data = vertcat(data,str2double(split(date_column+1:end)));          % read all columns except data
-    else
-        data = vertcat(data,str2double(split(data_column)));                % read selected data columns
+%% Get data: faster reading
+row = fgetl(fid);								% read only to get the number of columns. See below.
+number_of_column = length(strsplit(row,delim)); % get the number of columns for further data reading using textscan
+fclose(fid); % close the file to open it again for reading from beginning. The fgetl read already a row => not to loose it.
+fid = fopen(input_file);
+% Read/Remove the header
+if head > 0
+    for i = 1:head
+       fgetl(fid); 
     end
-    count = count+1;                                                        % increase row number
-    row = fgetl(fid);                                                       % read line
+end
+% Create format for reading
+format_spec = [];
+for i = 1:number_of_column
+    if i == date_column % read data as string. The datenum function and 'date_format' will be used to transform it to matlab format
+        format_spec = [format_spec,'%s'];
+    else
+        format_spec = [format_spec,'%f']; % all other columns are expected to be a floating-point number
+    end
+    if i~=number_of_column % add space only up to second last column. This is independent of delimiter! See 'data_all' variable.
+        format_spec = [format_spec,' '];
+    end
+end
+data_all = textscan(fid,format_spec,'Delimiter',char(delim),'TreatAsEmpty',{'"NAN"'}); % read the whole file at once
+time = datenum(data_all{date_column},date_format);                          % convert time string to matlab format
+if ischar(data_column)                                                      % is char = 'All columns'
+    data = cell2mat(data_all(2:end));
+else                                                                        % otherwise output only selected column
+    data = cell2mat(data_all(data_column));
 end
 
 fclose(fid);                                                                % close file
+
 
 end
