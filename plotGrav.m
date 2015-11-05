@@ -623,18 +623,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if ~isempty(data.igrav)
                         igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
                     end
-				elseif strcmp(file_path_igrav(end-3:end),'.030')        
+				elseif strcmp(file_path_igrav(end-3:end),'.030') || strcmp(file_path_igrav(end-3:end),'.029')   
                     % LOAD SG030 files, i.e. SG030 data stored in tsf format
                     % file_path_igrav = full file name of one of the files with SG030 data. Not Path, but file!
                     % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
                     % These time series will be stacked, filtered and calibrated (only lower sensor)
                     % Additionaly, these time series will be corrected for tides, atmosphere and drift (if selected so). 'Loading, and stacking'
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading SG030 data...');drawnow % send (general) message to status bar
+					set(findobj('Tag','plotGrav_text_status'),'String','Loading SG030/SG029 data...');drawnow % send (general) message to status bar
 					for i = 1:length(time_in(:,7))                          % for loop for each day
 						try  
 							set(findobj('Tag','plotGrav_text_status'),'String',...
-								sprintf('Loading SG030 data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow % send (specific) message to status bar
-							file_name = sprintf('%s%02d%02d%02d.030',file_path_igrav(1:end-10),abs(time_in(i,1)-2000),time_in(i,2),time_in(i,3)); % create file name: file path and file name = file_path_igrav. Last 10 characters specify the year, month and day of the file.
+								sprintf('Loading SG030/029 data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow % send (specific) message to status bar
+							file_name = sprintf('%s%02d%02d%02d%s',file_path_igrav(1:end-10),abs(time_in(i,1)-2000),time_in(i,2),time_in(i,3),file_path_igrav(end-3:end)); % create file name: file path and file name = file_path_igrav. Last 10 characters specify the year, month and day of the file.
 							[ttime,tdata] = plotGrav_loadtsf(file_name);    % load file and store to temporary variables. Do not read channel names and units, as these are known and constant.
                             % Now, check if the loaded time series contains non-constant sampling, i.e., missing data.
                             % If so, try to interpolate the missing intervals but only if the missing interval does not exceed 10 seconds!
@@ -644,7 +644,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								tdata = interp1(ttime,tdata,ntime,'linear');% interpolate value for new time vector (temporary variable)
 								ttime = ntime;clear ntime;                  % remove the temporary time vector to clear memory. The temporary data matrix will be used in the following part.
 								% It is important to write to the logfile that data has been interpolated
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 missing data interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 missing data interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
                             end
                             % Do the same as above for NaNs (missing data~= NaNs!)
 							ntime = ttime;ndata = tdata;                    % temp. variables (see the comment above)
@@ -653,18 +653,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 							if max(abs(diff(ntime))) > 1.9/86400 && max(abs(diff(ntime))) <= 10/86400 % interpolate if max missing time interval is < 10 seconds (and >= 2 seconds)
 								tdata = interp1(ntime,ndata,ttime,'linear');% interpolate value for new time vector
 								clear ntime ndata;
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 NaNs interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 NaNs interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
 							end
 							igrav_loaded = 3;                               % 3 => SG030 loaded time series will be corrected/calibrated/filtered. At least one of the inteded files must be loaded (it is not necesary to load all files)
                         catch error_message
 							ttime = datenum(time_in(i,1:3));                % if data has not been loaded correctly, add a dummy for stacking (to make sure the missing files result in missing data!)
 							tdata(1,1:3) = NaN;                             % insert NaNs (see comment above)
                             if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF') % switch between error IDs. See plotGrav_loadtsf.m function for error handling
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             else
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             end
@@ -676,11 +676,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values
 						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
 						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
 						data.igrav = [];                                    % otherwise empty
 						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG030 input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG030/029 input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
 					end
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % update the ui-table
 						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
@@ -717,7 +717,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 							[ttime,tdata] = plotGrav_loadData(file_name,1,[],[],fid,'iGrav'); % load file and store to temporary variables (do not read channels and units as these are known and constant)
                             % Check if the loaded time series contains non-constant sampling, i.e., missing data (same as for SG030).
                             % If so, try to interpolate the missing intervals but only if the missing interval does not exceed 10 seconds!
-                            % Steps longer than 10 seconds should not be interpolated due to the high nois of the data.
+                            % Steps longer than 10 seconds should not be interpolated due to the high noise of the data.
+                            % First though, check if sampling > 0 (=no ambiguous time stemps)
+                            if min(diff(ttime)) <= 0
+                                tdata(vertcat(1,diff(ttime))<=0,:) = [];    % use vertcat as diff outputs vector with shorter length (see: help diff)
+                                ttime(vertcat(1,diff(ttime))<=0) = [];
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav ambiguous data removed (e.g. non-increasing sampling):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
+                            end
+                            % Interpolate missing data (<10 seconds).
                             if max(abs(diff(ttime))) > 1.9/86400 && max(abs(diff(ttime))) <= 10/86400 
 								ntime = [ttime(1):1/86400:ttime(end)]';     % new time vector with one second resolution (temporary variable)
 								tdata = interp1(ttime,tdata,ntime,'linear');% interpolate value for new time vector (temporary variable)
@@ -946,7 +953,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				fprintf(fid,'No Other2 data loaded\n');
 				time.other2 = [];
 				data.other2 = [];
-				set(findobj('Tag','plotGrav_uitable_other1_data'),'data',...
+				set(findobj('Tag','plotGrav_uitable_other2_data'),'data',...
 					{false,false,false,'NotAvailable',false,false,false});  % update table = set to empty if  file input not selected
 			end
 			%% Load filter
