@@ -3816,7 +3816,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         for i = 1:size(eof.F,2)                                 % create legend related to principle components
                             eof.cur_legend{1,i} = sprintf('PC%1d (%4.1f%%)',i,eof.explained(size(eof.F,2)+1-i));
                         end
-                        % Plot the results (temporary plot, will disappear
+                        % Plot the results: PCs (temporary plot, will disappear
                         % after ploting something else (selecting channel).
                         % Nevertheless, the results will be stored for further
                         % export (save as, see 'export_rec_time_series' and
@@ -3853,7 +3853,48 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         set(a2(1),'YLimMode','auto','YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')
                         set(a2(2),'Visible','off','XLim',ref_lim,'XTick',xtick_value); % set new X ticks (left)
                         linkaxes([a2(1),a2(2)],'x');                            % link axes, just in case
-                        plot_mode(2:3) = [1 0];                                 % update plot mode (plot_mode(1) is on, otherwise no time series would be selected)
+                        
+                        % Plot the results: Reconstructions (temporary plot, 
+                        % same as PC plot). Plot only the reconstruction
+                        % for first component!!
+                        Fr = eof.F*eof.EOF(:,end)*eof.EOF(:,end)';          % Keep in mind, EOF are stored in ascending order => start from the end
+                        for i = 1:size(Fr,2)
+                            Fr(:,i) = Fr(:,i) + eof.mean_value(i);          % add the mean value that has been removed prior to EOF analysis
+                        end
+                        h = plot(a3(1),eof.ref_time,Fr);            % plot the computet reconstruction (fluplr to sort it descendingly)
+                        for i = 1:length(h)                                     % Set color for plotted lines + their width
+                            set(h(i),'color',color_scale(i,:),'LineWidth',line_width(3));
+                        end
+                        if get(findobj('Tag','plotGrav_check_grid'),'Value')==1  % show grid if required (selected)
+                            grid(a3(1),'on');                                   % only left axis (L2) is used
+                        else
+                            grid(a3(2),'off');
+                        end
+                        if get(findobj('Tag','plotGrav_check_legend'),'Value') ==1  % show legend if required (selected)
+                            temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend of L1 (the same for reconstruction)
+                            l = legend(a3(1),temp{1});                                     % set left legend
+                            set(l,'interpreter','none','FontSize',font_size);   % change font and interpreter (because channels contain spacial sybols like _)
+                            legend(a3(2),'off');                                % legend for left axes always off (nothing is plotted)
+                        else
+                            legend(a3(1),'off');                                % turn of legends if not required
+                            legend(a3(2),'off');
+                        end
+                        if get(findobj('Tag','plotGrav_check_labels'),'Value')==1  % show labels if required
+                            ylabel(a3(1),'EOF reconstruction','FontSize',font_size);  % label only for left axes
+                            ylabel(a3(2),[]);
+                        else
+                            ylabel(a3(1),[]);
+                            ylabel(a3(2),[]);
+                        end
+                        % Set limits                                            
+                        ref_lim = get(a1(1),'XLim');                            % get current L1 X limits and use them a reference
+                        xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x); % create new time ticks
+                        set(a3(1),'YLimMode','auto','XLim',ref_lim,'XTick',xtick_value,'Visible','on'); % set X limits
+                        rL1 = get(a3(1),'YLim'); 
+                        set(a3(1),'YLimMode','auto','YTick',linspace(rL1(1),rL1(2),num_of_ticks_y)); % set Y limits (for unknown reason, this must by done after X limits and 'YLimMode','auto')
+                        set(a3(2),'Visible','off','XLim',ref_lim,'XTick',xtick_value); % set new X ticks (left)
+                        linkaxes([a3(1),a3(2)],'x');                            % link axes, just in case
+                        plot_mode(2:3) = [1 1];                                 % update plot mode (plot_mode(1) is on, otherwise no time series would be selected)
                         plotGrav('push_date');                                  % make sure X axis is in civil time
                         set(findobj('Tag','plotGrav_push_reset_view'),'UserData',plot_mode);% store updated plot_mode 
                         set(findobj('Tag','plotGrav_menu_compute_eof'),'UserData',eof);% store EOF results for possible exporting (see next section)
@@ -3940,14 +3981,26 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		   %% Export EOF PC
            % Export the computed EOF principle components to plotGrav supported file
            % format.
-			eof = get(findobj('Tag','plotGrav_menu_compute_eof'),'UserData'); % store EOF results 
+			eof = get(findobj('Tag','plotGrav_menu_compute_eof'),'UserData'); % store EOF results
+            % Reconstruct time series using first PC
+            Fr = eof.F*eof.EOF(:,end)*eof.EOF(:,end)';                      % Keep in mind, EOF are stored in ascending order => start from the end
+            Fr = fliplr(Fr);                                                % ascending to descenting
+            for i = 1:size(Fr,2)
+                Fr(:,i) = Fr(:,i) + eof.mean_value(i);                      % add the mean value that has been removed prior to EOF analysis
+            end
             if ~isempty(eof)                                                % proceed only if EOF computed
+                % EOF time series (PCs)
                 for i = 1:size(eof.EOF,2)                                   % Create channel names and untis. Units are by default unkwnon
                     channels(i) = {sprintf('PC%1d',i)};
                     units(i) = {'?'};
                 end
-                dataout = fliplr(eof.PC);                                   % ascending to descending order (First column = first component)
-                plotGrav_exportData(eof.ref_time,dataout,channels,units,[],[],'EOF Patterns');
+                % Append reconstruciton
+                for i = 1:size(Fr,2)                                        % Create channel names and untis. Units are by default unkwnon
+                    channels(i+size(eof.EOF,2)) = {sprintf('PC%1d:reconst.',i)};
+                    units(i+size(eof.EOF,2)) = {'?'};
+                end
+                dataout = [fliplr(eof.PC),fliplr(Fr)];                              % ascending to descending order (First column = first component)
+                plotGrav_exportData(eof.ref_time,dataout,channels,units,[],[],'EOF Patterns',[]);
                 set(findobj('Tag','plotGrav_text_status'),'String','EOF Patterns exported.');drawnow % status
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Compute EOF first.');drawnow % status
