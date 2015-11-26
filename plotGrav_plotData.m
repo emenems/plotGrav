@@ -61,29 +61,29 @@ switch switch_plot
         cur_legend = [];                                                    % prepare variabel for legend
         if ~isempty(plot_axesL.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
             h1 = plot(plot_axes(1),time.igrav,data.igrav(:,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
-            cur_labelsL = [cur_labelsL,units_igrav(plot_axesL.igrav)];      % stack ylabels (only unique will be used at the end)
-            cur_legend = [cur_legend,channels_igrav(plot_axesL.igrav)];     % stack legend 
+            cur_labelsL = vertcat(cur_labelsL,units_igrav(plot_axesL.igrav));      % stack ylabels (only unique will be used at the end)
+            cur_legend = vertcat(cur_legend,channels_igrav(plot_axesL.igrav));     % stack legend 
         else
             h1 = [];
         end
         if ~isempty(plot_axesL.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
             h2 = plot(plot_axes(1),time.trilogi,data.trilogi(:,plot_axesL.trilogi));hold(plot_axes(1),'on')
-            cur_labelsL = [cur_labelsL,units_trilogi(plot_axesL.trilogi)];
-            cur_legend = [cur_legend,channels_trilogi(plot_axesL.trilogi)];
+            cur_labelsL = vertcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
+            cur_legend = vertcat(cur_legend,channels_trilogi(plot_axesL.trilogi));
         else
             h2 = [];
         end
         if ~isempty(plot_axesL.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
             h3 = plot(plot_axes(1),time.other1,data.other1(:,plot_axesL.other1));hold(plot_axes(1),'on')
-            cur_labelsL = [cur_labelsL,units_other1(plot_axesL.other1)];
-            cur_legend = [cur_legend,channels_other1(plot_axesL.other1)];
+            cur_labelsL = vertcat(cur_labelsL,units_other1(plot_axesL.other1));
+            cur_legend = vertcat(cur_legend,channels_other1(plot_axesL.other1));
         else
             h3 = [];
         end
         if ~isempty(plot_axesL.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
             h4 = plot(plot_axes(1),time.other2,data.other2(:,plot_axesL.other2));hold(plot_axes(1),'on')
-            cur_labelsL = [cur_labelsL,units_other2(plot_axesL.other2)];
-            cur_legend = [cur_legend,channels_other2(plot_axesL.other2)];
+            cur_labelsL = vertcat(cur_labelsL,units_other2(plot_axesL.other2));
+            cur_legend = vertcat(cur_legend,channels_other2(plot_axesL.other2));
         else
             h4 = [];
         end
@@ -141,29 +141,29 @@ switch switch_plot
         cur_legend = [];                                                    % prepare variabel for legend
         if ~isempty(plot_axesR.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
             h1 = plot(plot_axes(2),time.igrav,data.igrav(:,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
-            cur_labelsR = [cur_labelsR,units_igrav(plot_axesR.igrav)];
-            cur_legend = [cur_legend,channels_igrav(plot_axesR.igrav)];
+            cur_labelsR = vertcat(cur_labelsR,units_igrav(plot_axesR.igrav));
+            cur_legend = vertcat(cur_legend,channels_igrav(plot_axesR.igrav));
         else
             h1 = [];
         end
         if ~isempty(plot_axesR.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
             h2 = plot(plot_axes(2),time.trilogi,data.trilogi(:,plot_axesR.trilogi));hold(plot_axes(2),'on')
-            cur_labelsR = [cur_labelsR,units_trilogi(plot_axesR.trilogi)];
-            cur_legend = [cur_legend,channels_trilogi(plot_axesR.trilogi)];
+            cur_labelsR = vertcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
+            cur_legend = vertcat(cur_legend,channels_trilogi(plot_axesR.trilogi));
         else
             h2 = [];
         end
         if ~isempty(plot_axesR.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
             h3 = plot(plot_axes(2),time.other1,data.other1(:,plot_axesR.other1));hold(plot_axes(2),'on')
-            cur_labelsR = [cur_labelsR,units_other1(plot_axesR.other1)];
-            cur_legend = [cur_legend,channels_other1(plot_axesR.other1)];
+            cur_labelsR = vertcat(cur_labelsR,units_other1(plot_axesR.other1));
+            cur_legend = vertcat(cur_legend,channels_other1(plot_axesR.other1));
         else
             h3 = [];
         end
         if ~isempty(plot_axesR.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
             h4 = plot(plot_axes(2),time.other2,data.other2(:,plot_axesR.other2));hold(plot_axes(2),'on')
-            cur_labelsR = [cur_labelsR,units_other2(plot_axesR.other2)];
-            cur_legend = [cur_legend,channels_other2(plot_axesR.other2)];
+            cur_labelsR = vertcat(cur_labelsR,units_other2(plot_axesR.other2));
+            cur_legend = vertcat(cur_legend,channels_other2(plot_axesR.other2));
         else
             h4 = [];
         end
@@ -220,32 +220,32 @@ switch switch_plot
         if ~isempty(plot_axesL.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
             h1l = plot(plot_axes(1),time.igrav,data.igrav(:,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
             set(h1l,'LineWidth',line_width(1));                             % Unlike in previous code, the line width must be set for left and right plot separately
-            cur_labelsL = [cur_labelsL,units_igrav(plot_axesL.igrav)];
-            cur_legendL = [cur_legendL,channels_igrav(plot_axesL.igrav)];
+            cur_labelsL = vertcat(cur_labelsL,units_igrav(plot_axesL.igrav));
+            cur_legendL = vertcat(cur_legendL,channels_igrav(plot_axesL.igrav));
         else
             h1l = [];
         end
         if ~isempty(plot_axesL.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
             h2l = plot(plot_axes(1),time.trilogi,data.trilogi(:,plot_axesL.trilogi));hold(plot_axes(1),'on')
             set(h2l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
-            cur_labelsL = [cur_labelsL,units_trilogi(plot_axesL.trilogi)];
-            cur_legendL = [cur_legendL,channels_trilogi(plot_axesL.trilogi)];
+            cur_labelsL = vertcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
+            cur_legendL = vertcat(cur_legendL,channels_trilogi(plot_axesL.trilogi));
         else
             h2l = [];
         end
         if ~isempty(plot_axesL.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
             h3l = plot(plot_axes(1),time.other1,data.other1(:,plot_axesL.other1));hold(plot_axes(1),'on')
             set(h3l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
-            cur_labelsL = [cur_labelsL,units_other1(plot_axesL.other1)];
-            cur_legendL = [cur_legendL,channels_other1(plot_axesL.other1)];
+            cur_labelsL = vertcat(cur_labelsL,units_other1(plot_axesL.other1));
+            cur_legendL = vertcat(cur_legendL,channels_other1(plot_axesL.other1));
         else
             h3l = [];
         end
         if ~isempty(plot_axesL.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
             h4l = plot(plot_axes(1),time.other2,data.other2(:,plot_axesL.other2));hold(plot_axes(1),'on')
             set(h4l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
-            cur_labelsL = [cur_labelsL,units_other2(plot_axesL.other2)];
-            cur_legendL = [cur_legendL,channels_other2(plot_axesL.other2)];
+            cur_labelsL = vertcat(cur_labelsL,units_other2(plot_axesL.other2));
+            cur_legendL = vertcat(cur_legendL,channels_other2(plot_axesL.other2));
         else
             h4l = [];
         end
@@ -255,32 +255,32 @@ switch switch_plot
         if ~isempty(plot_axesR.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
             h1r = plot(plot_axes(2),time.igrav,data.igrav(:,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
             set(h1r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
-            cur_labelsR = [cur_labelsR,units_igrav(plot_axesR.igrav)];
-            cur_legendR = [cur_legendR,channels_igrav(plot_axesR.igrav)];
+            cur_labelsR = vertcat(cur_labelsR,units_igrav(plot_axesR.igrav));
+            cur_legendR = vertcat(cur_legendR,channels_igrav(plot_axesR.igrav));
         else
             h1r = [];
         end
         if ~isempty(plot_axesR.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
             h2r = plot(plot_axes(2),time.trilogi,data.trilogi(:,plot_axesR.trilogi));hold(plot_axes(2),'on')
             set(h2r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
-            cur_labelsR = [cur_labelsR,units_trilogi(plot_axesR.trilogi)];
-            cur_legendR = [cur_legendR,channels_trilogi(plot_axesR.trilogi)];
+            cur_labelsR = vertcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
+            cur_legendR = vertcat(cur_legendR,channels_trilogi(plot_axesR.trilogi));
         else
             h2r = [];
         end
         if ~isempty(plot_axesR.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
             h3r = plot(plot_axes(2),time.other1,data.other1(:,plot_axesR.other1));hold(plot_axes(2),'on')
             set(h3r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
-            cur_labelsR = [cur_labelsR,units_other1(plot_axesR.other1)];
-            cur_legendR = [cur_legendR,channels_other1(plot_axesR.other1)];
+            cur_labelsR = vertcat(cur_labelsR,units_other1(plot_axesR.other1));
+            cur_legendR = vertcat(cur_legendR,channels_other1(plot_axesR.other1));
         else
             h3r = [];
         end
         if ~isempty(plot_axesR.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
             h4r = plot(plot_axes(2),time.other2,data.other2(:,plot_axesR.other2));hold(plot_axes(2),'on')
             set(h4r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
-            cur_labelsR = [cur_labelsR,units_other2(plot_axesR.other2)];
-            cur_legendR = [cur_legendR,channels_other2(plot_axesR.other2)];
+            cur_labelsR = vertcat(cur_labelsR,units_other2(plot_axesR.other2));
+            cur_legendR = vertcat(cur_legendR,channels_other2(plot_axesR.other2));
         else
             h4r = [];
         end

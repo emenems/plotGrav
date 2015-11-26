@@ -1,5 +1,5 @@
 function [timeout,dataout,id_out,id_in] = plotGrav_findTimeStep(time,data,orig_step)
-%FINDTIMESTEP Function for identifying steps and filling them with NaN
+%PLOTGRAV_FINDTIMESTEP Function for identifying steps and filling them with NaN
 % Warning: this function calculates with one second accuracy. Therefore, do
 % not use this function for time series sampled with higher time
 % resolution!

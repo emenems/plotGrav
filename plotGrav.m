@@ -963,8 +963,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				try
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
 					if ~isempty(filter_file)                                % try to load the filter file/response if some string is given
-						Num = load(filter_file);                            % load filter file = in ETERNA modified format (header must be commented using %)
-						Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));     % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                        switch filter_file(end-3:end)                       % switch between supported formats: mat = matlab output, otherwise, eterna modified format.
+                            case '.mat'
+                                Num = importdata(filter_file);              % Impulse response as created using Matlab's Filter design toolbox
+                            otherwise
+                                Num = load(filter_file);                    % load filter file = in ETERNA modified format (header must be commented using %)
+                                Num = vertcat(Num(:,2),flipud(Num(1:end-1,2))); % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                        end
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Filter loaded: %s (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm);
 					else
 						Num = [];                                           % if not loaded, set to [] (empty)
@@ -2256,8 +2261,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size. Will be used for new figure/plot with filter inpulse
             if ~isempty(filter_file)                                        % try to load the filter file/response if some string is given
                 try 
-                    Num = load(filter_file);                                % load filter file = in ETERNA format - header
-                    Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));         % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                    switch filter_file(end-3:end)                           % switch between supported formats: mat = matlab output, otherwise, eterna modified format.
+                        case '.mat'
+                            Num = importdata(filter_file);                  % Impulse response as created using Matlab's Filter design toolbox
+                        otherwise
+                            Num = load(filter_file);                        % load filter file = in ETERNA format - header
+                            Num = vertcat(Num(:,2),flipud(Num(1:end-1,2))); % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                    end
                     figure('Name','plotGrav: filter impulse response','Toolbar','figure'); % open new figure
                     a0_spectral = axes('FontSize',font_size);               % create new axes using default or user-set font size 
                     hold(a0_spectral,'on');                                 % all results in one window
@@ -3241,8 +3251,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
 				filter_file = get(findobj('Tag','plotGrav_edit_filter_file'),'String'); % get filter filename
 				if ~isempty(filter_file)                                    % try to load the filter file/response if some string is given
-					Num = load(filter_file);                                % load filter file = in ETERNA format - header
-					Num = vertcat(Num(:,2),flipud(Num(1:end-1,2)));         % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                    switch filter_file(end-3:end)                           % switch between supported formats: mat = matlab output, otherwise, eterna modified format.
+                        case '.mat'
+                            Num = importdata(filter_file);                  % Impulse response as created using Matlab's Filter design toolbox
+                        otherwise
+                            Num = load(filter_file);                        % load filter file = in ETERNA format - header
+                            Num = vertcat(Num(:,2),flipud(Num(1:end-1,2))); % stack the filter (ETERNA uses only one half of the repose = mirror the filter)
+                    end
 				else
 					set(findobj('Tag','plotGrav_text_status'),'String','No filter file selected.');drawnow % status
 					Num = [];                                               % throughout this file, [] means not data has been loaded => no plotting/loading/computing

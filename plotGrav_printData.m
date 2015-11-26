@@ -91,11 +91,13 @@ else
             rL1 = get(a1c(1),'YLim');                                       % Get current limits for re-setting YTicks
             set(a1c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));     % set Y Ticks, for unknown reason, this must by done this way.      
             % Create legend (is not copied automatically)
-            temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
-            l = legend(a1c(1),temp{1});                                     % set left legend
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
-            l = legend(a1c(2),temp{2});                                     % set legend on right
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
+            if get(findobj('Tag','plotGrav_check_legend'),'Value') == 1 % copy only if selected by user
+                temp = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get legend
+                l = legend(a1c(1),temp{1});                                     % set left legend
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); % set font 
+                l = legend(a1c(2),temp{2});                                     % set legend on right
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); % set font
+            end
         end
         if plot_mode(2) > 0 && ~isempty(a2_position)                        % Continue only if something is plotted in second plot + user requires plotting second plot
             a2c(1) = copyobj(a2(1),F2c);
@@ -105,10 +107,12 @@ else
             rL1 = get(a2c(1),'YLim'); 
             set(a2c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));  
             temp = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); 
-            l = legend(a2c(1),temp{1});                             
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); 
-            l = legend(a2c(2),temp{2});                             
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); 
+            if get(findobj('Tag','plotGrav_check_legend'),'Value') == 1
+                l = legend(a2c(1),temp{1});                             
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest'); 
+                l = legend(a2c(2),temp{2});                             
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast'); 
+            end
         end
         if plot_mode(3) > 0 && ~isempty(a3_position)                        % Continue only if something is plotted in third plot + user requires plotting third plot
             a3c(1) = copyobj(a3(1),F2c);
@@ -118,10 +122,12 @@ else
             rL1 = get(a3c(1),'YLim'); 
             set(a3c(1),'YTick',linspace(rL1(1),rL1(2),num_of_ticks_y));     
             temp = get(findobj('Tag','plotGrav_menu_print_three'),'UserData');
-            l = legend(a3c(1),temp{1}); 
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');
-            l = legend(a3c(2),temp{2});
-            set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');
+            if get(findobj('Tag','plotGrav_check_legend'),'Value') == 1
+                l = legend(a3c(1),temp{1}); 
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');
+                l = legend(a3c(2),temp{2});
+                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');
+            end
         end
 
         %% Final Print
