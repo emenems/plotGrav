@@ -1301,8 +1301,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						set(findobj('Tag','plotGrav_text_status'),'String','Data corrected.');drawnow % status
 						set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store the updated data
                         fclose(fid);
-					catch
-						set(findobj('Tag','plotGrav_text_status'),'String','Could not correct iGrav data...');drawnow % status
+                    catch error_message
+						set(findobj('Tag','plotGrav_text_status'),'String','Data NOT corrected (see log file)');drawnow % status
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Correction file error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
+                        fclose('all');
 					end
 				end
 			end

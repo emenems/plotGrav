@@ -78,7 +78,7 @@ switch format_switch
                 elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',panel_name,file_name_in,ty,tm,td,th,tmm); % Write message to logfile
                 else
-                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',panel_name,file_name_in,ty,tm,td,th,tmm); % Write message to logfile
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s file: %s loaded but NOT processed. Error = %s (%04d/%02d/%02d %02d:%02d)\n',panel_name,file_name_in,error_message.identifier,ty,tm,td,th,tmm); % Write message to logfile
                 end
             end
         end
