@@ -666,7 +666,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             else
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                             end
 						end
 						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
@@ -743,7 +743,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             else
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                             end
 						end
 						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
@@ -855,7 +855,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
                             [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                         else
-                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s loaded but NOT processed (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                            [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                         end
                     end
                     time.trilogi = vertcat(time.trilogi,ttime);             % stack the temporary variable on already loaded ones (time)
@@ -978,7 +978,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if strcmp(error_message.identifier,'MATLAB:FileIO:InvalidFid')
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Filter file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm); % Write message to logfile
                     else
-                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not load filter file %s . Check format (%04d/%02d/%02d %02d:%02d)\n',filter_file,ty,tm,td,th,tmm); % Write message to logfile
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not load filter file %s . Check format, error %s (%04d/%02d/%02d %02d:%02d)\n',filter_file,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                     end
 					Num = [];                                               % if not loaded, set to [] (empty)
 				end
@@ -1033,7 +1033,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not filter gravity due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                     else
-                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not filter gravity. Reason unknown.(%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not filter gravity. Error %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm);
                     end
                 end
 			else
@@ -1160,7 +1160,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                     else
-                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity. Error %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % write to logfile
                     end
                     data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;        % set to zero if filtered data not available (except atmospheric effect, if computed than do not overwrite)
                 end
@@ -1192,6 +1192,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not re-sample %s data due to non-monotonic sampling of input data. Check for leap-seconds and data ambiguity (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
                     else
                         set(findobj('Tag','plotGrav_text_status'),'String',sprintf('Could not re-sample %s input data.',gravi_string));drawnow % status
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not re-sample %s data. Error %s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,char(error_message.message),ty,tm,td,th,tmm);
                     end
 				end
 				data.filt = [];time.filt = [];                              % remove used variable that are not of interest for plotting (they have been copied do other variables or used in other way)
@@ -4581,8 +4582,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First load all required inputs
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); 
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); 
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); 
+            time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
             units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
             channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+            units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
+            channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); 
+            units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
+            channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); 
+            units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');         
+            channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); 
             if ~isempty(data.igrav)                                         % continue only if data loaded
                 % Open logfile
                 try
@@ -4593,7 +4604,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				% Get user input
                 if nargin == 1
                     set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','23 - 26'); % Show editable field
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','A2 = A3 + B1 * 3'); % Show editable field
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
                     pause(10);
                 else
@@ -4603,52 +4614,141 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
                 st0 = get(findobj('Tag','plotGrav_edit_text_input'),'String');   % get string
                 st = strsplit(st0,' ');                                     % split string. Strings must be separated sith space!!
-                % Compute
-                if length(st) ~= 3                                          % first check the numer of character on input. 3 = '23' '-' '26'
-                    set(findobj('Tag','plotGrav_text_status'),'String','The expression must contain 2 channels and one operator.');drawnow % message
-                else
-                    try
-                        num_channels = length(channels.igrav);                  % channel count
-                        switch char(st(2))                                      % find operation to inserted symbol
-                            case '+'
-                                temp = data.igrav(:,str2double(st(1))) + data.igrav(:,str2double(st(3))); % perform operation
-                                channels.igrav(num_channels+1) = {sprintf('%s+%s',char(channels.igrav(str2double(st(1)))),char(channels.igrav(str2double(st(3)))))}; % create new channel name clearly decribing the opration
-                                units.igrav(num_channels+1) = units.igrav(str2double(st(1))); % create new units. It is assumed that the first==second!!
-                            case '-'
-                                temp = data.igrav(:,str2double(st(1))) - data.igrav(:,str2double(st(3)));
-                                channels.igrav(num_channels+1) = {sprintf('%s-%s',char(channels.igrav(str2double(st(1)))),char(channels.igrav(str2double(st(3)))))};
-                                units.igrav(num_channels+1) = units.igrav(str2double(st(1))); % create new units. It is assumed that the first==second!!
-                            case '*'
-                                temp = data.igrav(:,str2double(st(1))).*data.igrav(:,str2double(st(3)));
-                                channels.igrav(num_channels+1) = {sprintf('%s*%s',char(channels.igrav(str2double(st(1)))),char(channels.igrav(str2double(st(3)))))};
-                                units.igrav(num_channels+1) = units.igrav(str2double(st(1))); % create new units. It is assumed that the first==second!!
-                            case '/'
-                                temp = data.igrav(:,str2double(st(1)))./data.igrav(:,str2double(st(3)));
-                                channels.igrav(num_channels+1) = {sprintf('%s/%s',char(channels.igrav(str2double(st(1)))),char(channels.igrav(str2double(st(3)))))};
-                                units.igrav(num_channels+1) = units.igrav(str2double(st(1))); % create new units. It is assumed that the first==second!!
-                            otherwise
-                                set(findobj('Tag','plotGrav_text_status'),'String','Not supported operator.');drawnow % message
-                                temp = [];
+                % Supported statements:
+                %   A1 = A2 + B3 + B4 * 3
+                %   Delimiter = ' ', allowed operators:+-*/, no brackets. Each statement
+                %   must contain at least one channel. The statement must begin with a
+                %   channel, followed by ' = '. The operators have always even indices,
+                %   [2:2:end]. Channels and numers have odd indices. To use
+                %   negative values of a certain channel, use *-1, e.g., A1
+                %   = A2 * -1
+
+                % First, check if the statement contains '=' character. '=' must be the
+                % second character!
+                try
+                    if strcmp(char(st{2}),'=') 
+                        % Use the left-hand side to get reference time, i.e. used for
+                        % interpolation (in case statement contains different time series,
+                        % e.g., iGrav + trilogi)
+                        switch char(st{1}(1))
+                            case 'A'
+                                % ref_time stores the reference time vector
+                                ref_time = time.igrav;
+                            case 'B'
+                                ref_time = time.trilogi;
+                            case 'C'
+                                ref_time = time.other1;
+                            case 'D'
+                                ref_time = time.other2;
                         end
-                        if ~isempty(temp)                                   % proceed only if valid operation has been carried out
-                            data.igrav(:,num_channels+1) = temp;            % append to the end of the data matrix
-                            data_table.igrav(num_channels+1,1:7) = {false,false,false,...    % add to ui-table
-                                                        sprintf('[%2d] %s (%s)',num_channels+1,char(channels.igrav(num_channels+1)),char(units.igrav(num_channels+1))),false,false,false}; 
-                            % Write to logfile
-                            [ty,tm,td,th,tmm] = datevec(now);               % time for logfile
-                            fprintf(fid,'iGrav channel %d = %s (%04d/%02d/%02d %02d:%02d)\n',num_channels+1,st0,ty,tm,td,th,tmm);
-                            % Store the data and channels
-                            set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % update ui-table
-                            set(findobj('Tag','plotGrav_push_load'),'UserData',data);  
-                            set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav); 
-                            set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); 
-                            fclose(fid);
-                            set(findobj('Tag','plotGrav_text_status'),'String','Computed.');drawnow % message
+                        % Continue with the statement on the right-hand side. The left side, i.e.
+                        % output channel will be used later. The temp_matrix will (temporarily)
+                        % store all affected/given channels. 
+                        temp_matrix = []; 
+                        % Append all given channels to the temp_matrix
+                        for i = 3:length(st) % analyse the statement one string after another
+                            % Append loaded channels
+                            switch char(st{i}(1))
+                                case 'A'
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.igrav,data.igrav(:,str2double(st{i}(2:end))),ref_time));
+                                case 'B'
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.trilogi,data.trilogi(:,str2double(st{i}(2:end))),ref_time));
+                                case 'C'
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.other1,data.other1(:,str2double(st{i}(2:end))),ref_time));
+                                case 'D'
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.other2,data.other2(:,str2double(st{i}(2:end))),ref_time));
+                            end
+                            % Append numberic values if given
+                            if ~isnan(str2double(st{i}(:)))
+                                temp_matrix = horzcat(temp_matrix,ones(length(ref_time),1)*str2double(st{i}(:)));
+                            end
                         end
-                    catch
+                        % Create a command for the expression evaluation.
+                        command = []; % command will be used to evaluate the mathematical expression
+                        j = 1; % will be used to count temp_matrix columns. The i index used in the following loop does not correspond to temp_matrix columns!
+                        for i = 3:length(st)
+                            if mod(i,2) % operators must have even indices!
+                                command = [command,sprintf('temp_matrix(:,%d)',j)];
+                                j = j + 1;
+                            else
+                                % Switch between math. operators. The main reason is the
+                                % multiplication od dividing element-wise, i.e., using '.*' or
+                                % './'
+                                switch char(st{i}(1))
+                                    case '*'
+                                        command = [command,'.',char(st{i}(1))];
+                                    case '/'
+                                        command = [command,'.',char(st{i}(1))];
+                                    otherwise
+                                        command = [command,char(st{i}(1))];
+                                end
+                            end
+                        end
+
+                        % Update the required column depending on the left-hand side expression
+                        switch char(st{1}(1))
+                            case 'A'
+                                data.igrav(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.igrav{:,str2double(st{1}(2:end))} = '?'; % change/add units. By defauld, no unit
+                                channels.igrav{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end))); % change the channel name
+                                data_table.igrav(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+																false,false,false};
+                                % Store the results
+                                set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                                set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
+                                set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
+                                set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
+                            case 'B'
+                                data.trilogi(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.trilogi{:,str2double(st{1}(2:end))} = '?';
+                                channels.trilogi{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                data_table.trilogi(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+																false,false,false};
+                                % Store the results
+                                set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
+                                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
+                                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Trilogi channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
+                            case 'C'
+                                data.other1(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.other1{:,str2double(st{1}(2:end))} = '?';
+                                channels.other1{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                data_table.other1(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+																false,false,false};
+                                % Store the results
+                                set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                                set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
+                                set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
+                                set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
+                            case 'D'
+                                data.other2(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.other2{:,str2double(st{1}(2:end))} = '?';
+                                channels.other2{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                data_table.other2(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+																false,false,false};
+                                % Store the results
+                                set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                                set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
+                                set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
+                                set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
+                        end
                         fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Not computed.');drawnow % message
+                        set(findobj('Tag','plotGrav_text_status'),'String','The expression has been evaluated.');drawnow % message
+                    else
+                        set(findobj('Tag','plotGrav_text_status'),'String','The expression must contain = character.');drawnow % message
                     end
+                catch error_message
+                    set(findobj('Tag','plotGrav_text_status'),'String','Could not evaluate the expression.');drawnow % message
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Expression evaluation error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm);
+                    fclose(fid);
                 end
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load iGrav data first.');drawnow % message
