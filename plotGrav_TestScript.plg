@@ -25,6 +25,7 @@
 % ADMITTANCE_FACTOR		admittance factor used for atmospheric effect. Input: admittance in nm/s^2/hPa. Example: -3
 % LOAD_DATA 			This will load all selected inputs. No input.
 % REMOVE_DATA			This will remove all data an reset the ui-tables to default value. Settings such as input files or calibration coefficients will not be affected! No input
+% REMOVE_CHANNEL 		Remove selected channels. Input panel+channel number delimited using ; character. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2. Second (to last) character is the channel number. Example: A5;B4 => this will remove fifth iGrav channel and fourth TRiLOGi channel. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2. Second (to last) character is the channel number.
 % UITABLE_IGRAV_L		set which channels should be checked/plotted. All other will be unchecked! Set this option after LOAD_DATA!! Input: First number refers to the Plot; other numbers to channels, e.g., 2;2;10;3 => second plot (left axes=L2), second, tenth and third channels selected. All other off.
 % UITABLE_TRILOGI_L		see UITABLE_IGRAV_L
 % UITABLE_OTHER1_L 		see UITABLE_IGRAV_L
@@ -65,7 +66,7 @@
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
 % FILTER_SELECTED		Filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
 % RESAMPLE_ALL 			re-samples all time series to new temporal resolution. Input: new resolution in seconds, e.g., 3600 (=one hour)
-% CHANNELS_ALGEBRA		perform simple mathematical operation (+;-;*;/) on TWO iGrav channels (does not work with other panels). Input example: 1 + 2 => first plus second channel. The result will be appended at the end of the data matrix (=new last channel).
+% CHANNELS_ALGEBRA		perform simple mathematical operation (+;-;*;/). Input example: A1 = A2 * 2 + 2 + B3 => first iGrav panel = second iGrav panel * 2 plus 2 plus third trilogi panel. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2.
 % SCRIPT_END			terminates the script run. No input.
 %
 % 25.09.2015, M. Mikolaj, mikolaj@gfz-potsdam.de
@@ -178,5 +179,9 @@ RESAMPLE_ALL
 1
 FILTER_SELECTED
 CHANNELS_ALGEBRA
-1 + 2
+A1 = A2 * 2 + 2 + B3
+CHANNELS_ALGEBRA
+A2 = A2 * 2 + 2 + B3
+REMOVE_CHANNEL
+A5;B4
 SCRIPT_END

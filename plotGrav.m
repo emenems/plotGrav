@@ -4576,8 +4576,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'simple_algebra'
 			%% ALGEBRA
             % User can add, subract, multiply and divide channels and store
-            % the result in appended chennal. These operation can currently
-            % be performed only on iGrav data!
+            % the results. These operations can be performed using
+            % arbitrary panel/channel.
+            % Supported statements/expressions:
+            %   A1 = A2 + B3 + B4 * 3
+            %   Delimiter = ' ', allowed operators:+-*/, no brackets. Each statement
+            %   must contain at least one channel. The statement must begin with a
+            %   channel, followed by ' = '. The operators have always even indices,
+            %   [2:2:end]. Channels and numbers have odd indices. To use
+            %   negative values of a certain channel, use *-1, e.g., A1
+            %   = A2 * -1. The A symbols stands for iGrav, B for trilogi, C
+            %   for Other1 and D for Other2.
             
             % First load all required inputs
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
@@ -4614,14 +4623,6 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
                 st0 = get(findobj('Tag','plotGrav_edit_text_input'),'String');   % get string
                 st = strsplit(st0,' ');                                     % split string. Strings must be separated sith space!!
-                % Supported statements:
-                %   A1 = A2 + B3 + B4 * 3
-                %   Delimiter = ' ', allowed operators:+-*/, no brackets. Each statement
-                %   must contain at least one channel. The statement must begin with a
-                %   channel, followed by ' = '. The operators have always even indices,
-                %   [2:2:end]. Channels and numers have odd indices. To use
-                %   negative values of a certain channel, use *-1, e.g., A1
-                %   = A2 * -1
 
                 % First, check if the statement contains '=' character. '=' must be the
                 % second character!
@@ -6009,7 +6010,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Store/update the ui-tables
 			set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table_trilogi,'UserData',data_table_trilogi);clear data_table_trilogi
 			set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',{false,false,false,'NotAvailable',false,false,false});     % Other 1 table
-			set(findobj( 'Tag','plotGrav_uitable_other2_data'),'Data',{false,false,false,'NotAvailable',false,false,false});    % Other 2 table
+			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',{false,false,false,'NotAvailable',false,false,false});    % Other 2 table
             % Re-set data containers + store them
 			time.igrav = [];time.trilogi = [];time.other1 = [];time.other2 = [];
 			data.igrav = [];data.trilogi = [];data.other1 = [];data.other2 = [];

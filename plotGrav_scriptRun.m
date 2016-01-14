@@ -645,6 +645,62 @@ try                                                                         % ca
                 case 'REMOVE_DATA'                                              % this will remove all data and re-set ui tables. Settings, howerver, will not be affected!
                     plotGrav('reset_tables')                                    % No input expected => No further input (now row) needed
                     row = fgetl(fid);count = count + 1;
+                %% Remove channels
+                case 'REMOVE_CHANNEL'                                       % remove required channels
+                    row = fgetl(fid);count = count + 1;
+                    chan = strsplit(row,';');                               % multiple input possible = selected channels
+                    if ~strcmp(char(chan),'[]')                             % proceed/set only if required
+                        data_table_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the A ui-table.
+                        data_table_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the B ui-table.
+                        data_table_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the C ui-table.
+                        data_table_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the D ui-table.
+                        % First, uncheck all channels so channels selected
+                        % prior to calling this part will NOT be deleted
+                        for i = 1:size(data_table_igrav,1)
+                            data_table_igrav(i,1) = {false};
+                        end
+                        for i = 1:size(data_table_trilogi,1)
+                            data_table_trilogi(i,1) = {false};
+                        end
+                        for i = 1:size(data_table_other1,1)
+                            data_table_other1(i,1) = {false};
+                        end
+                        for i = 1:size(data_table_other2,1)
+                            data_table_other2(i,1) = {false};
+                        end
+                        
+                        % Run for all input values
+                        for i = 1:length(chan) 
+                            if length(chan{i}) >= 2 % the input for each selection must be at least 2 character long (panel+channel number)
+                                channel_number = str2double(char(chan{i}(2:end))); % get the channel number
+                                switch char(chan{i}(1)) % switch between panels
+                                    case 'A' % A == iGrav
+                                        if channel_number <= size(data_table_igrav,1) % check if required channel exists
+                                            data_table_igrav(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        end
+                                    case 'B' % B == trilogi
+                                        if channel_number <= size(data_table_trilogi,1) % check if required channel exists
+                                            data_table_trilogi(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        end
+                                    case 'C' % C == Other1
+                                        if channel_number <= size(data_table_other1,1) % check if required channel exists
+                                            data_table_other1(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        end
+                                    case 'D' % D == Other2
+                                        if channel_number <= size(data_table_other2,1) % check if required channel exists
+                                            data_table_other2(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        end
+                                end
+                            end
+                        end
+                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table_igrav); % update ui-table
+                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table_trilogi); % update ui-table 
+                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table_other1); % update ui-table
+                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table_other2); % update ui-table
+                        % The plotGrav 'compute_remove_channel' removes 
+                        % automatically all selected channels
+                        plotGrav('compute_remove_channel');                 % Call removing function
+                    end
                 %% Pause
                 case 'PAUSE'                                                % pauses the compuation for a required number of seconds
                     row = fgetl(fid);count = count + 1;
@@ -687,12 +743,12 @@ try                                                                         % ca
     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid_log,'Script finished. Duration = %6.1f sec., input file: %s (%04d/%02d/%02d %02d:%02d)\n',t,in_script,ty,tm,td,th,tmm);
     fclose(fid);
     fclose(fid_log);
-catch
+catch error_message
     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');             % in case some command has forgotten to turn of the GUI input fields
     set(findobj('Tag','plotGrav_text_input'),'Visible','off');
     set(findobj('Tag','plotGrav_text_status'),'String',sprintf('An error at line %3.0f occured during script run.',count));
     t = toc;
-    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid_log,'An error at line %3.0f occurred during script run. Duration = %6.1f sec., input file: %s (%04d/%02d/%02d %02d:%02d)\n',count,t,in_script,ty,tm,td,th,tmm);
+    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid_log,'An error at line %3.0f occurred during script run: %s. Duration = %6.1f sec., input file: %s (%04d/%02d/%02d %02d:%02d)\n',count,char(error_message.message),t,in_script,ty,tm,td,th,tmm);
     fclose(fid);
     fclose(fid_log);
 end
