@@ -429,9 +429,15 @@ try                                                                         % ca
                 case 'FILTER_SELECTED'                                      % will filter selected channels
                     plotGrav('compute_filter_channel',char(row));                       % no input required
                     row = fgetl(fid);count = count + 1;   
+                %% Introduce time shift
+                case 'TIME_SHIFT'                                           % will affect only selected channels!
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = time shift in seconds
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('compute_time_shift',char(row));           % call time shift function
+                    end
                 %% Resample all time series to new resolution
                 case 'RESAMPLE_ALL'
-                    row = fgetl(fid);count = count + 1;                     % only one input expected = time resolution in secods
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = time resolution in seconds
                     if ~strcmp(char(row),'[]')
                         plotGrav('compute_decimate',char(row));
                     end

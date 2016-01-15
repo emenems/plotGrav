@@ -250,6 +250,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
             uimenu(m4,'Label','Select point','Callback','plotGrav select_point');
             uimenu(m4,'Label','Statistics','Callback','plotGrav compute_statistics');
+            uimenu(m4,'Label','Time shift','Callback','plotGrav compute_time_shift');
 			
 		% Main EDIT menu (add/remove features to time series/plot)
         m5  = uimenu('Label','Edit');
@@ -2690,7 +2691,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get third axes handles
 
                     y = get(a1(1),'YLim');                                  % used Y range of L1 for plotting (do not plot outside the current view)
-                    x = get(a1(1),'XLim');                                  % use to check if loaded earhquakes occured within plotted window
+                    x = get(a1(1),'XLim');                                  % use to check if loaded earhquakes occurred within plotted window
                     axes(a1(1));                                            % Set L1 axes as current ('text' does not support axes handle passing)
                     for i = 1:length(quake_time)                            % Run for all quakes
                         if quake_time(i) > x(1) && quake_time(i) < x(2)     % Plot only if within plotted time interval
@@ -3628,7 +3629,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data.igrav(:,channel_number) = data.igrav(:,plot_axesL1.igrav(j)); % append to data matrix
                             channel_number = channel_number + 1;                % increase the number for next channel
                             [ty,tm,td,th,tmm] = datevec(now);
-                            fprintf(fid,'iGrav channel %d coppied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.igrav(j),channel_number,ty,tm,td,th,tmm);
+                            fprintf(fid,'iGrav channel %d copied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.igrav(j),channel_number-1,ty,tm,td,th,tmm);
                         end
                         set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_igrav); % update ui-table
                         set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store iGrav units
@@ -3649,7 +3650,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data.trilogi(:,channel_number) = data.trilogi(plot_axesL1.trilogi(j));
                             channel_number = channel_number + 1;            
                             [ty,tm,td,th,tmm] = datevec(now);
-                            fprintf(fid,'TRiLOGi channel %d coppied (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.trilogi(j),ty,tm,td,th,tmm);
+                            fprintf(fid,'TRiLOGi channel %d copied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.trilogi(j),channel_number-1,ty,tm,td,th,tmm);
                         end
                         set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi); 
                         set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); 
@@ -3670,7 +3671,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data.other1(:,channel_number) = data.other1(plot_axesL1.other1(j)); 
                             channel_number = channel_number + 1;            
                             [ty,tm,td,th,tmm] = datevec(now);
-                            fprintf(fid,'Other1 channel %d coppied (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.other1(j),ty,tm,td,th,tmm);
+                            fprintf(fid,'Other1 channel %d copied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.other1(j),channel_number-1,ty,tm,td,th,tmm);
                         end
                         set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1); 
                         set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1); 
@@ -3692,7 +3693,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             channel_number = channel_number + 1;           
                             clear data_filt time_filt timeout dataout id
                             [ty,tm,td,th,tmm] = datevec(now);
-                            fprintf(fid,'Other2 channel %d coppied (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.other2(j),ty,tm,td,th,tmm);
+                            fprintf(fid,'Other2 channel %d copied to (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.other2(j),channel_number-1,ty,tm,td,th,tmm);
                         end
                         set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2); 
                         set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2); 
@@ -4491,7 +4492,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					end
                 catch 
 					set(findobj('Tag','plotGrav_text_status'),'String','Could not compute Cross-correlation.');drawnow % status
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % make sure is OFF in case some error occured
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % make sure is OFF in case some error occurred
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');
                 end
             else
@@ -5123,7 +5124,111 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow % status
             end
-		
+        case 'compute_time_shift'
+            %% Introduce time shift
+            % This option allows for introduction of a time shift for
+            % selected channels. Only selected channel will be "shifted"!
+            
+            % First get all required inputs
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
+            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
+            channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+            units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
+            channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); 
+            units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
+            channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); 
+            units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');         
+            channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); 
+            
+            % Prepare variable for loop = all panels in one loop
+            panels = {'igrav','trilogi','other1','other2'};
+            
+            % Open logfile
+            try
+                fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+            catch
+                fid = fopen('plotGrav_LOG_FILE.log','a');
+            end
+            
+            if ~isempty(data.igrav)
+                if nargin == 1
+                    % Get user input = time shift in seconds.
+                    set(findobj('Tag','plotGrav_text_status'),'String','Time shift in seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String','0'); % show editable field + set default value
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                    pause(10);                                              % wait 10 seconds for user input (no confirmation button ise used)
+                else % set using plotGrav script option
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                end
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off editable fields
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status
+                try 
+                    % Get user input
+                    new_shift = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
+                    new_shift = str2double(new_shift);
+                    % Run for all panels (however only selected channels will
+                    % be affected
+                    for p = 1:length(panels)   
+                        if ~isempty(data.(char(panels(p))))                 % procees if current panel contains some data
+                            % Find all selected channels
+                            plot_axesL1.(char(panels(p))) = find(cell2mat(data_table.(char(panels(p)))(:,1))==1); % get selected channels (L1) for each panel
+                            % Check at least one channel is selected
+                            if ~isempty(plot_axesL1.(char(panels(p))))
+                                % Run for all selected channels
+                                for i = 1:length(plot_axesL1.(char(panels(p))))
+                                    channel_number = size(data.(char(panels(p))),2)+1;  % get current number o channels (all not only selected ones). Will be used to append the new channel at the and of the data matrix                
+                                    units.(char(panels(p)))(channel_number) = units.(char(panels(p)))(plot_axesL1.(char(panels(p)))(i)); % copy/append units
+                                    channels.(char(panels(p)))(channel_number) = {sprintf('%s_shift%3.1fs',char(channels.(char(panels(p)))(plot_axesL1.(char(panels(p)))(i))),new_shift)}; % add channel name
+                                    data_table.(char(panels(p)))(channel_number,1:7) = {false,false,false,... % add to ui-table. By default, the new channel is not checked for either axes (=false)
+                                                                            sprintf('[%2d] %s (%s)',channel_number,char(channels.(char(panels(p)))(channel_number)),char(units.(char(panels(p)))((plot_axesL1.(char(panels(p)))(i))))),...
+                                                                                false,false,false};
+                                    data.(char(panels(p)))(:,channel_number) = ...
+                                        interp1(time.(char(panels(p)))+new_shift/86400,data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)),time.(char(panels(p))));
+                                   % Write to logfile
+                                   [ty,tm,td,th,tmm] = datevec(now);        % time for logfile
+                                   fprintf(fid,'%s channel %2d = time shifted channel %d: %5.2f seconds (%04d/%02d/%02d %02d:%02d)\n',...
+                                        char(panels(p)),channel_number,plot_axesL1.(char(panels(p)))(i),new_shift,ty,tm,td,th,tmm);
+                                   set(findobj('Tag','plotGrav_text_status'),'String',...
+                                       sprintf('%s channel %2d = time shifted channel %2d: %5.2f seconds',char(panels(p)),channel_number,plot_axesL1.(char(panels(p)))(i),new_shift));drawnow % message
+                                   clear channel_number
+                                end
+                            end
+                        end
+                    end
+                    % Store all updated variables
+                    set(findobj('Tag','plotGrav_push_load'),'UserData',data); % store shifted data
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav); % store iGrav units
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); % store iGrav channels (names)
+                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);         
+                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi); 
+                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);         
+                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1); 
+                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);         
+                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2); 
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % store the iGrav ui-table
+                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi); % store the TRiLOGi ui-table
+                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1); % store the Other1 ui-table
+                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2); % store the Other2 ui-table
+                    fclose(fid); % close log file
+                catch error_message
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'An error occurred during time shift: %s (%04d/%02d/%02d %02d:%02d)\n',...
+                                char(error_message.message),ty,tm,td,th,tmm);
+                    set(findobj('Tag','plotGrav_text_status'),'String','An error occurred during time shift.');drawnow % message
+                    fclose(fid);
+                    
+                end
+            else
+                set(findobj('Tag','plotGrav_text_status'),'String','Load (iGrav) data first.');drawnow % message
+            end 
+            
+            
 		case 'get_polar'
 			%% GET Polar motion effect
             % User can either load polar motion effect using 'Tides tsf
