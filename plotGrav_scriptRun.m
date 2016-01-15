@@ -443,9 +443,15 @@ try                                                                         % ca
                     end
                 %% Channels algebra
                 case 'CHANNELS_ALGEBRA'
-                    row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical operation on two channels
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical expression
                     if ~strcmp(char(row),'[]')
                         plotGrav('simple_algebra',char(row));
+                    end
+                %% Regression analysis
+                case 'REGRESSION'
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical expression (response = predictors)
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('regression_simple',char(row));
                     end
                 %% View: fonts, labels, legends, grid
                 case 'SET_DATE_FORMAT'                                      % set date format = x tick labels

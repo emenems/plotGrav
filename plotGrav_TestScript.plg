@@ -65,6 +65,7 @@
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
 % FILTER_SELECTED		Filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
+% REGRESSION 			Compute (multiple) linear regression for given expression. Input example: A26 = A1 + t + 1 => 26-th channel of the iGrav panel equals first iGrav channel*Predictor1 + time*Predictor2 + 1*Predictor3. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2, t = time vector - its mean value (to increase numerical stability), T = time vector in matlab (datenum) format.
 % RESAMPLE_ALL 			re-samples all time series to new temporal resolution. Input: new resolution in seconds, e.g., 3600 (=one hour)
 % CHANNELS_ALGEBRA		perform simple mathematical operation (+;-;*;/). Input example: A1 = A2 * 2 + 2 + B3 => first iGrav panel = second iGrav panel * 2 plus 2 plus third TRiLOGi panel. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2.
 % TIME_SHIFT			Time shift introduced to selected channel. Input example: 12 => introduces a time shift of 12 second to SELECTED channel. The result will be appended as the last channel. Use UITABLE_XXXX_L for channel selection.
@@ -179,12 +180,14 @@ UITABLE_IGRAV_L
 RESAMPLE_ALL
 1
 FILTER_SELECTED
+REGRESSION
+A26 = A1 + t + 1
 CHANNELS_ALGEBRA
 A1 = A2 * 2 + 2 + B3
-CHANNELS_ALGEBRA
-A2 = A2 * 2 + 2 + B3
 REMOVE_CHANNEL
 A5;B4
+UITABLE_IGRAV_L
+1;1
 TIME_SHIFT
 12
 SCRIPT_END

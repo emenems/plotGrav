@@ -4507,73 +4507,246 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % panels. By default, data is interpolated to iGrav time vecor. 
             % If iGrav not laoded, use TRiLOGi, if TRiLOGi not loaded...
             
-            % First, get all required data
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data
-            time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
+            % First load all required inputs
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 table
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            % Find selected channels
-            panels = {'igrav','trilogi','other1','other2'};                 % will be used to simplify the code: run a for loop for all panels  
-            for i = 1:length(panels)
-                plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
-            end
-            if ~isempty(data)                                               % continue only if data loaded
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); 
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); 
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); 
+            time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
+            units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
+            channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+            units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
+            channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); 
+            units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
+            channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); 
+            units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');         
+            channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); 
+
+            if ~isempty(data.igrav)                                         % continue only if data loaded
+                % Open logfile
                 try
-					check = [plot_axesL1.igrav plot_axesL1.trilogi plot_axesL1.other1 plot_axesL1.other2]; % get number of all selected channels (e.g., [2 [] 3] = [2 3] = only two selected)
-                    if numel(check) ~= 2                    
-						set(findobj('Tag','plotGrav_text_status'),'String','You can select only two channels (L1)...');drawnow % status
-                    else
-                        % Run loop for all panels and selected channels
-                        reg_mat = [];                                       % prepare variable for computation. This matrix will contain two time series used for regression analysis
-                        j = 1;                                              % column of reg_mat
-                        for p = 1:length(panels)                            % i and j indices are reserved for other loops
-                            if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % only if some channel selected
-                                for i = 1:length(plot_axesL1.(char(panels(p)))) % Run loop for all selected channels
-                                    if ~exist('ref_time','var')             % create ref. time vector if not already created (priority: iGrav -> TRiLOGi -> Other1 -> Other2)
-                                        ref_time = time.(char(panels(p)));
+                    fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+                catch
+                    fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                % Get user input
+                if nargin == 1
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','A2 = A3 + B1 * B1 + T + 1'); % Show editable field
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                    pause(10);
+                else
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                end
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % turn off
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
+                st0 = get(findobj('Tag','plotGrav_edit_text_input'),'String');   % get string
+                st = strsplit(st0,' ');                                     % split string. Strings must be separated sith space!!
+
+                % First, check if the statement contains '=' character. '=' must be the
+                % second character!
+                try
+                    if strcmp(char(st{2}),'=') 
+                        % Use the left-hand side to get the vector and reference time, 
+                        % i.e. used for interpolation (in case statement contains 
+                        % different time series, e.g., iGrav + trilogi)
+                        switch char(st{1}(1))
+                            case 'A'
+                                % ref_time stores the reference time vector
+                                ref_time = time.igrav; 
+                                % Response vector. 
+                                y = data.igrav(:,str2double(st{1}(2:end)));
+                                panel = 'igrav';
+                            case 'B'
+                                ref_time = time.trilogi;
+                                y = data.trilogi(:,str2double(st{1}(2:end)));
+                                panel = 'trilogi';
+                            case 'C'
+                                ref_time = time.other1;
+                                y = data.other1(:,str2double(st{1}(2:end)));
+                                panel = 'other1';
+                            case 'D'
+                                ref_time = time.other2;
+                                y = data.other2(:,str2double(st{1}(2:end)));
+                                panel = 'other2';
+                        end
+
+                        % Declare variable for the next loop. The temp_matrix is the 
+                        % matrix for the (multiple) linear regression, i.e., it 
+                        % will store all vectors on the right-hand side = predictors.
+                        % mult is used to change the sign. i is the starting index
+                        % of the input expression (first is the left-hand side, second
+                        % is '=' and the right-hand side starts with index 3.
+                        temp_matrix = []; 
+                        mult = 1;
+                        i = 3;
+                        % Run loop for each string/character of the expression.
+                        while i <= length(st)
+                            switch char(st{i}(1))
+                                case 'A' % = iGrav
+                                    % Use interp1 to ensure all input vectors have the
+                                    % same length.
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.igrav,data.igrav(:,str2double(st{i}(2:end))),ref_time));
+                                    i = i + 1;
+                                case 'B' % = TRiLOGi
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.trilogi,data.trilogi(:,str2double(st{i}(2:end))),ref_time));
+                                    i = i + 1;
+                                case 'C' % = Other1
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.other1,data.other1(:,str2double(st{i}(2:end))),ref_time));
+                                    i = i + 1;
+                                case 'D' % = Other2
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.other2,data.other2(:,str2double(st{i}(2:end))),ref_time));
+                                    i = i + 1;
+                                case 't' % = time vector, e.g., for drift estimation
+                                    % For 't', subtract mean to improve
+                                    % nmerical sability = small condition
+                                    % number.
+                                    temp_matrix = horzcat(temp_matrix,mult*(ref_time - mean(ref_time)));
+                                    i = i + 1;
+                                case 'T'
+                                    % Just like 't' but without average
+                                    % value subtraction. A quadratic fit
+                                    % could result in a large condiction
+                                    % number, i.e., nearly singlular
+                                    % temp_matrix!
+                                    temp_matrix = horzcat(temp_matrix,mult*ref_time);
+                                    i = i + 1;
+                                case '+'
+                                    mult = 1;
+                                    i = i + 1;
+                                case '-'
+                                    mult = -1;
+                                    i = i + 1;
+                                case '*' % = this will automatically read the next string (i+1) and use it for multiplication
+                                    switch char(st{i+1}(1))
+                                        case 'A' % Again switch between Panels or Time vector and multiplie with the previos vector (now as column end)
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.igrav,data.igrav(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'B'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.trilogi,data.trilogi(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'C'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.other1,data.other1(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'D'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.other2,data.other2(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 't'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*(ref_time - mean(ref_time));
+                                        case 'T'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*ref_time;
+                                        otherwise % = constants
+                                            if ~isnan(str2double(st{i}(:)))
+                                                temp_matrix = mult*temp_matrix(:,end).*ones(length(ref_time),1)*str2double(st{i+1}(:));
+                                            end
                                     end
-                                    reg_mat(:,j) = interp1(time.(char(panels(p))),data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)),ref_time); % interpolate current channel to ref_time
-                                    j = j + 1;                              % next column
-                                end
+                                    i = i + 2; % Add 2 as we have used the i+1 index for the multiplication
+                                case '/'
+                                    switch char(st{i+1}(1))
+                                        case 'A'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.igrav,data.igrav(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'B'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.trilogi,data.trilogi(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'C'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.other1,data.other1(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 'D'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.other2,data.other2(:,str2double(st{i+1}(2:end))),ref_time);
+                                        case 't'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./(ref_time - mean(ref_time));
+                                        case 'T'
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./ref_time;
+                                        otherwise
+                                            if ~isnan(str2double(st{i}(:)))
+                                                temp_matrix = mult*temp_matrix(:,end)./ones(length(ref_time),1)*str2double(st{i+1}(:));
+                                            end
+                                    end
+                                    i = i + 2;
+                                otherwise
+                                    % Append numberic values if given
+                                    if ~isnan(str2double(st{i}(:)))
+                                        temp_matrix = horzcat(temp_matrix,mult*ones(length(ref_time),1)*str2double(st{i}(:)));
+                                        i = i + 1;
+                                    end
                             end
                         end
-                        % Compute regression analysis
-                        ref_time(isnan(sum(reg_mat,2))) = [];               % remove NaNs (sum([1 NaN]) = NaN)
-                        reg_mat(isnan(sum(reg_mat,2)),:) = [];
-                        reg1 = regress(reg_mat(:,2),reg_mat(:,1));          % regression (build-in matlab function)
-                        % Plot the results: first vs second. Plot both
-                        % option (1 vs 2 and 2 vs 1) as it is not possible
-                        % to know what combination user require
-                        figure('Name','plotGrav: regression (second vs. first)'); % open new figure. Do not plot into GUI. Keep menu and toolbars ON so user can save and modify the plot. 
-                        plot(ref_time,reg_mat(:,2),'k-',ref_time,reg_mat(:,1)*reg1,'r-'); 
-                        title(sprintf('Regression coefficient = %10.8f',reg1),'FontSize',font_size); % Write the result to title
-                        l = legend('second','first*coeff.');
-                        set(l,'FontSize',font_size);set(gca,'FontSize',font_size)
-                        xlabel('time in matlab (datenum) format','FontSize',font_size);
-                        clear reg1
-                        % Plot the results: second vs first
-                        reg2 = regress(reg_mat(:,1),reg_mat(:,2));
-                        figure('Name','plotGrav: regression (first vs. second)'); % open new figure
-                        plot(ref_time,reg_mat(:,1),'k-',ref_time,reg_mat(:,2)*reg2,'r-');
-                        title(sprintf('Regression coefficient = %10.8f',reg2),'FontSize',font_size); % Write the result to title  
-                        l = legend('first','second*coeff.');
-                        set(l,'FontSize',font_size);set(gca,'FontSize',font_size)
-                        xlabel('time in matlab (datenum) format','FontSize',font_size);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Regression analysis performed and plotted.');drawnow % status
+
+                        % Compute the multiple linear regression using Matlab build in
+                        % regression function. It is not necesary to remove NaNs as the
+                        % function ingores them.
+                        [out_par,out_par_sig,resid,~,~] = regress(y,temp_matrix);
+                        out_par_sig = (out_par_sig(:,2)-out_par_sig(:,1))./4; % /4 as the regress function returns the interval for 95% == 2*sigma
+                        
+                        % Compute the fit, regress returns only output parameters and
+                        % residuals, no fit.
+                        out_fit = 0;
+                        for i = 1:length(out_par)
+                            out_fit = out_fit + temp_matrix(:,i)*out_par(i);
+                        end
+
+%                         % Plot the results
+%                         date_format = get(findobj('Tag','plotGrav_menu_date_format'),'UserData'); % get current date format (to show it to user)
+%                         font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+%                         figure('Name','plotGrav: regression analysis','Units','Normalized',...
+%                             'PaperPositionMode','auto','Position',[0.25 0.3 0.5 0.4]); % open new figure. Do not plot into GUI. Keep menu and toolbars ON so user can save and modify the plot. 
+%                         subplot(2,1,1)
+%                         plot(ref_time,y,'k-',ref_time,out_fit,'r-'); 
+%                         l = legend('Input','Fit');
+%                         set(l,'FontSize',font_size);set(gca,'FontSize',font_size)
+%                         datetick(gca,'x',date_format,'keepticks'); 
+%                         subplot(2,1,2)
+%                         plot(ref_time,resid,'k-'); 
+%                         legend('Residuals');
+%                         set(l,'FontSize',font_size);set(gca,'FontSize',font_size)
+%                         datetick(gca,'x',date_format,'keepticks');
+
+                        % Append the results using the specific panel name
+                        column_num = size(data.igrav,2) + 1;
+                        data.(panel)(:,column_num) = out_fit; % append fit to data matrix
+                        data.(panel)(:,column_num+1) = resid; % append residuals to data matrix
+                        units.(panel){:,column_num} = char(units.(panel)(str2double(st{1}(2:end)))); % add fit units. The same as input.
+                        units.(panel){:,column_num+1} = char(units.(panel)(str2double(st{1}(2:end)))); % add resid units. The same as input.
+                        channels.(panel){:,column_num} = [channels.(panel){str2double(st{1}(2:end))},'_RegFit']; % add fit name. The same as input + RegFit suffix.
+                        channels.(panel){:,column_num+1} = [channels.(panel){str2double(st{1}(2:end))},'_RegRes']; % add residuals name. The same as input + RegFit suffix.
+                        data_table.(panel)(column_num,1:7) = {false,false,false,...        % add fit to ui-table
+                                                    sprintf('[%2d] %s (%s)',column_num,char(channels.(panel){:,column_num}),char(units.(panel){:,column_num})),...
+                                                        false,false,false};
+                        data_table.(panel)(column_num+1,1:7) = {false,false,false,...        % add residuals to ui-table
+                                                    sprintf('[%2d] %s (%s)',column_num+1,char(channels.(panel){:,column_num+1}),char(units.(panel){:,column_num+1})),...
+                                                        false,false,false};
+                        % Write the results to log-file
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s channel %2d = Regression fit: ',panel,column_num);
+                        for i = 1:length(out_par)
+                            fprintf(fid,' %.6f +/- %.6f,',out_par(i),out_par_sig(i)); 
+                        end
+                        fprintf(fid,' (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                        fprintf(fid,'%s channel %2d = Regression residuals input expression %s (%04d/%02d/%02d %02d:%02d)\n',panel,column_num+1,st0,ty,tm,td,th,tmm); 
+
+                        % Store the results
+                        set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
+                        set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
+                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
+                        set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
+                        set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
+                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
+                        set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
+                        set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
+                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
+                        set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
+                        set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
+                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                        % Close the log-file
+                        fclose(fid);
+                        % Send message to command line
+                        set(findobj('Tag','plotGrav_text_status'),'String','The regression analysis results have been appended.');drawnow % message
+                    else
+                        set(findobj('Tag','plotGrav_text_status'),'String','The expression must contain = character.');drawnow % message
                     end
                 catch error_message
-                    if strcmp(error_message.identifier,'MATLAB:license:checkouterror')
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, no licence (Statistics_Toolbox?)');drawnow % message
-                    else
-                        set(findobj('Tag','plotGrav_text_status'),'String','Regression not computed (unkown reason).');drawnow % message
-                    end
+                    set(findobj('Tag','plotGrav_text_status'),'String','Could not evaluate the expression.');drawnow % message
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Expression evaluation error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm);
+                    fclose(fid);
                 end
             else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
-            end  
+                set(findobj('Tag','plotGrav_text_status'),'String','Load iGrav data first.');drawnow % message
+            end
 		case 'simple_algebra'
 			%% ALGEBRA
             % User can add, subract, multiply and divide channels and store
