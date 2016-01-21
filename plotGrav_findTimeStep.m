@@ -23,9 +23,14 @@ function [timeout,dataout,id_out,id_in] = plotGrav_findTimeStep(time,data,orig_s
 % Example:
 %   [tout,dout,id_out] = plotGrav_findTimeStep(tin,din,1/86400)
 % 
-%                                                    M.Mikolaj, 24.6.2014
+%                                                    M.Mikolaj, 21.1.2016
 %                                                    mikolaj@gfz-potsdam.de
 
+% Round input time resolution to 0.01 seconds. This is done to overcome
+% possible numberic issues.
+orig_step = orig_step*86400;                                                % convert to seconds
+orig_step = round(orig_step*100)/100;                                       % round to two decimal places
+orig_step = orig_step/86400;                                                % convert back to days
 time_mat = datevec(time);                                                   % create input time matrix (date+time)
 time_mat(:,end) = round(time_mat(:,end));                                   % round seconds (one second accuracy!)
 time = datenum(time_mat);                                                   % transform back to Matlab format (vector)
@@ -39,7 +44,7 @@ timeout = datenum(timeout_mat);
 
 dataout_i = interp1(time,data,timeout,'linear');                            % interpolate to new/output time 
 df = vertcat(orig_step,diff(time));                                         % compute time step
-r = find(abs(df)>orig_step*1.1);                                            % find time steps > given resolution (+10% tolerance)
+r = find(abs(df)>orig_step*1.05);                                           % find time steps > given resolution (+5% tolerance)
 if ~isempty(r)                                                              % if such time steps are found
     id_in = [1,r(1)-1];                                                     % first time interval
     rout = find(timeout == time(r(1)-1));                                   % find where the first step time epoch == output time

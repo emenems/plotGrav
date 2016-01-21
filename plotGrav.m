@@ -3137,6 +3137,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             if ~isempty(data)                                               % continue only if some data have been loaded
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time: will be used to determine the sampling frequency and for interpolation
+                data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
 				channels_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
 				data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
 				channels_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
@@ -3372,7 +3373,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi); % update table
 					set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % update trilogi units
 					set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % update trilogi channels (names)
-					clear time time_resolution                     % remove variables
+					clear time_resolution                     % remove variables
 				end
 				
 				% Do the same for Other1 time series. For comments, see
@@ -3410,7 +3411,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1);
 					set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1);
 					set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels_other1); 
-					clear time time_resolution                    
+					clear time_resolution                    
 				end 
 				
 				% Do the same for Other2 time series. For comments, see
@@ -3448,7 +3449,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2); 
 					set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2); 
 					set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels_other2); 
-					clear time time_resolution                     
+					clear time_resolution                     
 					
                 end
                 fclose(fid);                                                % Close the logfile
@@ -4697,7 +4698,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 %                         datetick(gca,'x',date_format,'keepticks');
 
                         % Append the results using the specific panel name
-                        column_num = size(data.igrav,2) + 1;
+                        column_num = size(data.(panel),2) + 1;
                         data.(panel)(:,column_num) = out_fit; % append fit to data matrix
                         data.(panel)(:,column_num+1) = resid; % append residuals to data matrix
                         units.(panel){:,column_num} = char(units.(panel)(str2double(st{1}(2:end)))); % add fit units. The same as input.
