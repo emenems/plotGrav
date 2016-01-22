@@ -422,8 +422,13 @@ try                                                                         % ca
                 case 'REMOVE_SPIKES'                                        % remove spikes using standard deviation*input as condition
                     row = fgetl(fid);count = count + 1;                     % only one input expected = number to multiply the standard deviation.
                     if ~strcmp(char(row),'[]')
-                        char(row)
                         plotGrav('remove_Xsd',char(row));
+                    end
+                %% Remove missing/NaN data
+                case 'REMOVE_MISSING'   
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = maximum time interval in seconds.
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('interpolate_interval_auto',char(row));
                     end
                 %% Filter channels
                 case 'FILTER_SELECTED'                                      % will filter selected channels

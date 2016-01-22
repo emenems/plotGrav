@@ -64,6 +64,7 @@
 % PAUSE					pauses the computation for required time. Input = number of seconds, e.g, 5. This option is advisable when plotting long time series as the visualisation takes some time and consecutive plotting commands (e.g., UITABLE_IGRAV_L) may not be otherwise perform sufficiently.
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
+% REMOVE_MISSING		remove missing, i.e., NaN data points in the selected channels giving a maximum time intervals (in seconds) used to find neighbouring valid data points used for linear interpolation. Input example: 10 => 10 seconds. Only selected channel will be affected!
 % FILTER_SELECTED		Filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
 % REGRESSION 			Compute (multiple) linear regression for given expression. Input example: A26 = A1 + t + 1 => 26-th channel of the iGrav panel equals first iGrav channel*Predictor1 + time*Predictor2 + 1*Predictor3. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2, t = time vector - its mean value (to increase numerical stability), T = time vector in matlab (datenum) format.
 % RESAMPLE_ALL 			re-samples all time series to new temporal resolution. Input: new resolution in seconds, e.g., 3600 (=one hour)
@@ -190,4 +191,6 @@ UITABLE_IGRAV_L
 1;1
 TIME_SHIFT
 12
+REMOVE_MISSING
+10
 SCRIPT_END

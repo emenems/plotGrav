@@ -268,7 +268,9 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                     uimenu(m523,'Label','TRiLOGi','CallBack','plotGrav edit_channel_units_trilogi');
                     uimenu(m523,'Label','Other1','CallBack','plotGrav edit_channel_units_other1');
                     uimenu(m523,'Label','Other2','CallBack','plotGrav edit_channel_units_other2');
-                uimenu(m52,'Label','Interp. interval','CallBack','plotGrav interpolate_interval_linear');
+                m524 = uimenu(m52,'Label','Interp. interval');
+                    uimenu(m524,'Label','Select','CallBack','plotGrav interpolate_interval_linear');
+                    uimenu(m524,'Label','Auto','CallBack','plotGrav interpolate_interval_auto');
                 m522 = uimenu(m52,'Label','Object');
                     uimenu(m522,'Label','Ellipse','CallBack','plotGrav insert_circle',...
                         'Tag','plotGrav_insert_circle','UserData',[]); 			% UserData will be used to store references to inserted circles (to have the option to delete them)
@@ -3648,7 +3650,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data_trilogi(channel_number,1:7) = {false,false,false,...
                                                                 sprintf('[%2d] %s (%s)',channel_number,char(channels_trilogi(channel_number)),char(units_trilogi((plot_axesL1.trilogi(j))))),...
                                                                     false,false,false};
-                            data.trilogi(:,channel_number) = data.trilogi(plot_axesL1.trilogi(j));
+                            data.trilogi(:,channel_number) = data.trilogi(:,plot_axesL1.trilogi(j));
                             channel_number = channel_number + 1;            
                             [ty,tm,td,th,tmm] = datevec(now);
                             fprintf(fid,'TRiLOGi channel %d copied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.trilogi(j),channel_number-1,ty,tm,td,th,tmm);
@@ -3669,7 +3671,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data_other1(channel_number,1:7) = {false,false,false,... 
                                                                 sprintf('[%2d] %s (%s)',channel_number,char(channels_other1(channel_number)),char(units_other1((plot_axesL1.other1(j))))),...
                                                                     false,false,false};
-                            data.other1(:,channel_number) = data.other1(plot_axesL1.other1(j)); 
+                            data.other1(:,channel_number) = data.other1(:,plot_axesL1.other1(j)); 
                             channel_number = channel_number + 1;            
                             [ty,tm,td,th,tmm] = datevec(now);
                             fprintf(fid,'Other1 channel %d copied to %d (%04d/%02d/%02d %02d:%02d)\n',plot_axesL1.other1(j),channel_number-1,ty,tm,td,th,tmm);
@@ -3690,7 +3692,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data_other2(channel_number,1:7) = {false,false,false,...
                                                                 sprintf('[%2d] %s (%s)',channel_number,char(channels_other2(channel_number)),char(units_other2((plot_axesL1.other2(j))))),...
                                                                     false,false,false};
-                            data.other2(:,channel_number) = data.other2(plot_axesL1.other2(j)); 
+                            data.other2(:,channel_number) = data.other2(:,plot_axesL1.other2(j)); 
                             channel_number = channel_number + 1;           
                             clear data_filt time_filt timeout dataout id
                             [ty,tm,td,th,tmm] = datevec(now);
@@ -4866,9 +4868,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             case 'A'
                                 data.igrav(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
                                 units.igrav{:,str2double(st{1}(2:end))} = '?'; % change/add units. By defauld, no unit
-                                channels.igrav{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end))); % change the channel name
+                                channels.igrav{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
                                 data_table.igrav(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4879,9 +4881,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             case 'B'
                                 data.trilogi(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
                                 units.trilogi{:,str2double(st{1}(2:end))} = '?';
-                                channels.trilogi{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                channels.trilogi{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
                                 data_table.trilogi(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4892,9 +4894,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             case 'C'
                                 data.other1(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
                                 units.other1{:,str2double(st{1}(2:end))} = '?';
-                                channels.other1{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                channels.other1{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
                                 data_table.other1(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4905,9 +4907,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             case 'D'
                                 data.other2(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
                                 units.other2{:,str2double(st{1}(2:end))} = '?';
-                                channels.other2{:,str2double(st{1}(2:end))} = sprintf('algebra%02d',str2double(st{1}(2:end)));
+                                channels.other2{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
                                 data_table.other2(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] algebra%02d (?)',str2double(st{1}(2:end)),str2double(st{1}(2:end))),...
+															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -5024,7 +5026,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
                 
             if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
-                % Open logfile (to document removed time interval)
+                % Open logfile (to document interpolated time intervals)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
 				catch
@@ -5078,7 +5080,102 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     end
 				end
             end
+        case 'interpolate_interval_auto'
+            %% Remove missing data using automatic search algorithm
+            % User can replace the missing data, i.e., NaNs (not missing
+            % time epochs!) provided valid values are found within a
+            % user-defined time interval. For example, user set on input 10
+            % seconds, then this function finds first all NaNs and then
+            % seeks valid values within +/-10 seconds from each NaN and
+            % replace the n-th NaN with interpolated value. This is done
+            % for one selected channel.
             
+            
+            % First get all required inputs
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
+            time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
+            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+                
+            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+                % Open logfile (to document interpolated time intervals)
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                % Find all selected channels
+                panels = {'igrav','trilogi','other1','other2'};  
+                for i = 1:length(panels)
+                    plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                end
+                
+				% Get User input
+                if nargin == 1
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set maximum missing interval (in seconds)...waiting 6 seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','10'); % Show editable field + set default value
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                    pause(6);                                               % wait 6 seconds for user input
+                else
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                end
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
+                threshold = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
+                threshold = str2double(threshold)/86400;                    % Convert to time in days
+                
+                if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
+					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
+                    fclose(fid);                                            % close logfile
+                else
+                    % Get input from user
+                    try
+                        % Interpolate interval
+                        for p = 1:length(panels)                            % run loop for all panels
+                            for j = 1:length(plot_axesL1.(char(panels(p)))) % run loop for all selected channels
+                                if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % check if current panel is selected and data are loaded
+                                    r = find(isnan(data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(j)))); % find all NaNs in
+                                    if ~isempty(r)                              % continue only if at least one NaN has been found.
+                                        for i = 1:length(r)
+                                            set(findobj('Tag','plotGrav_text_status'),'String',sprintf('Removing NaNs...(%4.1f%%).',i/length(r)*100));drawnow % status
+                                            x1 = time.(char(panels(p)))(r(i))-threshold; % set time limits: for current NaN
+                                            x2 = time.(char(panels(p)))(r(i))+threshold;
+                                            ytemp = data.(char(panels(p)))(time.(char(panels(p)))>= x1 & time.(char(panels(p))) <= x2,plot_axesL1.(char(panels(p)))(j)); % find the affected data
+                                            xtemp = time.(char(panels(p)))(time.(char(panels(p))) >= x1 & time.(char(panels(p))) <= x2); % get selected time interval 
+                                            % Remove all NaNs from current interval so NaNs adjacent to the
+                                            % current one are not preventing the interpolation (it is only
+                                            % important that at least two valid values are within the interval,
+                                            % one before and one after current NaN)
+                                            xtemp(isnan(ytemp)) = [];
+                                            ytemp(isnan(ytemp)) = [];
+                                            if ~isempty(xtemp)              % compute only if some input data exist
+                                                ttime = datevec(time.(char(panels(p)))(r(i)));
+                                                fprintf(fid,'%s channel %2d: Replacing missing/NaNs %04d/%02d/%02d %02d:%02d:%02d +/-%5.2f seconds.\n',...
+                                                    char(panels(p)),plot_axesL1.(char(panels(p)))(j),ttime(1),ttime(2),ttime(3),ttime(4),ttime(5),ttime(6),threshold*86400);
+                                                data.(char(panels(p)))(r(i),plot_axesL1.(char(panels(p)))(j)) = interp1(xtemp,ytemp,time.(char(panels(p)))(r(i)),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                                clear xtemp ytemp x1 x2
+                                            end
+                                        end
+                                    else
+                                        fprintf(fid,'%s channel %02d: No NaNs found\n',char(panels(p)),plot_axesL1.(char(panels(p)))(j));
+                                    end
+                                end
+                            end
+                        end
+                        % Store the updated data
+                        set(findobj('Tag','plotGrav_push_load'),'UserData',data); % store the updated table
+                        plotGrav('uitable_push')                            % re-plot to see the changes
+                        fclose(fid);                                        % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','Missing data have been interpolated (if present).');drawnow % status
+                    catch
+                        fclose(fid);                                        % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','An error occurred during the interpolation of missing data.');drawnow % status
+                    end
+                end
+            end
+
 		case 'remove_step_selected'
 			%% Remove selected step
             % User can remove gravity steps interactively. This section
