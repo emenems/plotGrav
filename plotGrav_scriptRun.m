@@ -458,6 +458,43 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('regression_simple',char(row));
                     end
+                %% Polynomial fit
+                case 'FIT_POLYNOMIAL'
+                    row = fgetl(fid);count = count + 1;                     % variable input. Either one number of set of numbers
+                    if ~strcmp(char(row),'[]')
+                        st = strsplit(row,';');                             % try to split in case set of numbers on input
+                        switch char(st(1))
+                            case '0'
+                                plotGrav('fit_constant',char(row));
+                            case '1'
+                                plotGrav('fit_linear',char(row));
+                            case '2'
+                                plotGrav('fit_quadratic',char(row));
+                            case '3'
+                                plotGrav('fit_cubic',char(row));
+                            case 'SET'
+                                % User defines the polynomial coefficients.
+                                % It is necessary to convert the delimeter
+                                % from ; to space as this is the standard
+                                % input delimeter in plotGrav GUI
+                                set_char = char(st(2)); % start with first input (st(1) = 'SET')
+                                for i = 3:length(st) 
+                                    set_char = [set_char,' ',char(st(i))]; % append remaining (if available) input values.
+                                end
+                                plotGrav('fit_user_set',set_char);
+                        end
+                    end
+                %% Correlation analysis
+                case 'CORRELATION_SIMPLE'
+                    plotGrav('correlation_matrix')                          % no input expected
+                    row = fgetl(fid);count = count + 1;                     % 
+                    
+                %% Cross-Correlation analysis
+                case 'CORRELATION_CROSS'
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = maximum lag time in seconds
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('correlation_cross',char(row));
+                    end
                 %% View: fonts, labels, legends, grid
                 case 'SET_DATE_FORMAT'                                      % set date format = x tick labels
                     row = fgetl(fid);count = count + 1;                     % only one input expected = date format (e.g., yyyy)

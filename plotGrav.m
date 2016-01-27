@@ -4051,10 +4051,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % In this case, user input is required:
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % just to check if some data has been loaded
             if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2)
-                set(findobj('Tag','plotGrav_text_status'),'String','Set coefficients of a polynomial (PN PN-1... P0)...waiting 10 seconds');drawnow % send instructions to command promtp
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-                pause(10);                                                  % wait 10 seconds for user input
+                if nargin == 1 
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set coefficients of a polynomial (PN PN-1... P0)...waiting 10 seconds');drawnow % send instructions to command promtp
+                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
+                    pause(10);                                                  % wait 10 seconds for user input
+                else
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
                 st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
@@ -4171,95 +4175,117 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             end
 			eof.F = [];                                                     % will store all interpolated time series used to compute correlation matrix
 			eof.chan_list = [];                                             % declare variable that will store channel names. Will be used for plotting. Units not important.
-			if ~isempty(data)                                               % continue only if some data exists
+			eof.chan_list_log = [];                                         % declare variable for channel names written to logfile (will include panel and channel number, not names)
+            if ~isempty(data)                                               % continue only if some data exists
                 set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status
-				% Stack data to one matrix
-                for i = 1:length(panels)                                    % loop for all panels
-                    if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))  % check if at least one time series is selected in current panel
-                        for j = 1:length(plot_axesL1.(char(panels(i))))                 % compute for all selected channels
-                            temp = interp1(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))(j)),eof.ref_time); % interpolate current channel to ref_time
-                            eof.chan_list = [eof.chan_list,channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))]; % add current channel name
-                            eof.F = horzcat(eof.F,temp);                    % stack columns
-                            clear temp                                      % Clear variable before use data for next column
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                try
+                    % Stack data to one matrix
+                    run_index = 1;
+                    for i = 1:length(panels)                                    % loop for all panels
+                        if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))  % check if at least one time series is selected in current panel
+                            for j = 1:length(plot_axesL1.(char(panels(i))))                 % compute for all selected channels
+                                temp = interp1(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))(j)),eof.ref_time); % interpolate current channel to ref_time
+                                eof.chan_list = [eof.chan_list,channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))]; % add current channel name
+                                eof.F = horzcat(eof.F,temp);                    % stack columns
+                                eof.chan_list_log{run_index} = {sprintf('%s channel %2d',char(panels(i)),plot_axesL1.(char(panels(i)))(j))};
+                                clear temp                                      % Clear variable before use data for next column
+                                run_index = run_index + 1;
+                            end
                         end
                     end
+                    % Compute correlation
+                    eof.F(isnan(sum(eof.F,2)),:) = [];                          % remove NaNs: whole rows where at leas one value is NaN (=>sum of [1 2 NaN] = NaN)
+                    [r_pers,p] = corrcoef(eof.F);                               % correlation matrix and p values
+                    r_boots = bootstrp(1000,@corrcoef,eof.F);                   % bootstrapping. By default, use 1000 as number of bootsraps. Call the corrcoef function using newly created matrix eof.F 
+                    t.estim = r_pers.*sqrt((size(eof.F,1)-2)./(1-r_pers.^2));   % estimated t value
+                    t.crit = tinv(0.95,size(eof.F,1)-2);                        % critical t value
+                    mversion = version;                                         % get matlab version. New Matlab version (8.4 uses different interpreter switch, see below)
+                    mversion = str2double(mversion(1:3));                       % to numeric: >= operation will be performed on 'mversion'
+                    % Show correlation matrix
+                    figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation matrix'); % open new figure so results are not plotted to plotgrav GUI
+                    imagesc(r_pers);                                            % Plot correlation matrix
+                    r = find(isnan(r_pers) | isinf(r_pers));                    % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show p value matrix
+                    figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation p value (close to 0 => significant corr.)'); % open new figure so results are not plotted to plotgrav GUI
+                    imagesc(p);                                                 % Plot p value
+                    r = find(isnan(p) | isinf(p));                              % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show t test value matrix
+                    figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
+                        'Name','plotGrav: correlation t test (>0 =>reject that there is no corr. (95%))');
+                    imagesc(t.estim-t.crit);                                    % plot t test difference 
+                    r = find(isnan(t.estim-t.crit) | isinf(t.estim-t.crit));    % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4                                            % Adjust the plot for newer matlab version
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show bootsrap results: In this case, the bootsrap
+                    % result for each pair will be plotted into a histogram.
+                    % These histograms will be in ONE figure (using subplot
+                    % function)
+                    figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
+                        'Name','plotGrav: correlation bootstrap histograms');
+                    si = 1;                                                     % subplot index
+                    for i = 1:size(r_pers,1)                                    % for each row     
+                        % Write results to logfile
+                        if i > 1 % do not output autocorrelation
+                            otime = datevec(now);
+                            fprintf(fid,'Simple correlation analysis: %s  vs  %s = %7.5f, t_est = %7.4f, t_crit = %7.4f, p_val = %7.4f (%04d/%02d/%02d %02d:%02d)\n',...
+                                char(eof.chan_list_log{1}),char(eof.chan_list_log{i}),r_pers(i,1),t.estim(i,1),t.crit,p(i,1),otime(1),otime(2),otime(3),otime(4),otime(5));
+                        end
+                        for j = 1:size(r_pers,2)                                % For each column
+                            subplot(size(r_pers,1),size(r_pers,2),si)           % one subplot per one pair 
+                            hist(r_boots(:,si),round(sqrt(1000)));              % show each bootstrap histrogram (1000 = number of bootsraps)
+                            title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
+                            xlabel('corr.','FontSize',font_size-2);             % Reduce the fontsize. One plot may contain too many subplots!
+                            set(gca,'FontSize',font_size-2);
+                            si = si + 1;                                        % next subplot index
+                        end
+                    end
+                    fclose(fid);
+                    set(findobj('Tag','plotGrav_text_status'),'String','Correlation computed.');drawnow % status
+                catch error_message
+                    otime = datevec(now);
+                    fprintf(fid,'Correlation not computed. Error %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),otime(1),otime(2),otime(3),otime(4),otime(5));
+                    fclose(fid);
+                    set(findobj('Tag','plotGrav_text_status'),'String','Correlation not computed.');drawnow % status
                 end
-				% Compute correlation
-				eof.F(isnan(sum(eof.F,2)),:) = [];                          % remove NaNs: whole rows where at leas one value is NaN (=>sum of [1 2 NaN] = NaN)
-				[r_pers,p] = corrcoef(eof.F);                               % correlation matrix and p values
-				r_boots = bootstrp(1000,@corrcoef,eof.F);                   % bootstrapping. By default, use 1000 as number of bootsraps. Call the corrcoef function using newly created matrix eof.F 
-				t.estim = r_pers.*sqrt((size(eof.F,1)-2)./(1-r_pers.^2));   % estimated t value
-				t.crit = tinv(0.95,size(eof.F,1)-2);                        % critical t value
-				mversion = version;                                         % get matlab version. New Matlab version (8.4 uses different interpreter switch, see below)
-				mversion = str2double(mversion(1:3));                       % to numeric: >= operation will be performed on 'mversion'
-				% Show correlation matrix
-				figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation matrix'); % open new figure so results are not plotted to plotgrav GUI
-				imagesc(r_pers);                                            % Plot correlation matrix
-				r = find(isnan(r_pers) | isinf(r_pers));                    % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show p value matrix
-				figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation p value (close to 0 => significant corr.)'); % open new figure so results are not plotted to plotgrav GUI
-				imagesc(p);                                                 % Plot p value
-				r = find(isnan(p) | isinf(p));                              % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show t test value matrix
-				figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
-					'Name','plotGrav: correlation t test (>0 =>reject that there is no corr. (95%))');
-				imagesc(t.estim-t.crit);                                    % plot t test difference 
-				r = find(isnan(t.estim-t.crit) | isinf(t.estim-t.crit));    % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4                                            % Adjust the plot for newer matlab version
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show bootsrap results: In this case, the bootsrap
-				% result for each pair will be plotted into a histogram.
-				% These histograms will be in ONE figure (using subplot
-				% function)
-				figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
-					'Name','plotGrav: correlation bootstrap histograms');
-				si = 1;                                                     % subplot index
-				for i = 1:size(r_pers,1)                                    % for each row                                
-					for j = 1:size(r_pers,2)                                % For each column
-						subplot(size(r_pers,1),size(r_pers,2),si)           % one subplot per one pair 
-						hist(r_boots(:,si),round(sqrt(1000)));              % show each bootstrap histrogram (1000 = number of bootsraps)
-						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
-						xlabel('corr.','FontSize',font_size-2);             % Reduce the fontsize. One plot may contain too many subplots!
-						set(gca,'FontSize',font_size-2);
-						si = si + 1;                                        % next subplot index
-					end
-				end
-				
-				set(findobj('Tag','plotGrav_text_status'),'String','Correlation computed.');drawnow % status
-			else
+            else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
-			end
+            end
 			
 		case 'correlation_matrix_select'
             % Just like in the previous section 'correlation_matrix', this
@@ -4304,98 +4330,126 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             end
             set(findobj('Tag','plotGrav_text_status'),'String','Select two points (like for zooming)...');drawnow % send instruction to status bar
 			[selected_x,~] = ginput(2);                                     % Get user input
+            selected_x = sort(selected_x);                                  % in case user select first the second point and vice versa.
             eof.ref_time(eof.ref_time<selected_x(1) | eof.ref_time>selected_x(2)) = []; % remove time records outside selected time interval
             
             % The remaining code is identical to 'correlation_matrix'
 			eof.F = [];                                                     % will store all interpolated time series used to compute correlation matrix
 			eof.chan_list = [];                                             % declare variable that will store channel names. Will be used for plotting. Units not important.
+            eof.chan_list_log = [];                                         % declare variable for channel names written to logfile (will include panel and channel number, not names)
             if ~isempty(data)                                               % continue only if some data exists
                 set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status
-				% Stack data to one matrix
-                for i = 1:length(panels)                                    % loop for all panels
-                    if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))  % check if at least one time series is selected in current panel
-                        for j = 1:length(plot_axesL1.(char(panels(i))))                 % compute for all selected channels
-                            temp = interp1(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))(j)),eof.ref_time); % interpolate current channel to ref_time
-                            eof.chan_list = [eof.chan_list,channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))]; % add current channel name
-                            eof.F = horzcat(eof.F,temp);                    % stack columns
-                            clear temp                                      % Clear variable before use data for next column
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                try
+                    % Stack data to one matrix
+                    run_index = 1;
+                    for i = 1:length(panels)                                    % loop for all panels
+                        if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))  % check if at least one time series is selected in current panel
+                            for j = 1:length(plot_axesL1.(char(panels(i))))                 % compute for all selected channels
+                                temp = interp1(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))(j)),eof.ref_time); % interpolate current channel to ref_time
+                                eof.chan_list = [eof.chan_list,channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))]; % add current channel name
+                                eof.F = horzcat(eof.F,temp);                    % stack columns
+                                eof.chan_list_log{run_index} = {sprintf('%s channel %2d',char(panels(i)),plot_axesL1.(char(panels(i)))(j))};
+                                clear temp                                      % Clear variable before use data for next column
+                                run_index = run_index + 1;
+                            end
                         end
                     end
+                    % Compute correlation
+                    eof.F(isnan(sum(eof.F,2)),:) = [];                          % remove NaNs: whole rows where at leas one value is NaN (=>sum of [1 2 NaN] = NaN)
+                    [r_pers,p] = corrcoef(eof.F);                               % correlation matrix and p values
+                    r_boots = bootstrp(1000,@corrcoef,eof.F);                   % bootstrapping. By default, use 1000 as number of bootsraps. Call the corrcoef function using newly created matrix eof.F 
+                    t.estim = r_pers.*sqrt((size(eof.F,1)-2)./(1-r_pers.^2));   % estimated t value
+                    t.crit = tinv(0.95,size(eof.F,1)-2);                        % critical t value
+                    mversion = version;                                         % get matlab version. New Matlab version (8.4 uses different interpreter switch, see below)
+                    mversion = str2double(mversion(1:3));                       % to numeric: >= operation will be performed on 'mversion'
+                    % Show correlation matrix
+                    figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation matrix'); % open new figure so results are not plotted to plotgrav GUI
+                    imagesc(r_pers);                                            % Plot correlation matrix
+                    r = find(isnan(r_pers) | isinf(r_pers));                    % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show p value matrix
+                    figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation p value (close to 0 => significant corr.)'); % open new figure so results are not plotted to plotgrav GUI
+                    imagesc(p);                                                 % Plot p value
+                    r = find(isnan(p) | isinf(p));                              % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show t test value matrix
+                    figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
+                        'Name','plotGrav: correlation t test (>0 =>reject that there is no corr. (95%))');
+                    imagesc(t.estim-t.crit);                                    % plot t test difference 
+                    r = find(isnan(t.estim-t.crit) | isinf(t.estim-t.crit));    % Check if NaNs or Inf values in the correlation matrix exist
+                    if ~isempty(r)                                              % If so, sen a warning message to title
+                        title('Warning: NaN or Inf values are depicted as -1');
+                    end
+                    axis square;view(0,90);                                     % set axis and view
+                    colorbar;                                                   % show colorbar
+                    set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
+                        'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
+                        'FontSize',font_size);                                  % font size
+                    if mversion>=8.4                                            % Adjust the plot for newer matlab version
+                        set(gca,'TickLabelInterpreter','none');
+                    end
+                    % Show bootsrap results: In this case, the bootsrap
+                    % result for each pair will be plotted into a histogram.
+                    % These histograms will be in ONE figure (using subplot
+                    % function)
+                    figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
+                        'Name','plotGrav: correlation bootstrap histograms');
+                    si = 1;                                                     % subplot index
+                    eof.chan_list_log
+                    for i = 1:size(r_pers,1)                                    % for each row     
+                        % Write results to logfile
+                        if i > 1 % do not output autocorrelation
+                            otime = datevec(now); % current time for logfile
+                            x1time = datevec(selected_x(1)); % first selected point
+                            x2time = datevec(selected_x(2)); % first selected point
+                            fprintf(fid,'Simple correlation analysis between %04d/%02d/%02d %02d:%02d:%03.1f - %04d/%02d/%02d %02d:%02d:%03.1f: %s  vs  %s = %7.5f, t_est = %7.4f, t_crit = %7.4f, p_val = %7.4f (%04d/%02d/%02d %02d:%02d)\n',...
+                                x1time(1),x1time(2),x1time(3),x1time(4),x1time(5),x1time(6),...
+                                x2time(1),x2time(2),x2time(3),x2time(4),x2time(5),x2time(6),...
+                                char(eof.chan_list_log{1}),char(eof.chan_list_log{i}),r_pers(i,1),t.estim(i,1),t.crit,p(i,1),otime(1),otime(2),otime(3),otime(4),otime(5));
+                        end
+                        for j = 1:size(r_pers,2)                                % For each column
+                            subplot(size(r_pers,1),size(r_pers,2),si)           % one subplot per one pair 
+                            hist(r_boots(:,si),round(sqrt(1000)));              % show each bootstrap histrogram (1000 = number of bootsraps)
+                            title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
+                            xlabel('corr.','FontSize',font_size-2);             % Reduce the fontsize. One plot may contain too many subplots!
+                            set(gca,'FontSize',font_size-2);
+                            si = si + 1;                                        % next subplot index
+                        end
+                    end
+                    fclose(fid);
+                    set(findobj('Tag','plotGrav_text_status'),'String','Correlation computed.');drawnow % status
+                catch error_message
+                    otime = datevec(now);
+                    fprintf(fid,'Correlation not computed. Error %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),otime(1),otime(2),otime(3),otime(4),otime(5));
+                    fclose(fid);
+                    set(findobj('Tag','plotGrav_text_status'),'String','Correlation not computed.');drawnow % status
                 end
-				% Compute correlation
-				eof.F(isnan(sum(eof.F,2)),:) = [];                          % remove NaNs: whole rows where at leas one value is NaN (=>sum of [1 2 NaN] = NaN)
-				[r_pers,p] = corrcoef(eof.F);                               % correlation matrix and p values
-				r_boots = bootstrp(1000,@corrcoef,eof.F);                   % bootstrapping. By default, use 1000 as number of bootsraps. Call the corrcoef function using newly created matrix eof.F 
-				t.estim = r_pers.*sqrt((size(eof.F,1)-2)./(1-r_pers.^2));   % estimated t value
-				t.crit = tinv(0.95,size(eof.F,1)-2);                        % critical t value
-				mversion = version;                                         % get matlab version. New Matlab version (8.4 uses different interpreter switch, see below)
-				mversion = str2double(mversion(1:3));                       % to numeric: >= operation will be performed on 'mversion'
-				% Show correlation matrix
-				figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation matrix'); % open new figure so results are not plotted to plotgrav GUI
-				imagesc(r_pers);                                            % Plot correlation matrix
-				r = find(isnan(r_pers) | isinf(r_pers));                    % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show p value matrix
-				figure('NumberTitle','off','Menu','none','Name','plotGrav: correlation p value (close to 0 => significant corr.)'); % open new figure so results are not plotted to plotgrav GUI
-				imagesc(p);                                                 % Plot p value
-				r = find(isnan(p) | isinf(p));                              % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show t test value matrix
-				figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
-					'Name','plotGrav: correlation t test (>0 =>reject that there is no corr. (95%))');
-				imagesc(t.estim-t.crit);                                    % plot t test difference 
-				r = find(isnan(t.estim-t.crit) | isinf(t.estim-t.crit));    % Check if NaNs or Inf values in the correlation matrix exist
-				if ~isempty(r)                                              % If so, sen a warning message to title
-					title('Warning: NaN or Inf values are depicted as -1');
-				end
-				axis square;view(0,90);                                     % set axis and view
-				colorbar;                                                   % show colorbar
-				set(gca,'XTick',(1:1:size(eof.F,2)),'YTick',(1:1:size(eof.F,2)),... % set X and Y ticks
-					'XTickLabel',eof.chan_list,'YTickLabel',eof.chan_list,'Clim',[-1,1],...% Labels
-					'FontSize',font_size);                                  % font size
-				if mversion>=8.4                                            % Adjust the plot for newer matlab version
-					set(gca,'TickLabelInterpreter','none');
-				end
-				% Show bootsrap results: In this case, the bootsrap
-				% result for each pair will be plotted into a histogram.
-				% These histograms will be in ONE figure (using subplot
-				% function)
-				figure('NumberTitle','off','Menu','none',...                % open new figure so results are not plotted to plotgrav GUI
-					'Name','plotGrav: correlation bootstrap histograms');
-				si = 1;                                                     % subplot index
-				for i = 1:size(r_pers,1)                                    % for each row                                
-					for j = 1:size(r_pers,2)                                % For each column
-						subplot(size(r_pers,1),size(r_pers,2),si)           % one subplot per one pair 
-						hist(r_boots(:,si),round(sqrt(1000)));              % show each bootstrap histrogram (1000 = number of bootsraps)
-						title(sprintf('%s - %s',char(eof.chan_list(i)),char(eof.chan_list(j))),'FontSize',font_size-1,'interpreter','none');
-						xlabel('corr.','FontSize',font_size-2);             % Reduce the fontsize. One plot may contain too many subplots!
-						set(gca,'FontSize',font_size-2);
-						si = si + 1;                                        % next subplot index
-					end
-				end
-				
-				set(findobj('Tag','plotGrav_text_status'),'String','Correlation computed.');drawnow % status
-			else
+            else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
             end
 			
@@ -4416,6 +4470,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 table
             data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 table
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
+            
             % Find selected channels
             panels = {'igrav','trilogi','other1','other2'};                 % will be used to simplify the code: run a for loop for all panels  
             for i = 1:length(panels)
@@ -4428,11 +4483,21 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if numel(check) ~= 2                    
 						set(findobj('Tag','plotGrav_text_status'),'String','You can select only two channels (L1)...');drawnow % status
                     else
+                        % Open logfile
+                        try
+                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+                        catch
+                            fid = fopen('plotGrav_LOG_FILE.log','a');
+                        end
                         % Get parameters related to maximim possible lag from user
-                        set(findobj('Tag','plotGrav_text_status'),'String','Set maximum lag (in seconds, e.g. 20)...waiting 6 seconds');drawnow % send instructions to status bar
-                        set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','20');  % make input text visible + set default value
-                        set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
-                        pause(6);                                           % wait 6 seconds for user input
+                        if nargin == 1
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set maximum lag (in seconds, e.g. 20)...waiting 6 seconds');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','20');  % make input text visible + set default value
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
+                            pause(6);                                           % wait 6 seconds for user input
+                        else
+                            set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                        end
                         set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off afterwards
                         set(findobj('Tag','plotGrav_text_input'),'Visible','off');
                         set(findobj('Tag','plotGrav_text_status'),'String','Cross-correlation computing...');drawnow % status
@@ -4440,6 +4505,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         max_lag = str2double(max_lag);                      % Convert to double (will be used with mathematical operations)
                         reg_mat = [];                                       % prepare variable for computation. This matrix will contain two time series used for cross-correlation
                         j = 1;                                              % column of reg_mat
+                        channel_name = [];
 						% Run loop for all panels and selected channels
                         for p = 1:length(panels)                            % i and j indices are reserved for other loops
                             if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % only if some channel selected
@@ -4448,7 +4514,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                         ref_time = time.(char(panels(p)));
                                     end
                                     reg_mat(:,j) = interp1(time.(char(panels(p))),data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)),ref_time); % interpolate current channel to ref_time
+                                    channel_name{j} = sprintf('%s %2d',char(panels(p)),plot_axesL1.(char(panels(p)))(i)); % store current chanel name (panel + number)
                                     j = j + 1;                              % next column
+                                    
                                 end
                             end
                         end  
@@ -4486,17 +4554,27 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         % Plot results
                         figure('Name','plotGrav: cross-correlation');       % open new figure. Do not plot into GUI. Keep menu and toolbars ON so user can save and modify the plot.
-                        ncor = interp1(lag,corr_out,-max_lag:step/50:max_lag,'spline'); % refine the plot = insert a spline curve between the compution points/lags.
-                        plot(-max_lag:step/50:max_lag,ncor,'k-',lag,corr_out,'r.')
+                        nlag = -max_lag:step/50:max_lag;
+                        ncor = interp1(lag,corr_out,nlag,'spline'); % refine the plot = insert a spline curve between the compution points/lags.
+                        plot(nlag,ncor,'k-',lag,corr_out,'r.')
                         l = legend('fitted spline','computation points');
                         set(l,'FontSize',font_size);set(gca,'FontSize',font_size); % set font size
                         xlabel('lag (seconds)','FontSize',font_size);
                         set(findobj('Tag','plotGrav_text_status'),'String','Cross-correlation has been computed.');drawnow % status
+                        % Write results to logfile
+                        otime = datevec(now); % current time for logfile
+                        fprintf(fid,'Cross-correlation analysis %s  vs  %s: max corr = %8.6f at %4.2f seconds, min corr = %8.6f at %4.2f seconds. Maximum lag = %3.1f (%04d/%02d/%02d %02d:%02d)\n',...
+                            char(channel_name{1}),char(channel_name{2}),max(max(ncor)),max(nlag(ncor==max(ncor))),min(min(ncor)),max(nlag(ncor==min(ncor))),... % use max(max()) to avoid multiple outputs
+                            max_lag,otime(1),otime(2),otime(3),otime(4),otime(5));
 					end
-                catch 
+                catch error_message
 					set(findobj('Tag','plotGrav_text_status'),'String','Could not compute Cross-correlation.');drawnow % status
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % make sure is OFF in case some error occurred
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                    otime = datevec(now); % current time for logfile
+                    fprintf(fid,'Cross-correlation not computed. Error %s (%04d/%02d/%02d %02d:%02d)\n',...
+                        char(error_message.message),otime(1),otime(2),otime(3),otime(4),otime(5));
+                    fclose(fid);
                 end
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
@@ -4703,15 +4781,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         column_num = size(data.(panel),2) + 1;
                         data.(panel)(:,column_num) = out_fit; % append fit to data matrix
                         data.(panel)(:,column_num+1) = resid; % append residuals to data matrix
-                        units.(panel){:,column_num} = char(units.(panel)(str2double(st{1}(2:end)))); % add fit units. The same as input.
-                        units.(panel){:,column_num+1} = char(units.(panel)(str2double(st{1}(2:end)))); % add resid units. The same as input.
-                        channels.(panel){:,column_num} = [channels.(panel){str2double(st{1}(2:end))},'_RegFit']; % add fit name. The same as input + RegFit suffix.
-                        channels.(panel){:,column_num+1} = [channels.(panel){str2double(st{1}(2:end))},'_RegRes']; % add residuals name. The same as input + RegFit suffix.
+                        units.(panel)(column_num) = {char(units.(panel)(str2double(st{1}(2:end))))}; % add fit units. The same as input.
+                        units.(panel)(column_num+1) = {char(units.(panel)(str2double(st{1}(2:end))))}; % add resid units. The same as input.
+                        channels.(panel)(column_num) = {[channels.(panel){str2double(st{1}(2:end))},'_RegFit']}; % add fit name. The same as input + RegFit suffix.
+                        channels.(panel)(column_num+1) = {[channels.(panel){str2double(st{1}(2:end))},'_RegRes']}; % add residuals name. The same as input + RegFit suffix.
                         data_table.(panel)(column_num,1:7) = {false,false,false,...        % add fit to ui-table
-                                                    sprintf('[%2d] %s (%s)',column_num,char(channels.(panel){:,column_num}),char(units.(panel){:,column_num})),...
+                                                    sprintf('[%2d] %s (%s)',column_num,char(channels.(panel){column_num}),char(units.(panel){column_num})),...
                                                         false,false,false};
                         data_table.(panel)(column_num+1,1:7) = {false,false,false,...        % add residuals to ui-table
-                                                    sprintf('[%2d] %s (%s)',column_num+1,char(channels.(panel){:,column_num+1}),char(units.(panel){:,column_num+1})),...
+                                                    sprintf('[%2d] %s (%s)',column_num+1,char(channels.(panel){column_num+1}),char(units.(panel){column_num+1})),...
                                                         false,false,false};
                         % Write the results to log-file
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s channel %2d = Regression fit: ',panel,column_num);
@@ -4867,8 +4945,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         switch char(st{1}(1))
                             case 'A'
                                 data.igrav(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.igrav{:,str2double(st{1}(2:end))} = '?'; % change/add units. By defauld, no unit
-                                channels.igrav{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
+                                units.igrav(str2double(st{1}(2:end))) = {'?'}; % change/add units. By defauld, no unit
+                                channels.igrav(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.igrav(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
@@ -4880,8 +4958,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'B'
                                 data.trilogi(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.trilogi{:,str2double(st{1}(2:end))} = '?';
-                                channels.trilogi{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
+                                units.trilogi(str2double(st{1}(2:end))) = {'?'};
+                                channels.trilogi(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.trilogi(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
@@ -4893,8 +4971,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Trilogi channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'C'
                                 data.other1(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.other1{:,str2double(st{1}(2:end))} = '?';
-                                channels.other1{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
+                                units.other1(:,str2double(st{1}(2:end))) = {'?'};
+                                channels.other1(:,str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.other1(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
@@ -4906,8 +4984,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'D'
                                 data.other2(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.other2{:,str2double(st{1}(2:end))} = '?';
-                                channels.other2{:,str2double(st{1}(2:end))} = sprintf('%s',[st{3:end}]); % change the channel name
+                                units.other2(str2double(st{1}(2:end))) = {'?'};
+                                channels.other2(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.other2(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
