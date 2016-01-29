@@ -248,6 +248,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			m41 =  uimenu(m4,'Label','Spectral analysis');
 				uimenu(m41,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
 				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
+				uimenu(m41,'Label','Spectrogram (interpolate)','Callback','plotGrav compute_spectral_evolution');
             uimenu(m4,'Label','Select point','Callback','plotGrav select_point');
             uimenu(m4,'Label','Statistics','Callback','plotGrav compute_statistics');
             uimenu(m4,'Label','Time shift','Callback','plotGrav compute_time_shift');
@@ -3238,6 +3239,107 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				l = legend(a0_spectral,legend_spectral);                    % plot the stacked legend (contains all selected channels)
 				set(l,'FontSize',font_size,'interpreter','none');           % set legend properties: font size and interpreter to none. Reason for that is the fact that the channel names often contain underscore '_' which would be otehrwise interpreted us lower index
 				set(findobj('Tag','plotGrav_text_status'),'String','Select channels.');drawnow % status 
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
+            end
+            
+        case 'compute_spectral_evolution'
+			%% Compute spectral analysis of moving window
+            % This code similar to 'compute_spectral_interp'. The only
+            % difference is, that an analysis is performed only for one
+            % channel and a moving window. The window length is set by
+            % user.
+            
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time series. Time vector will be loaded later.
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size. Will be used for output plots.
+            date_format = get(findobj('Tag','plotGrav_menu_date_format'),'UserData'); % get date format switch. See numeric identificator: http://de.mathworks.com/help/matlab/ref/datetick.html#inputarg_dateFormat
+            
+            if ~isempty(data)                                               % continue only if some data have been loaded
+				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
+				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time: will be used to determine the sampling frequency and for interpolation
+                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
+				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
+				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
+				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
+				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
+				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
+				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+                try
+                    % Find selected channles
+                    % Set panel 'official' names. To reduce the code length, use a for loop for
+                    % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
+                    % filling the structure arrays.
+                    panels = {'igrav','trilogi','other1','other2'};  
+                    % First find all selected channels
+                    for i = 1:length(panels)
+                        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                    end
+                    if length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) == 1
+                        % Get user input
+                        if nargin == 1 
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set moving window length in hours...waiting 6 seconds');drawnow % send instructions to command promtp
+                            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','96');  % make input text visible
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
+                            pause(6);                                                  % wait 10 seconds for user input
+                        else
+                            set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                        end
+                        set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
+                        set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+                        st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
+                        set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
+                        win_length = str2double(st)/24;                             % convert to double and time in days.
+                        set(findobj('Tag','plotGrav_text_status'),'String','Starting computation...');drawnow % status
+                        
+                        for i = 1:length(panels)
+                        % Check if only one channel selected (function does not work if more than one channel selected for fitting)
+                            % Then continue with a loop searching the selected
+                            % channel in all panels.
+                            if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))
+                                time_in = time.(char(panels(i)));                   % copy the whole time vector to temporary variable. Will be used for interpolation after removing NaNs
+                                data_in = data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))); % copy selected time series to temporary variable.
+                                % 
+                                time_resolution = mode(diff(time.(char(panels(i))))); % time resolution of input time series(sampling period)
+                                t_index = round(win_length/time_resolution);        % number of points (indices) within on window length
+                                time_in(isnan(data_in)) = [];                       % remove NaNs from both, time vector and data. This ensures time and data have same dimensions and therefore can be used as input for 'interp1' function.
+                                data_in(isnan(data_in)) = [];                       
+                                timeout = time_in(1):time_resolution:time_in(end);  % new output time vecor with constant sampling
+                                dataout = interp1(time_in,data_in,timeout);         % interpolate to new time vector 
+                                % Create new figure for the plot
+                                figure('Name','plotGrav: Spectrogram','Toolbar','figure',... % open new figure for plotting. Otherwise, the result would be plotted in main plotGrav GUI figure.
+                                        'Units','Normalized','Position',[0.2,0.5,0.6,0.3]);
+                                % Compute spectrogram. This will create plot
+                                % with time on X axis, frequency on Y axis and
+                                % Power Spectral density on Z axis
+                                [~,f,t,ps] = spectrogram(dataout,t_index,round(t_index/2),t_index*4,1/(time_resolution*86400),'psd','yaxis');
+                                % Plot the result. To obtain the same results
+                                % as matlab's spectrogram, the PSD must be
+                                % scaled to get dB/Hz. Add time_in(1) to get
+                                % the date.
+                                surf(t/86400+time_in(1),(1./f)/86400,10*log10(abs(ps)),'EdgeColor','none');
+                                clear t f ps
+                                view(0,90);
+                                colorbar
+                                % Adjust ylimits to reasonable values.
+                                ylim([time_resolution win_length]);
+                                % Add description
+                                title(sprintf('Power spectral density (dB/Hz): %s  (window length = %3.1f hours)'...
+                                    ,char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i))))),win_length*24));
+                                ylabel('period (days)','FontSize',font_size)
+                                % Final plot adjustments
+                                set(gca,'FontSize',font_size);
+                                datetick(gca,'x',date_format,'keepticks');          % convert xtick to date
+                                set(gcf,'Position',[0.1,0.5,0.8,0.3],'PaperPositionMode','auto'); % adujust the figure size so date is clearly visible
+                            end
+                        end
+                        set(findobj('Tag','plotGrav_text_status'),'String','Spectral analysis computed.');drawnow % status 
+                    else
+                        set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel.');drawnow % status 
+                    end
+                catch
+                    set(findobj('Tag','plotGrav_text_status'),'String','An error occured.');drawnow % status 
+                end
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
             end
