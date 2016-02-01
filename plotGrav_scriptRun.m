@@ -495,6 +495,24 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('correlation_cross',char(row));
                     end
+                %% Statistics
+                case 'STATISTICS'
+                    plotGrav('compute_statistics')                          % no input expected. Compute statistics for selected channels.
+                    row = fgetl(fid);count = count + 1;                     % 
+                %% Spectral analysis
+                case 'SPECTRAL_ANALYSIS'
+                    row = fgetl(fid);count = count + 1;                     % read switch between 
+                    if ~strcmp(char(row),'[]')
+                        st = strsplit(row,';');                             % try to split in case set of numbers on input
+                        switch char(st(1))
+                            case '1'
+                                plotGrav('compute_spectral_valid');
+                            case '2'
+                                plotGrav('compute_spectral_interp');
+                            case '3'
+                                plotGrav('compute_spectral_evolution',char(st(2)));
+                        end
+                    end
                 %% View: fonts, labels, legends, grid
                 case 'SET_DATE_FORMAT'                                      % set date format = x tick labels
                     row = fgetl(fid);count = count + 1;                     % only one input expected = date format (e.g., yyyy)
