@@ -248,7 +248,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			m41 =  uimenu(m4,'Label','Spectral analysis');
 				uimenu(m41,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
 				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
-				uimenu(m41,'Label','Spectrogram (interpolate)','Callback','plotGrav compute_spectral_evolution');
+				uimenu(m41,'Label','Spectrogram','Callback','plotGrav compute_spectral_evolution');
             uimenu(m4,'Label','Select point','Callback','plotGrav select_point');
             uimenu(m4,'Label','Statistics','Callback','plotGrav compute_statistics');
             uimenu(m4,'Label','Time shift','Callback','plotGrav compute_time_shift');
@@ -2948,7 +2948,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for i = 1:length(plot_axesL1.igrav)                     % compute for all (even one) selected channels
 						temp = data.igrav(:,plot_axesL1.igrav(i));          % create temporary variable with current (selected) data column/time series
 						temp(isnan(temp)) = [];                             % Remove NaNs. Functions such as 'mean' and 'std' would otherwise return NaN.
-						figure('Name','plotGrav: basic statistics','Menubar','none'); % open new figure for histograp plot
+						figure('Name','plotGrav: basic statistics','Toolbar','figure'); % open new figure for histograp plot
 						histfit(temp)                                       % histogram + fitted normal ditribution
 						title(sprintf('iGrav hitogram+fitted norm. distibution: %s',char(channels_igrav(plot_axesL1.igrav(i)))),...
 							  'interpreter','none');                        % plot title with channel name
@@ -2970,7 +2970,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for i = 1:length(plot_axesL1.trilogi)                  
 						temp = data.trilogi(:,plot_axesL1.trilogi(i));
 						temp(isnan(temp)) = [];
-						figure('Name','plotGrav: basic statistics','Menubar','none'); 
+						figure('Name','plotGrav: basic statistics','Toolbar','figure'); 
 						histfit(temp)                                   
 						title(sprintf('TRiLOGi hitogram+fitted norm. distibution: %s',char(channels_trilogi(plot_axesL1.trilogi(i)))),...
 							  'interpreter','none');
@@ -2990,7 +2990,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for i = 1:length(plot_axesL1.other1) 
 						temp = data.other1(:,plot_axesL1.other1(i));
 						temp(isnan(temp)) = [];
-						figure('Name','plotGrav: basic statistics','Menubar','none'); 
+						figure('Name','plotGrav: basic statistics','Toolbar','figure'); 
 						histfit(temp)
 						title(sprintf('Other1 hitogram+fitted norm. distibution: %s',char(channels_other1(plot_axesL1.other1(i)))),...
 							  'interpreter','none');
@@ -3010,7 +3010,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					for i = 1:length(plot_axesL1.other2)
 						temp = data.other2(:,plot_axesL1.other2(i));
 						temp(isnan(temp)) = [];
-						figure('Name','plotGrav: basic statistics','Menubar','none');
+						figure('Name','plotGrav: basic statistics','Toolbar','figure');
 						histfit(temp)                                   
 						title(sprintf('Other2 hitogram+fitted norm. distibution: %s',char(channels_other2(plot_axesL1.other2(i)))),...
 							  'interpreter','none');                    
@@ -3245,7 +3245,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
         case 'compute_spectral_evolution'
 			%% Compute spectral analysis of moving window
-            % This code similar to 'compute_spectral_interp'. The only
+            % This code similar to 'compute_spectral_valid'. The only
             % difference is, that an analysis is performed only for one
             % channel and a moving window. The window length is set by
             % user.
@@ -3253,7 +3253,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time series. Time vector will be loaded later.
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size. Will be used for output plots.
             date_format = get(findobj('Tag','plotGrav_menu_date_format'),'UserData'); % get date format switch. See numeric identificator: http://de.mathworks.com/help/matlab/ref/datetick.html#inputarg_dateFormat
-            
+            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes of the First plot (left and right axes = L1 and R1)
+				
             if ~isempty(data)                                               % continue only if some data have been loaded
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time: will be used to determine the sampling frequency and for interpolation
@@ -3302,17 +3303,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 % 
                                 time_resolution = mode(diff(time.(char(panels(i))))); % time resolution of input time series(sampling period)
                                 t_index = round(win_length/time_resolution);        % number of points (indices) within on window length
-                                time_in(isnan(data_in)) = [];                       % remove NaNs from both, time vector and data. This ensures time and data have same dimensions and therefore can be used as input for 'interp1' function.
-                                data_in(isnan(data_in)) = [];                       
+%                                 time_in(isnan(data_in)) = [];                       % remove NaNs from both, time vector and data. This ensures time and data have same dimensions and therefore can be used as input for 'interp1' function.
+%                                 data_in(isnan(data_in)) = [];                       
                                 timeout = time_in(1):time_resolution:time_in(end);  % new output time vecor with constant sampling
                                 dataout = interp1(time_in,data_in,timeout);         % interpolate to new time vector 
                                 % Create new figure for the plot
                                 figure('Name','plotGrav: Spectrogram','Toolbar','figure',... % open new figure for plotting. Otherwise, the result would be plotted in main plotGrav GUI figure.
-                                        'Units','Normalized','Position',[0.2,0.5,0.6,0.3]);
+                                        'Units','Normalized','Position',[0.2229 0.2898 0.8115 0.3000],'PaperPositionMode','auto');
                                 % Compute spectrogram. This will create plot
                                 % with time on X axis, frequency on Y axis and
                                 % Power Spectral density on Z axis
-                                [~,f,t,ps] = spectrogram(dataout,t_index,round(t_index/2),t_index*4,1/(time_resolution*86400),'psd','yaxis');
+                                set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status
+                                [~,f,t,ps] = spectrogram(dataout,t_index,round(t_index/2),length(dataout),1/(time_resolution*86400),'psd','yaxis');
                                 % Plot the result. To obtain the same results
                                 % as matlab's spectrogram, the PSD must be
                                 % scaled to get dB/Hz. Add time_in(1) to get
@@ -3320,17 +3322,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 surf(t/86400+time_in(1),(1./f)/86400,10*log10(abs(ps)),'EdgeColor','none');
                                 clear t f ps
                                 view(0,90);
-                                colorbar
+                                colorbar('east');
                                 % Adjust ylimits to reasonable values.
                                 ylim([time_resolution win_length]);
                                 % Add description
                                 title(sprintf('Power spectral density (dB/Hz): %s  (window length = %3.1f hours)'...
-                                    ,char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i))))),win_length*24));
+                                    ,char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i))))),win_length*24),'interpreter','none');
                                 ylabel('period (days)','FontSize',font_size)
                                 % Final plot adjustments
-                                set(gca,'FontSize',font_size);
+                                set(gca,'FontSize',font_size,'XTick',get(a1(1),'XTick'),'XLim',get(a1(1),'XLim')); % set ticks to L1 (must be L1 as it is the input for analysis)
                                 datetick(gca,'x',date_format,'keepticks');          % convert xtick to date
-                                set(gcf,'Position',[0.1,0.5,0.8,0.3],'PaperPositionMode','auto'); % adujust the figure size so date is clearly visible
                             end
                         end
                         set(findobj('Tag','plotGrav_text_status'),'String','Spectral analysis computed.');drawnow % status 
