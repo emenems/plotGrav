@@ -144,6 +144,8 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         m2 = uimenu('Label','View');
             % uimenu(m2,'Label','Convert/Update date','Callback','plotGrav push_date'); % use for setting exact X limits
 			% Sub-VIEW menu
+            uimenu(m2,'Label','Data points','CallBack','plotGrav set_data_points','UserData',1,...
+                    'Tag','plotGrav_menu_set_data_points');
 			uimenu(m2,'Label','Font Size','CallBack','plotGrav set_font_size','UserData',9,...
                     'Tag','plotGrav_menu_set_font_size');
             uimenu(m2,'Label','Grid On/Off','Callback','plotGrav show_grid');
@@ -372,10 +374,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		% Settings panel: calibration and admittance
         uicontrol(p3,'Style','Text','String','Calibration:','units','normalized',...
                   'Position',[0.54,0.565+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','-914.78','units','normalized',...	% default calibration factor (iGrav)
+        uicontrol(p3,'Style','Edit','String','-914.392','units','normalized',...	% default calibration factor (iGrav)
                   'Position',[0.70,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_factor');
-        uicontrol(p3,'Style','Edit','String','-14.2','units','normalized',...	% default phase delay (iGrav)	
+        uicontrol(p3,'Style','Edit','String','-11.18','units','normalized',...	% default phase delay (iGrav)	
                   'Position',[0.83,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_delay');
         uicontrol(p3,'Style','Text','String','nm/s^2 / V','units','normalized',...
@@ -385,7 +387,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   'Position',[0.845,0.630+0.30,0.12,0.07],'FontSize',8,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Text','String','Admittance:','units','normalized',...
                   'Position',[0.54,0.44+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','-2.9','units','normalized',...	% default single admittance factor			
+        uicontrol(p3,'Style','Edit','String','-3.0','units','normalized',...	% default single admittance factor			
                   'Position',[0.70,0.445+0.28,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_admit_factor');
         uicontrol(p3,'Style','Text','String','nm/s^2 / hPa','units','normalized',...
@@ -1248,8 +1250,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					end
 					try
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Loading correction file: %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
-						in = load(file_name);                     % load the correction file
-						channel = in(:,2);                                  % Read channe indices (fixed file structure)
+                        fileid = fopen(file_name);
+                        in_cell = textscan(fileid,'%d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %s','CommentStyle','%','TreatAsEmpty',{'NaN'}); % load formated the correction file
+						in = horzcat(double(cell2mat(in_cell(1:14))),double(cell2mat(in_cell(15:16)))); % convert cell aray (standard textscan output) to matrix with double precision
+                        channel = in(:,2);                                  % Read channe indices (fixed file structure)
 						x1 = datenum(in(:,3:8));                            % Read starting point/time of the correction + convert to matlab format (iGrav time is in such format) 
 						x2 = datenum(in(:,9:14));                           % Read ending point/time of the correction
 						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
@@ -1306,6 +1310,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						set(findobj('Tag','plotGrav_text_status'),'String','Data corrected.');drawnow % status
 						set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store the updated data
                         fclose(fid);
+                        fclose(fileid);
                     catch error_message
 						set(findobj('Tag','plotGrav_text_status'),'String','Data NOT corrected (see log file)');drawnow % status
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Correction file error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
@@ -1832,6 +1837,40 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
             catch
                 set(findobj('Tag','plotGrav_menu_set_font_size'),'UserData',9); % set default
+                plotGrav('uitable_push');                                   % re-plot
+            end
+        case 'set_data_points'
+            %% Data points for plotting
+            % User can use this option to plot only n-th data points of
+            % each time series. For example use each second value from a 
+            % time series [1 2 3 4 5 6] => [1 3 5] plot data points. 
+            % This option affect only plotting, not stored data! The aim is 
+            % to accelerate the plotting. By default all data points are
+            % plotted, i.e., the value is set to 1.
+            
+            % Use either GUI (nargin == 1) or script (else)
+            if nargin == 1  
+                nth = get(findobj('Tag','plotGrav_menu_set_data_points'),'UserData'); % get current values
+                set(findobj('Tag','plotGrav_text_status'),'String','Set integer to plot each n-th data point (e.g., 2)...waiting 6 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',nth); % Make user editable field visible and set the default value 
+                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+            else
+                set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % In case functin has two inputs (for example when called from plotGrav_scriptRun.m)
+            end
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off user input fields
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            try
+                nth = round(str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String'))); % get user input and convert it to integer
+                if nth > 0                                                  % must be positive value
+                    set(findobj('Tag','plotGrav_menu_set_data_points'),'UserData',nth);
+                    plotGrav('uitable_push');                                   % re-plot
+                    set(findobj('Tag','plotGrav_text_status'),'String','Plot n-th data points: set');drawnow 
+                else
+                    set(findobj('Tag','plotGrav_text_status'),'String','Value must be a positive integer.');drawnow 
+                end
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Coult not set.');drawnow 
                 plotGrav('uitable_push');                                   % re-plot
             end
 		case 'reset_view'
@@ -5331,7 +5370,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                             % one before and one after current NaN)
                                             xtemp(isnan(ytemp)) = [];
                                             ytemp(isnan(ytemp)) = [];
-                                            if ~isempty(xtemp)              % compute only if some input data exist
+                                            if length(xtemp) >= 2           % at least two data points required
                                                 ttime = datevec(time.(char(panels(p)))(r(i)));
                                                 fprintf(fid,'%s channel %2d: Replacing missing/NaNs %04d/%02d/%02d %02d:%02d:%02d +/-%5.2f seconds.\n',...
                                                     char(panels(p)),plot_axesL1.(char(panels(p)))(j),ttime(1),ttime(2),ttime(3),ttime(4),ttime(5),ttime(6),threshold*86400);
@@ -5340,7 +5379,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                             end
                                         end
                                     else
-                                        fprintf(fid,'%s channel %02d: No NaNs found\n',char(panels(p)),plot_axesL1.(char(panels(p)))(j));
+                                        fprintf(fid,'%s channel %2d: No NaNs found\n',char(panels(p)),plot_axesL1.(char(panels(p)))(j));
                                     end
                                 end
                             end
@@ -5350,7 +5389,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         plotGrav('uitable_push')                            % re-plot to see the changes
                         fclose(fid);                                        % close logfile
                         set(findobj('Tag','plotGrav_text_status'),'String','Missing data have been interpolated (if present).');drawnow % status
-                    catch
+                    catch error_message
+                        ltime = datevec(now);
+                        fprintf(fid,'An error occurred during the interpolation of missing data: %s (%04d/%02d/%02d %02d:%02d)\n',...
+                                char(error_message.message),ltime(1),ltime(2),ltime(3),ltime(4),ltime(5));
                         fclose(fid);                                        % close logfile
                         set(findobj('Tag','plotGrav_text_status'),'String','An error occurred during the interpolation of missing data.');drawnow % status
                     end
@@ -5551,12 +5593,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         if ~isempty(data.(char(panels(p))))                 % procees if current panel contains some data
                            ctime_resolution = mode(diff(time.(char(panels(p)))))*86400; % get current time resolution in seconds (only for logfile)
                            tn = [time.(char(panels(p)))(1):resol/86400:time.(char(panels(p)))(end)]'; % new time vector. Covert input time resolution in seconds to days (/86400)
-                           dn(1:length(tn),1:size(data.(char(panels(p))),2)) = NaN; % declare new variable for further interpolation (this variable will stor all resampled time series of current panel)
-                           for i = 1:size(data.(char(panels(p))),2)                     % interpolate one column after another
-                               dn(:,i) = interp1(time.(char(panels(p))),data.(char(panels(p)))(:,i),tn); % Use LINEAR interpolation!
-                           end
+                           data.(char(panels(p))) = interp1(time.(char(panels(p))),data.(char(panels(p))),tn); % Use LINEAR interpolation! Overwrite existing data
                            time.(char(panels(p))) = tn;clear tn             % set new values + delete temp. variable. Will be stored later after running for all panels
-                           data.(char(panels(p))) = dn;clear dn
                            % Write to logfile
                            [ty,tm,td,th,tmm] = datevec(now);               % time for logfile
                            fprintf(fid,'%s channels re-sampled from: %8.2f to %8.2f seconds (%04d/%02d/%02d %02d:%02d)\n',...

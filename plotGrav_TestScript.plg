@@ -46,6 +46,7 @@
 % SET_PLOT_Y_RANGE 		set range for y axes. Input: two numbers minimum maximum (number, e.g., 0 10) for each axis, i.e., 12 numbers in total. Use [] for 'do not set'. Example: 0 10;[];[];[];-5 5;[] => set L1 to 0 10 and L3 to -5 5.
 % SET_TICK_X 			set number of ticks of X axis. Input: number (e.g., 7).
 % SET_TICK_Y 			set number of ticks of Y axis. Input: number (e.g., 7).
+% SET_DATA_POINTS		set distance between plotted data points, i.e., plot each n-th data point. Input: show each n-th data point, i.e., input is an integer. This does not affect the data itself, only plotted values.
 % SHOW_GRID 			grid on/off. Input: 0 = off, 1 = on. It is recommended to use option in the beginning of the script (calling this command re-plots time series and therefore may affect inserted objects such as rectangles etc.!)
 % SHOW_LABEL 			y label on/off. Input: 0 = off, 1 = on. It is recommended to use option in the beginning of the script (calling this command re-plots time series and therefore may affect inserted objects such as rectangles etc.!)
 % SHOW_LEGEND 			legend on/off. Input: 0 = off, 1 = on. It is recommended to use option in the beginning of the script (calling this command re-plots time series and therefore may affect inserted objects such as rectangles etc.!)
@@ -214,4 +215,6 @@ FIT_POLYNOMIAL
 STATISTICS
 SPECTRAL_ANALYSIS
 3;20
+SET_DATA_POINTS
+2
 SCRIPT_END

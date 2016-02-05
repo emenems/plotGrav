@@ -666,6 +666,11 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('set_line_width',char(row));
                     end 
+                case 'SET_DATA_POINTS' 											% set data points to be plotted
+                    row = fgetl(fid);count = count + 1;
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('set_data_points',char(row));
+                    end 
                 %% Set new channel names
                 case 'SET_CHANNELS_IGRAV'                                       % sets new channel names and update the ui-table of iGrav
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
