@@ -513,6 +513,14 @@ try                                                                         % ca
                                 plotGrav('compute_spectral_evolution',char(st(2)));
                         end
                     end
+                %% Derivative
+                case 'DERIVE_DIFFERENCE'
+                    plotGrav('compute_derivative')                          % no input expected. Compute differences of selected file
+                    row = fgetl(fid);count = count + 1;                     % 
+                %% Cumulative sum
+                case 'DERIVE_CUMSUM'
+                    plotGrav('compute_cumsum')                              % no input expected. Compute cumulative sum of selected file
+                    row = fgetl(fid);count = count + 1;                     % 
                 %% View: fonts, labels, legends, grid
                 case 'SET_DATE_FORMAT'                                      % set date format = x tick labels
                     row = fgetl(fid);count = count + 1;                     % only one input expected = date format (e.g., yyyy)

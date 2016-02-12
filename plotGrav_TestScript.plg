@@ -74,6 +74,8 @@
 % CHANNELS_ALGEBRA		perform simple mathematical operation (+;-;*;/). Input example: A1 = A2 * 2 + 2 + B3 => first iGrav panel = second iGrav panel * 2 plus 2 plus third TRiLOGi panel. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2.
 % CORRELATION_SIMPLE 	compute simple correlation analysis for selected channels. No input expected (just like LOAD_DATA). Channels from all panels can be selected.
 % CORRELATION_CROSS		compute cross-correlation analysis of selected channels. Input: maximum time lag in seconds. Example: 20. Only two channels can be selected for this function.
+% DERIVE_DIFFERENCE 	compute difference between adjacent data points of selected channel. No input expected (like LOAD_DATA).
+% DERIVE_CUMSUM 		compute cumulative sum of selected channel. No input expected (like LOAD_DATA).
 % STATISTICS			compute basic statistics for selected channels. No input expected (like LOAD_DATA).
 % SPECTRAL_ANALYSIS		perform spectral analysis. Input is a switch between: 1 = maximum valid interval (no interpolation prior to analysis), 2 = interpolate prior to analysis (to remove NaNs), 3 = spectrogram. In this case the second number gives the window length in hours (3;20 = spectrogram for window length 24 hours).
 % TIME_SHIFT			time shift introduced to selected channel. Input example: 12 => introduces a time shift of 12 second to SELECTED channel. The result will be appended as the last channel. Use UITABLE_XXXX_L for channel selection.

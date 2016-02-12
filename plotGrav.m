@@ -227,7 +227,9 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m40,'Label','Simple all','CallBack','plotGrav correlation_matrix');
 				uimenu(m40,'Label','Simple select','CallBack','plotGrav correlation_matrix_select');
 				uimenu(m40,'Label','Cross','CallBack','plotGrav correlation_cross');
-				uimenu(m4,'Label','Difference','CallBack','plotGrav compute_difference');
+			m45 = uimenu(m4,'Label','Derivative');
+                uimenu(m45,'Label','Difference','CallBack','plotGrav compute_derivative');
+                uimenu(m45,'Label','Cumulative sum','CallBack','plotGrav compute_cumsum');
 			m42 = uimenu(m4,'Label','EOF/PCA (beta)'); 						% EOF/PCA in beta version
 				uimenu(m42,'Label','Compute','CallBack','plotGrav compute_eof',...
 					'Tag','plotGrav_menu_compute_eof','UserData',[]); 		% UserData container will be used to store EOF results
@@ -251,7 +253,9 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m41,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
 				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
 				uimenu(m41,'Label','Spectrogram','Callback','plotGrav compute_spectral_evolution');
-            uimenu(m4,'Label','Select point','Callback','plotGrav select_point');
+            m44 = uimenu(m4,'Label','Select');
+                uimenu(m44,'Label','One point','Callback','plotGrav select_point');
+                uimenu(m44,'Label','Difference','CallBack','plotGrav compute_difference');
             uimenu(m4,'Label','Statistics','Callback','plotGrav compute_statistics');
             uimenu(m4,'Label','Time shift','Callback','plotGrav compute_time_shift');
 			
@@ -1314,7 +1318,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     catch error_message
 						set(findobj('Tag','plotGrav_text_status'),'String','Data NOT corrected (see log file)');drawnow % status
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Correction file error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
-                        fclose('all');
+                        fclose(fid);
+                        try
+                            fclose(fileid);
+                        end
 					end
 				end
 			end
@@ -1339,7 +1346,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				if ~isempty(data.igrav)                                     % continue only if exists
 					set(findobj('Tag','plotGrav_text_status'),'String','Plotting...');drawnow % status
 					try
-						in = load(file_name);                     % load the correction file
+                        fileid = fopen(file_name);
+                        in_cell = textscan(fileid,'%d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %s','CommentStyle','%','TreatAsEmpty',{'NaN'}); % load formated the correction file
+						in = horzcat(double(cell2mat(in_cell(1:14))),double(cell2mat(in_cell(15:16)))); % convert cell aray (standard textscan output) to matrix with double precision
 						channel = in(:,2);                                  % Read channe indices (fixed file structure)
 						x1 = datenum(in(:,3:8));                            % Read starting point/time of the correction + convert to matlab format (iGrav time is in such format) 
 						x2 = datenum(in(:,9:14));                           % Read ending point/time of the correction
@@ -2947,7 +2956,191 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				(selected_x(1)-selected_x(2))*24,selected_y(1)-selected_y(2),ty1,tm1,td1,th1,tmm1,ts1,selected_y(1),...
 				ty2,tm2,td2,th2,tmm2,ts2,selected_y(2),ty,tm,td,th,tmm);
 			fclose(fid);                                                    % close the logfile
+        case 'compute_derivative'
+            %% Compute derivative/difference
+            % Compute difference between adjacent points
+            % This function computes the difference between all points of
+            % selected channel, whereas 'compute_differnce' returns the
+            % difference between selected points (by user). This will be
+            % computed regardless the sampling! This function does not
+            % check for constant sampling!!
             
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time series. Time vector will be not be used.
+            	
+            if ~isempty(data)                                               % continue only if some data have been loaded
+                % Logfile
+                try                                                             % try if some logfile is selected/exists
+                    fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Always append ('a') the new comments!
+                catch                                                           % If not, create a new one.
+                    fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
+                % Get channel units. Will be used for output
+                units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
+                units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
+                units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
+                units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');  
+                % Get channel names. Will be used for output. 'diff' will
+                % be appended to the end.
+				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names).
+				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
+				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
+				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+                % Get UI tables (selected channels)
+                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
+				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
+				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
+				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+                try
+                    % Find selected channles
+                    % Set panel 'official' names. To reduce the code length, use a for loop for
+                    % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
+                    % filling the structure arrays.
+                    panels = {'igrav','trilogi','other1','other2'};  
+                    % Run loop for all panels
+                    for i = 1:length(panels)
+                        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                        run_index = length(units.(char(panels(i))))+1;          % get number of channels in panel. Compute this prior to appending new channels to i-th panel
+                        if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i)))) % check if at least one channel selected
+                            for j = 1:length(plot_axesL1.(char(panels(i)))) % compute for all selected channels
+                                data.(char(panels(i)))(:,run_index) = vertcat(NaN,diff(data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))(j)))); % compute difference for current channel. Always add NaN to the beginning so the vector does not change in length (data(1)-data(0) => NaN)
+%                                 data_table.(char(panels(i)))(run_index,1:7) = {};
+%                                 channels.(char(panels(i)))(run_index) = {channels.(char*
+                                units.(char(panels(i)))(run_index) = {char(units.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j)))}; % add diff units. The same as input.
+                                channels.(char(panels(i)))(run_index) = {[char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))),'_diff']}; % add diff name. The same as input + diff.
+                                data_table.(char(panels(i)))(run_index,1:7) = {false,false,false,...        % add diff to ui-table
+                                                    sprintf('[%2d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
+                                                        false,false,false};
+                                ttime = datevec(now);
+                                fprintf(fid,'%s channel %2d derivative/difference computed -> %2d (%04d/%02d/%02d %02d:%02d)\n',...
+                                    char(panels(i)),plot_axesL1.(char(panels(i)))(j),run_index,...
+                                    ttime(1),ttime(2),ttime(3),ttime(4),ttime(5));
+                                run_index = run_index + 1;
+                            end
+                        end
+                    end
+                    % Store the results
+                    set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
+                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
+                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
+                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
+                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
+                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
+                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
+                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
+                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
+                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+
+                    set(findobj('Tag','plotGrav_text_status'),'String','Derivative/difference computed.');drawnow % status
+                    fclose(fid);
+                catch error_message
+                    ttime = datevec(now);
+                                fprintf(fid,'An error occurred during Derivative/diff computation: %s (%04d/%02d/%02d %02d:%02d)\n',...
+                                    char(error_message.message),...
+                                    ttime(1),ttime(2),ttime(3),ttime(4),ttime(5));
+                    set(findobj('Tag','plotGrav_text_status'),'String','An error occurred.');drawnow % status
+                    fclose(fid);
+                end
+            else
+				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
+            end
+        case 'compute_cumsum'
+            %% Compute cumulative sum
+            % Compute cumulative sum of selected channel. This is an
+            % extenstion function to 'compute_derivative'. This will be 
+            % computed regardless the sampling! This function does not
+            % check for constant sampling!!
+            
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time series. Time vector will be not be used.
+            	
+            if ~isempty(data)                                               % continue only if some data have been loaded
+                % Logfile
+                try                                                             % try if some logfile is selected/exists
+                    fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Always append ('a') the new comments!
+                catch                                                           % If not, create a new one.
+                    fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
+                % Get channel units. Will be used for output
+                units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
+                units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
+                units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
+                units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');  
+                % Get channel names. Will be used for output. 'diff' will
+                % be appended to the end.
+				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names).
+				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
+				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
+				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+                % Get UI tables (selected channels)
+                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
+				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
+				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
+				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+                try
+                    % Find selected channles
+                    % Set panel 'official' names. To reduce the code length, use a for loop for
+                    % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
+                    % filling the structure arrays.
+                    panels = {'igrav','trilogi','other1','other2'};  
+                    % Run loop for all panels
+                    for i = 1:length(panels)
+                        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                        run_index = length(units.(char(panels(i))))+1;          % get number of channels in panel. Compute this prior to appending new channels to i-th panel
+                        if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i)))) % check if at least one channel selected
+                            for j = 1:length(plot_axesL1.(char(panels(i)))) % compute for all selected channels
+                                % By default first value of derivative
+                                % function is an NaN. Avoid summing NaNs by
+                                % checking the first element only.
+                                if isnan(data.(char(panels(i)))(1,plot_axesL1.(char(panels(i)))(j)))
+                                    data.(char(panels(i)))(:,run_index) = vertcat(NaN,cumsum(data.(char(panels(i)))(2:end,plot_axesL1.(char(panels(i)))(j)))); % compute cumulative sum for current channel.
+                                else
+                                    data.(char(panels(i)))(:,run_index) = cumsum(data.(char(panels(i)))(2:end,plot_axesL1.(char(panels(i)))(j)));
+                                end
+                                units.(char(panels(i)))(run_index) = {char(units.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j)))}; % add diff units. The same as input.
+                                channels.(char(panels(i)))(run_index) = {[char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))),'_sum']}; % add diff name. The same as input + diff.
+                                data_table.(char(panels(i)))(run_index,1:7) = {false,false,false,...        % add diff to ui-table
+                                                    sprintf('[%2d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
+                                                        false,false,false};
+                                ttime = datevec(now);
+                                fprintf(fid,'%s channel %2d cumulative sum computed -> %2d (%04d/%02d/%02d %02d:%02d)\n',...
+                                    char(panels(i)),plot_axesL1.(char(panels(i)))(j),run_index,...
+                                    ttime(1),ttime(2),ttime(3),ttime(4),ttime(5));
+                                run_index = run_index + 1;
+                            end
+                        end
+                    end
+                    % Store the results
+                    set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
+                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
+                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
+                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
+                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
+                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
+                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
+                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
+                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
+                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+
+                    set(findobj('Tag','plotGrav_text_status'),'String','Cumulative sum computed.');drawnow % status
+                    fclose(fid);
+                catch error_message
+                    ttime = datevec(now);
+                                fprintf(fid,'An error occurred during Cumulative sum computation: %s (%04d/%02d/%02d %02d:%02d)\n',...
+                                    char(error_message.message),...
+                                    ttime(1),ttime(2),ttime(3),ttime(4),ttime(5));
+                    set(findobj('Tag','plotGrav_text_status'),'String','An error occurred.');drawnow % status
+                    fclose(fid);
+                end
+            else
+				set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % status
+            end
 		case 'compute_statistics'
 			%% COMPUTE histogram
             % User can compute basic statistics such as mean, standard
@@ -3412,7 +3605,6 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					Num = [];                                               % throughout this file, [] means not data has been loaded => no plotting/loading/computing
 				end
 			catch
-				fprintf('Could not load filter: %s\n',filter_file);         % send message to command line that filter file could not be loaded
 				Num = [];                                           
 			end
 			% Apply filter
@@ -6660,11 +6852,22 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % plotGrav supports scripting, i.e., instead of using GUI, user
             % can call a script with plotGrav commands.
             
-            [name,path] = uigetfile({'*.plg'},'Select plotGrav script');    % Store plotGrav script as *.plg
+            % Get input either using GUI or via sting input
+            if nargin == 1
+                [name,path] = uigetfile({'*.plg'},'Select plotGrav script');    % Get plotGrav script file name (*.plg)
+                file_name = fullfile(path,name);
+            else
+                file_name = char(varargin{1});
+                if strcmp(file_name,'[]'); %  [] == no input. It needs to be converted to 0/1 switch as used by uigetfile function
+                    name = 0;
+                else
+                    name = 1;
+                end
+            end
             if name == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select a script file.');drawnow % status
 			else
-				plotGrav_scriptRun([path,name]);
+				plotGrav_scriptRun(file_name);
             end
             
 %%%%%%%%%%%%%%%%%%%  F I L E   S E L E C T I O N %%%%%%%%%%%%%%%%%%%%%%%%%%
