@@ -76,10 +76,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 																			% Another option is to select directly file (will not be corrected as iGrav and SG030) in supported file format (*.tsf,*.mat);
         path_trilogi = '\\dms\hygra\iGrav\iGrav006 Data\Controller Data\';	% Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
 																			% Another option is to select directly file in supported file format (*.tsf,*.mat);
-        file_tides = '\\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf'; % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
-        file_filter = '\\dms\hygra\iGrav\Software\plotGrav\N01S1M01.NLF';	% File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
+        file_tides = '\\dms\hygra\iGrav\Corrections\Tides\WE_wet2009_TideEffect_CurrentFile_60sec.tsf'; % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
+        file_filter = '\\dms\hygra\\iGrav\Corrections\Filters\N01S1M01.NLF';	% File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
         file_unzip = 'E:\Program Files\7-Zip\7z.exe';						% Unzipping program (exe) used only if plotGrav_FTP.m function is called (to download iGrav data from GWR server)
-        path_webcam = '\\dms\hygra\iGrav\iGrav006 Webcam';					% Path with Webcam Snapshots
+        path_webcam = '\\dep5z32\AG_Hydrologie\hygra\Wettzell\iGrav_Webcam\FI9903P_00626E580815\snap';					% Path with Webcam Snapshots
         file_other1 = '';													% Full file name for Other1 time series. If empty ('', or []) not loaded.
         file_other2 = '';													% Full file name for Other2 time series. If empty ('', or []) not loaded.
         file_logfile = 'plotGrav_LOG_FILE.log';								% Full file name for Log-file with all important information
@@ -136,8 +136,11 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 					'Tag','plotGrav_menu_print_three','UserData',[]);		% this uimenu will be used to store file name for printing output (Plot 1 + 2 + 3)
 			uimenu(m1,'Label','Connect to FTP','CallBack','plotGrav_FTP','Tag',...
 					'plotGrav_menu_ftp','UserData',file_unzip);				% this uimenu will be used to store exe for unzipping
-			uimenu(m1,'Label','Correction file','CallBack','plotGrav correction_file','Tag',...
+            m14 = uimenu(m1,'Label','Correction file');
+			uimenu(m14,'Label','Apply (read channel)','CallBack','plotGrav correction_file','Tag',...
 					'plotGrav_menu_correction_file','UserData',[]);			% this uimenu will be used to store file name with correction file name
+            uimenu(m14,'Label','Apply to selected','CallBack','plotGrav correction_file_selected');
+            uimenu(m14,'Label','Show','CallBack','plotGrav correction_file_show');
 			uimenu(m1,'Label','Script file','CallBack','plotGrav script_run');
 				
         % Main VIEW menu (change the plot appearance or show additional information)
@@ -207,7 +210,6 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         % Main SHOW menu (plot/show additional informations)
         m3 = uimenu('Label','Show');
             % Sub-SHOW menu
-            uimenu(m3,'Label','Correction file','CallBack','plotGrav correction_file_show');
 			m30 = uimenu(m3,'Label','Earthquakes');
 				% Sub-Sub-VIEW meanu
 				uimenu(m30,'Label','List','CallBack','plotGrav show_earthquake',... % this uimenu contains link to earthquake web page
@@ -1139,19 +1141,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								data.igrav(:,29+column_id) = 0;             % no drift estimated
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 							case 2
-                                out_par = mean(data.igrav(~isnan(data.igrav(:,24)),24)); % mean value
+                                out_par = mean(data.igrav(~isnan(data.igrav(:,24+column_id)),24+column_id)); % mean value
 								data.igrav(:,29+column_id) = out_par;       % can use scalar because data.igrav is defined as matrix = will be used for all rows of 29th column.
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Constant: %6.2f (%04d/%02d/%02d %02d:%02d)\n',out_par,ty,tm,td,th,tmm);
 							case 3
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly1');
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly1');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Linear coefficients: %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),ty,tm,td,th,tmm);
 							case 4
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly2');
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly2');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Quadratic coefficients: %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),ty,tm,td,th,tmm);
 							case 5
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24),'poly3');
+								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly3');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Cubic coefficients: %10.8f, %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),out_par(4),ty,tm,td,th,tmm);
                             case 6                                          % In this case, user defined coeficients are used.
@@ -1324,6 +1326,127 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
 					end
 				end
+            end
+        case 'correction_file_selected'
+            % Just like correction_file but instead of reading the channel
+            % number from correction file, the corrections are apply to
+            % selected channel only (regardless second column in correction
+            % file). Unlike 'correction_file', this section allows to apply
+            % correction to all panels ('correction_file' only for iGrav
+            % panel)
+            
+            % First check if some (only one) channel is selected
+            % To do so get required input data
+            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+            panels = {'igrav','trilogi','other1','other2'};
+            % Run loop checking which channel is selected
+            check_sum = 0;
+            panel_use = '';
+            for i = 1:length(panels)
+                plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                % Get the name of selected panel
+                if length(plot_axesL1.(char(panels(i)))) == 1
+                    panel_use = char(panels(i));
+                end
+                check_sum = check_sum + length(plot_axesL1.(char(panels(i))));
+            end
+                   
+            % Load the correction file:
+			set(findobj('Tag','plotGrav_text_status'),'String','Select correction file.');drawnow % send instructions to status bar
+            if nargin == 1                                                  % => no additional input
+                [name,path] = uigetfile({'*.txt'},'Select Correction file');    % Select the file with correctors
+                file_name = fullfile(path,name);
+            else
+                file_name = char(varargin{1});                              % read additional function input
+                name = 1;
+            end
+			if name == 0                                                    % Continue only if some correction file selected (not important if valid or not at this stage)
+				set(findobj('Tag','plotGrav_text_status'),'String','No correction file selected.');drawnow % status
+            else                           
+				data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data with all time series. 
+				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors
+				if ~isempty(data) && check_sum == 1                         % continue only if some time series have been loaded and exactly one channel is selected
+					set(findobj('Tag','plotGrav_text_status'),'String','Correcting...');drawnow % status
+					try
+						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Open logfile to document all applied corrections.
+					catch
+						fid = fopen('plotGrav_LOG_FILE.log','a');
+					end
+					try
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Loading correction file: %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
+                        fileid = fopen(file_name);
+                        in_cell = textscan(fileid,'%d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %s','CommentStyle','%','TreatAsEmpty',{'NaN'}); % load formated the correction file
+						in = horzcat(double(cell2mat(in_cell(1:14))),double(cell2mat(in_cell(15:16)))); % convert cell aray (standard textscan output) to matrix with double precision
+                        channel = ones(size(in,1),1).*plot_axesL1.(panel_use); % set fixed channel number = selected channel.
+						x1 = datenum(in(:,3:8));                            % Read starting point/time of the correction + convert to matlab format (iGrav time is in such format) 
+						x2 = datenum(in(:,9:14));                           % Read ending point/time of the correction
+						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
+						y2 = in(:,16);                                      % Read ending point/Y Value of the correction (used especially for step correction). 
+                        for i = 1:size(in,1)                                % Run the correction algorithm for all correctors
+                            if (x1(i) >= time.(panel_use)(1) && x1(i) <= time.(panel_use)(end)) && (x2(i) >= time.(panel_use)(1) && x2(i) <= time.(panel_use)(end)) % Continue only if in loaded interval
+                                switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
+                                    case 1                                      % Step removal. 
+                                        if channel(i) <= size(data.(panel_use),2)     % continue only if such channel exists
+                                            r = find(time.(panel_use) >= x2(i));      % find points recorded after the step occur.
+                                            if ~isempty(r)                      % continue only if some points have been found
+                                                data.(panel_use)(r,channel(i)) = data.(panel_use)(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                                [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
+                                                fprintf(fid,'%s step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                    panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
+                                                    in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),y2(i),ty,tm,td,th,tmm);
+                                            end
+                                            clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
+                                        end
+                                    case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
+                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval
+                                        if ~isempty(r)                          % continue only if some points have been found
+                                            data.(panel_use)(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
+                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                            fprintf(fid,'%s channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                        end
+                                    case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
+                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
+                                        if ~isempty(r)                          % continue only if some points have been found
+                                            ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                            xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
+                                            data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                            fprintf(fid,'%s channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                        end
+                                    case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
+                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
+                                        if ~isempty(r)                          % continue only if some points have been found
+                                            ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                            xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
+                                            data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'spline'); % Interpolate values for the affected interval only (use r as index)
+                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                            fprintf(fid,'%s channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                        end
+                                end
+                            end
+                        end
+						set(findobj('Tag','plotGrav_text_status'),'String','Data corrected.');drawnow % status
+						set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store the updated data
+                        fclose(fid);
+                        fclose(fileid);
+                    catch error_message
+						set(findobj('Tag','plotGrav_text_status'),'String','Data NOT corrected (see log file)');drawnow % status
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Correction file error: %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
+                        fclose(fid);
+                        try
+                            fclose(fileid);
+                        end
+					end
+				end
 			end
 			%% CORRECTION FILE - show
 		case 'correction_file_show'
@@ -1349,7 +1472,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         fileid = fopen(file_name);
                         in_cell = textscan(fileid,'%d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %s','CommentStyle','%','TreatAsEmpty',{'NaN'}); % load formated the correction file
 						in = horzcat(double(cell2mat(in_cell(1:14))),double(cell2mat(in_cell(15:16)))); % convert cell aray (standard textscan output) to matrix with double precision
-						channel = in(:,2);                                  % Read channe indices (fixed file structure)
+						description = in_cell(17);                          % Read description
 						x1 = datenum(in(:,3:8));                            % Read starting point/time of the correction + convert to matlab format (iGrav time is in such format) 
 						x2 = datenum(in(:,9:14));                           % Read ending point/time of the correction
 						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
@@ -1360,14 +1483,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file. 
 								case 1                                      % Step removal
 									plot([x1(i),x1(i)],y,'k-');hold on      % Plot the step with black line.
-									text(x1(i),y(1)+range(y)*0.05,sprintf('Step channel %02d = %3.1f',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',font_size,'VerticalAlignment','bottom'); % Add step value
+									text(x1(i),y(1)+range(y)*0.05,sprintf('%s (%3.1f)',char(description{1,1}(i)),y2(i)-y1(i)),'Rotation',90,'FontSize',font_size-2,'VerticalAlignment','bottom','interpreter','none'); % Add step value
 								case 2                                      % Interval removal    
                                     plot([x1(i),x2(i),x2(i),x1(i),x1(i)],[y(1),y(1),y(2),y(2),y(1)],'k--');
-%                                         text(mean(x1(1),x2(i)),y(1)+range(y)*0.05,sprintf('Interval',channel(i),y2(i)-y1(i)),'Rotation',90,'FontSize',font_size)
+                                    text(x1(i),y(1)+range(y)*0.05,sprintf('%s (remove)',char(description{1,1}(i))),'Rotation',90,'FontSize',font_size-2,'VerticalAlignment','bottom','interpreter','none'); %
                                 case 3
                                     plot([x1(i),x2(i),x2(i),x1(i),x1(i)],[y(1),y(1),y(2),y(2),y(1)],'k-.','Color',[0.5 0.5 0.5]);
+                                    text(x1(i),y(1)+range(y)*0.05,sprintf('%s (linear)',char(description{1,1}(i))),'Rotation',90,'FontSize',font_size-2,'VerticalAlignment','bottom','interpreter','none'); %
                                 case 4
                                     plot([x1(i),x2(i),x2(i),x1(i),x1(i)],[y(1),y(1),y(2),y(2),y(1)],':','Color',[0.5 0.5 0.5]);
+                                    text(x1(i),y(1)+range(y)*0.05,sprintf('%s (spline)',char(description{1,1}(i))),'Rotation',90,'FontSize',font_size-2,'VerticalAlignment','bottom','interpreter','none'); %
                             end
                         end
                         axes(a1(2));                                        % Set axes back to R1 (otherwise invisible)
@@ -2696,7 +2821,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			url = get(findobj('Tag','plotGrav_menu_show_earthquake'),'UserData'); % get the Geofon URL
 			web(url);                                                       % open external or matlab browser
 		case 'plot_earthquake'
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size. Will be used for text 'location and magnitude'
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData')-1; % get font size. Will be used for text 'location and magnitude'
             try
                 % User can sat the minimum magnitude of plotted
                 % earthquaked. By default this value is set to 6.
@@ -5538,7 +5663,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 threshold = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
                 threshold = str2double(threshold)/86400;                    % Convert to time in days
                 
-                if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
+                if isempty([plot_axesL1.igrav;plot_axesL1.trilogi;plot_axesL1.other1;plot_axesL1.other2]) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
                     fclose(fid);                                            % close logfile
                 else

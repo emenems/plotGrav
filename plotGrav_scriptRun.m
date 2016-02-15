@@ -408,12 +408,14 @@ try                                                                         % ca
                 %% Correction file (apply or show)
                 case 'CORRECTION_FILE'
                     row = fgetl(fid);count = count + 1;
-                    in = strsplit(row,';');                                     % two inputs expected
+                    in = strsplit(row,';');                                 % two inputs expected
                     if ~strcmp(char(in(1)),'[]')
-                        if length(in) == 2                                      % two inputs expected = first is file name, second switch between correction apply, correction show
-                            if strcmp(char(in(2)),'1')                          % 1 == apply correction
+                        if length(in) == 2                                  % two inputs expected = first is file name, second switch between correction apply, correction show
+                            if strcmp(char(in(2)),'1')                      % 1 == apply correction
                                 plotGrav('correction_file',char(in(1))); 
-                            elseif strcmp(char(in(2)),'2')                      % 2 == show correctors
+                            elseif strcmp(char(in(2)),'2')                  % 2 == apply to selected channel
+                                plotGrav('correction_file_selected',char(in(1))); 
+                            elseif strcmp(char(in(2)),'3')                  % 3 == show correctors
                                 plotGrav('correction_file_show',char(in(1))); 
                             end
                         end
@@ -536,14 +538,21 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1;
                     in = strsplit(row,';');                                 % two inputs expected = starting and ending date
                     if ~strcmp(char(in(1)),'[]')                            % two inputs expected = starting and ending date
-                        if length(strsplit(in{1},' ')) == 6                 % input = whole date (2x)
-                            plotGrav('push_zoom_in_set',char(in(1)),char(in(2)));
-                        elseif length(strsplit(in{1},' ')) == 1             % input is one number (with minus sign) that sets the date to curent-input
-                            temp1 = now;temp1 = datevec(temp1+str2double(in(1)));  % Start. use + as input starts with minus sign!
-                            temp2 = now;temp2 = datevec(temp2+str2double(in(2)));  % Stop. use + as input starts with minus sign!
-                            plotGrav('push_zoom_in_set',sprintf('%4d %02d %02d 00 00 00',temp1(1),temp1(2),temp1(3)),... % do not set hours minutes and seconds.
-                                                        sprintf('%4d %02d %02d 00 00 00',temp2(1),temp2(2),temp2(3)));
+                        % Check if user set date or range
+                        if length(char(in(1))) <= 12
+                            temp1 = now;
+                            temp1 = datevec(temp1+str2double(in(1)));  % Start. use + as input starts with minus sign!
+                        else
+                            temp1 = str2double(strsplit(char(in(1)),' '));
                         end
+                        if length(char(in(2))) <= 12
+                            temp2 = now;
+                            temp2 = datevec(temp2+str2double(in(2)));  % Stop. use + as input starts with minus sign!
+                        else
+                            temp2 = str2double(strsplit(char(in(2)),' '));
+                        end
+                        plotGrav('push_zoom_in_set',sprintf('%4d %02d %02d 00 00 00',temp1(1),temp1(2),temp1(3)),... % do not set hours minutes and seconds.
+                                 sprintf('%4d %02d %02d 00 00 00',temp2(1),temp2(2),temp2(3)));
                     end 
                 case 'SET_TICK_X'                                               % number of ticks on x axes
                     row = fgetl(fid);count = count + 1;
@@ -693,7 +702,7 @@ try                                                                         % ca
                 case 'SET_CHANNELS_OTHER1'                                       % sets new channel names and update the ui-table of Other1
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_otehr2',char(row));
+                        plotGrav('edit_channel_names_other1',char(row));
                     end 
                 case 'SET_CHANNELS_OTHER2'                                       % sets new channel names and update the ui-table of Other2
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
@@ -714,7 +723,7 @@ try                                                                         % ca
                 case 'SET_UNITS_OTHER1'                                         % sets new channel units and update the ui-table of Other1
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_igrav'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_otehr2',char(row));
+                        plotGrav('edit_channel_units_other1',char(row));
                     end 
                 case 'SET_UNITS_OTHER2'                                         % sets new channel units and update the ui-table of Other2
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_igrav'

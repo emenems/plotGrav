@@ -40,7 +40,7 @@
 % RESET_VIEW 			re-sets the plots, i.e., zooms out to whole time series (e.g., after using SET_PLOT_DATE). No input.
 % GET_POLAR_MOTION 		computes the polar motion effect. On input: Latitude Longitude (not separated), e.g., 49.14490 12.87687
 % GET_ATMACS 			computes the Atmacs effect. On input: url to local part; url to global part;channel number with pressure variations. If no pressure channel present, leave empty = do not set.
-% CORRECTION_FILE 		correct time series using a correction file. Input: full file name of correction file,e.g., F:\mikolaj\Documents\plotGrav\iGrav_correction_file.txt; Apply/Show switch, 1 = apply, 2 = show.
+% CORRECTION_FILE 		correct time series using a correction file. Input: full file name of correction file,e.g., F:\mikolaj\Documents\plotGrav\iGrav_correction_file.txt; Apply/Show switch, 1 = apply, 2 = apply to selected channel, 3 = show.
 % SET_FONT_SIZE 		set font size of all labels, legends and axes. Input: number, e.g., 12
 % SET_PLOT_DATE 		set plot range (time interval). Input: starting date (2015 5 10 15 0 0); ending date (2015 6 1 0 0 0). Do not separate year month day hour minute and second with ; but with space. Use ; to separate star and stop. . Alternatively, use two string with minus sign to plot past X days, e.g., Input: -11;-1 => will set the plot date range to current date-11 days up to current date-1.
 % SET_PLOT_Y_RANGE 		set range for y axes. Input: two numbers minimum maximum (number, e.g., 0 10) for each axis, i.e., 12 numbers in total. Use [] for 'do not set'. Example: 0 10;[];[];[];-5 5;[] => set L1 to 0 10 and L3 to -5 5.
