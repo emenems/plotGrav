@@ -62,10 +62,12 @@
 % SET_UNITS_OTHER1		same procedure as SET_UNITS_IGRAV.
 % SET_UNITS_OTHER2		same procedure as SET_UNITS_IGRAV.
 % SET_DATE_FORMAT		set x ticks date format. Input: string, e.g. dd/mm/yyyy. This will re-set the plot.
+% SET_PLOT_TYPE 		set plot type = line or bar plot. 1 = line, 2 = bar, 3 = area, 4 = stem, 5 = stairs. Input for each axes = 6 in total. Example: 1;1;1;1;1;2
 % EXPORT_DATA	 		save loaded time series as. Input = switch number for panels, 1 = iGrav,2 = TRiLOGi,3 = Other1,4 = Other2;switch number for all/selected only, 1 = all channels,2 = selected channels (in L1); String with output file name. Example: 1;1;F:\mikolaj\Desktop\Test_Script_Export.tsf => all iGrav time series will be exported to *.tsf file.
 % PAUSE					pauses the computation for required time. Input = number of seconds, e.g, 5. This option is advisable when plotting long time series as the visualisation takes some time and consecutive plotting commands (e.g., UITABLE_IGRAV_L) may not be otherwise perform sufficiently.
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
+% REMOVE_RANGE			remove spikes using a [min max] condition. Input: min, max vector used to remove all values outside this Y range. Example: -50 50
 % REMOVE_MISSING		remove missing, i.e., NaN data points in the selected channels giving a maximum time intervals (in seconds) used to find neighbouring valid data points used for linear interpolation. Input example: 10 => 10 seconds. Only selected channel will be affected!
 % FILTER_SELECTED		filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
 % FIT_POLYNOMIAL		fit a polynomial to a selected time series. Input is a switch: 0 => constant value, 1 => linear, 2 => quadratic, 3 => cubic, SET => user defined values. If SET than following values determine the coefficients delimited by ;. Example1: 1. Example2: SET;0.05;1  => a linear fit 0.05*time + 1. Example3: SET;0.05;1;2  => a quadratic fit 0.05*time^2 + 1*time + 2. Only one channel can be selected.
@@ -182,6 +184,8 @@ PAUSE
 1
 REMOVE_SPIKES
 3
+REMOVE_RANGE
+-2000 2000
 EXPORT_DATA
 1;1;F:\mikolaj\Desktop\Test_Script_Export.tsf
 SHOW_EARTHQUAKES

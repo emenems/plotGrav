@@ -1,4 +1,4 @@
-function legend_save = plotGrav_plotData(plot_axes,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width)
+function legend_save = plotGrav_plotData(plot_axes,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width,plot_type)
 %PLOTGRAV_PLOTDATA plot iGrav/Trilogi/Other data
 % This function works only with connection to plotGrav GUI!
 %
@@ -25,6 +25,9 @@ function legend_save = plotGrav_plotData(plot_axes,ref_axes,switch_plot,data,plo
 %                         width for current plot (all lines in plot, not
 %                         each line separately). Scalar for left or right
 %                         plot or vector if both plotted.
+%   plot_type     ...     plot type: 1 = standard 'plot', 2 = bar plot, 3 =
+%                         area plot, 4 = step, 5 = stairs.
+%                         Input is a vector for Left and Right axes
 %
 % Output:
 %   legend_save   ...     cell are containing legend for the left and right
@@ -56,41 +59,86 @@ nth = get(findobj('Tag','plotGrav_menu_set_data_points'),'UserData'); 		% plot o
 switch switch_plot
     case 1
        %% Plot Left
-        set(plot_axes(1),'Visible','on','YAxisLocation','left'); % make sure the left axes is visible and on the correct side
-        set(plot_axes(2),'Visible','off','YAxisLocation','right'); % make sure the right axes is not visible and on the correct side
+        set(plot_axes(1),'Visible','on','YAxisLocation','left','FontSize',font_size); % make sure the left axes is visible and on the correct side
+        set(plot_axes(2),'Visible','off','YAxisLocation','right','FontSize',font_size); % make sure the right axes is not visible and on the correct side
         cur_labelsL = [];                                                   % prepare variable for ylabelsLeft
         cur_legend = [];                                                    % prepare variabel for legend
         if ~isempty(plot_axesL.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
-            h1 = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+            switch plot_type(1)
+                case 2
+                    h1 = bar(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav),1);hold(plot_axes(1),'on') % hX = line specification/handle
+                case 3
+                    h1 = area(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                case 4
+                    h1 = stem(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                case 5
+                    h1 = stairs(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                otherwise
+                    h1 = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+            end
             cur_labelsL = horzcat(cur_labelsL,units_igrav(plot_axesL.igrav));      % stack ylabels (only unique will be used at the end)
             cur_legend = horzcat(cur_legend,channels_igrav(plot_axesL.igrav));     % stack legend 
         else
             h1 = [];
         end
         if ~isempty(plot_axesL.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
-            h2 = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
+            switch plot_type(1)
+                case 2
+                    h2 = bar(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi),1);hold(plot_axes(1),'on')
+                otherwise
+                    h2 = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
+            end
             cur_labelsL = horzcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
             cur_legend = horzcat(cur_legend,channels_trilogi(plot_axesL.trilogi));
         else
             h2 = [];
         end
         if ~isempty(plot_axesL.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
-            h3 = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+            switch plot_type(1)
+                case 2
+                    h3 = bar(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1),1);hold(plot_axes(1),'on')
+                case 3
+                    h3 = area(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+                case 4
+                    h3 = stem(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+                case 5
+                    h3 = stairs(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+                otherwise
+                    h3 = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+            end
             cur_labelsL = horzcat(cur_labelsL,units_other1(plot_axesL.other1));
             cur_legend = horzcat(cur_legend,channels_other1(plot_axesL.other1));
         else
             h3 = [];
         end
         if ~isempty(plot_axesL.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
-            h4 = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+            switch plot_type(1)
+                case 2
+                    h4 = bar(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2),1);hold(plot_axes(1),'on')
+                case 3
+                    h4 = area(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+                case 4
+                    h4 = stem(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+                case 5
+                    h4 = stairs(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+                otherwise
+                    h4 = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+            end
             cur_labelsL = horzcat(cur_labelsL,units_other2(plot_axesL.other2));
             cur_legend = horzcat(cur_legend,channels_other2(plot_axesL.other2));
         else
             h4 = [];
         end
-        h = [h1',h2',h3',h4'];                                              % stack the line handles
+        h = [h1(:)',h2(:)',h3(:)',h4(:)'];                                              % stack the line handles
         for c = 1:length(h)
-            set(h(c),'color',color_scale(c,:),'LineWidth',line_width(1));   % change the color of each line + their width
+            switch plot_type(1)
+                case 2
+                    set(h(c),'FaceColor',color_scale(c,:),'EdgeColor','none');
+                case 3
+                    set(h(c),'FaceColor',color_scale(c,:),'EdgeColor',color_scale(c,:),'LineWidth',line_width(1));
+                otherwise
+                    set(h(c),'color',color_scale(c,:),'LineWidth',line_width(1));   % change the color of each line + their width
+            end
         end
         if get(findobj('Tag','plotGrav_check_grid'),'Value')==1             % show grid if required
             grid(plot_axes(1),'on');                                        % on for left axes
@@ -136,41 +184,92 @@ switch switch_plot
         
     case 2
        %% Plot Right 
-        set(plot_axes(1),'Visible','off','YAxisLocation','left');           % turn of left axes
-        set(plot_axes(2),'Visible','on','YAxisLocation','right','color','w'); % right axes visible and background  color white (otherwise no color)
+        set(plot_axes(1),'Visible','off','YAxisLocation','left','FontSize',font_size);           % turn of left axes
+        set(plot_axes(2),'Visible','on','YAxisLocation','right','color','w','FontSize',font_size); % right axes visible and background  color white (otherwise no color)
         cur_labelsR = [];                                                   % prepare variable for ylabelsLeft
         cur_legend = [];                                                    % prepare variabel for legend
         if ~isempty(plot_axesR.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
-            h1 = plot(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+            switch plot_type(2)
+                case 2
+                    h1 = bar(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav),1);hold(plot_axes(2),'on') % hX = line specification/handle
+                case 3
+                    h1 = area(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                case 4
+                    h1 = stem(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                case 5
+                    h1 = stairs(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                otherwise
+                    h1 = plot(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+            end
             cur_labelsR = horzcat(cur_labelsR,units_igrav(plot_axesR.igrav));
             cur_legend = horzcat(cur_legend,channels_igrav(plot_axesR.igrav));
         else
             h1 = [];
         end
         if ~isempty(plot_axesR.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
-            h2 = plot(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
+            switch plot_type(2)
+                case 2
+                    h2 = bar(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi),1);hold(plot_axes(2),'on')
+                case 3
+                    h2 = area(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
+                case 4
+                    h2 = stem(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
+                case 5
+                    h2 = stairs(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
+                otherwise
+                    h2 = plot(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
+            end
             cur_labelsR = horzcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
             cur_legend = horzcat(cur_legend,channels_trilogi(plot_axesR.trilogi));
         else
             h2 = [];
         end
         if ~isempty(plot_axesR.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
-            h3 = plot(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
+            switch plot_type(2)
+                case 2
+                    h3 = bar(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1),1);hold(plot_axes(2),'on')
+                case 3
+                    h3 = area(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
+                case 4
+                    h3 = stem(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
+                case 5
+                    h3 = stairs(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
+                otherwise
+                    h3 = plot(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
+            end
             cur_labelsR = horzcat(cur_labelsR,units_other1(plot_axesR.other1));
             cur_legend = horzcat(cur_legend,channels_other1(plot_axesR.other1));
         else
             h3 = [];
         end
         if ~isempty(plot_axesR.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
-            h4 = plot(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
+            switch plot_type(2)
+                case 2
+                    h4 = bar(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2),1);hold(plot_axes(2),'on')
+                case 3
+                    h4 = area(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
+                case 4
+                    h4 = stem(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
+                case 5
+                    h4 = stairs(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
+                otherwise
+                    h4 = plot(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
+            end
             cur_labelsR = horzcat(cur_labelsR,units_other2(plot_axesR.other2));
             cur_legend = horzcat(cur_legend,channels_other2(plot_axesR.other2));
         else
             h4 = [];
         end
-        h = [h1',h2',h3',h4'];                                              % stack the line handles
+        h = [h1(:)',h2(:)',h3(:)',h4(:)'];                                  % stack the line handles
         for c = 1:length(h)
-            set(h(c),'color',color_scale(c,:),'LineWidth',line_width(1));   % change the color of each line + width
+            switch plot_type(2)
+                case 2
+                    set(h(c),'FaceColor',color_scale(c,:),'EdgeColor','none');
+                case 3
+                    set(h(c),'FaceColor',color_scale(c,:),'EdgeColor',color_scale(c,:),'LineWidth',line_width(1));
+                otherwise
+                    set(h(c),'color',color_scale(c,:),'LineWidth',line_width(1));   % change the color of each line + their width
+            end
         end
         if get(findobj('Tag','plotGrav_check_grid'),'Value')==1             % show grid if required
             grid(plot_axes(2),'on');                                        % grid only for right axes
@@ -219,32 +318,92 @@ switch switch_plot
         cur_labelsL = [];                                                   % prepare variable for ylabelsLeft
         cur_legendL = [];                                                   % prepare variabel for legend
         if ~isempty(plot_axesL.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
-            h1l = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
-            set(h1l,'LineWidth',line_width(1));                             % Unlike in previous code, the line width must be set for left and right plot separately
+            switch plot_type(1)
+                case 2
+                    h1l = bar(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav),1);hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h1l,'EdgeColor','none');
+                case 3
+                    h1l = area(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h1l,'LineWidth',line_width(1),'EdgeColor','none');
+                case 4
+                    h1l = stem(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h1l,'LineWidth',line_width(1));
+                case 5
+                    h1l = stairs(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h1l,'LineWidth',line_width(1));
+                otherwise
+                    h1l = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h1l,'LineWidth',line_width(1));                             % Unlike in previous code, the line width must be set for left and right plot separately
+            end
             cur_labelsL = horzcat(cur_labelsL,units_igrav(plot_axesL.igrav));
             cur_legendL = horzcat(cur_legendL,channels_igrav(plot_axesL.igrav));
         else
             h1l = [];
         end
         if ~isempty(plot_axesL.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
-            h2l = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
-            set(h2l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            switch plot_type(1)
+                case 2
+                    h2l = bar(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi),1);hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h2l,'EdgeColor','none');
+                case 3
+                    h2l = area(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h2l,'LineWidth',line_width(1),'EdgeColor','none'); 
+                case 4
+                    h2l = stem(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h2l,'LineWidth',line_width(1)); 
+                case 5
+                    h2l = stairs(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h2l,'LineWidth',line_width(1)); 
+                otherwise
+                    h2l = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
+                    set(h2l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            end
             cur_labelsL = horzcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
             cur_legendL = horzcat(cur_legendL,channels_trilogi(plot_axesL.trilogi));
         else
             h2l = [];
         end
         if ~isempty(plot_axesL.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
-            h3l = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
-            set(h3l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            switch plot_type(1)
+                case 2
+                    h3l = bar(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1),1);hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h3l,'EdgeColor','none');
+                case 3
+                    h3l = area(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h3l,'LineWidth',line_width(1),'EdgeColor','none');
+                case 4
+                    h3l = stem(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h3l,'LineWidth',line_width(1));
+                case 5
+                    h3l = stairs(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h3l,'LineWidth',line_width(1));
+                otherwise
+                    h3l = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
+                    set(h3l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            end
             cur_labelsL = horzcat(cur_labelsL,units_other1(plot_axesL.other1));
             cur_legendL = horzcat(cur_legendL,channels_other1(plot_axesL.other1));
         else
             h3l = [];
         end
         if ~isempty(plot_axesL.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
-            h4l = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
-            set(h4l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            switch plot_type(1)
+                case 2
+                    h4l = bar(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2),1);hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h4l,'EdgeColor','none');
+                case 3
+                    h4l = area(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h4l,'LineWidth',line_width(1),'EdgeColor','none');
+                case 4
+                    h4l = stem(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h4l,'LineWidth',line_width(1));
+                case 5
+                    h4l = stairs(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on') % hX = line specification/handle
+                    set(h4l,'LineWidth',line_width(1));
+                otherwise
+                    h4l = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
+                    set(h4l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
+            end
             cur_labelsL = horzcat(cur_labelsL,units_other2(plot_axesL.other2));
             cur_legendL = horzcat(cur_legendL,channels_other2(plot_axesL.other2));
         else
@@ -254,41 +413,105 @@ switch switch_plot
         cur_legendR = [];
         cur_labelsR = [];                                                   % prepare variable for ylabelsLeft
         if ~isempty(plot_axesR.igrav) && ~isempty(data.igrav)               % plot igrav data if selected/loaded
-            h1r = plot(plot_axes(2),time.igrav,data.igrav(:,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
-            set(h1r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            switch plot_type(2)
+                case 2
+                    h1r = bar(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav),1);hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h1r,'EdgeColor','none');
+                case 3
+                    h1r = area(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h1r,'LineWidth',line_width(2),'EdgeColor','none');
+                case 4
+                    h1r = stem(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h1r,'LineWidth',line_width(2));
+                case 5
+                    h1r = stairs(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h1r,'LineWidth',line_width(2));
+                otherwise
+                    h1r = plot(plot_axes(2),time.igrav,data.igrav(:,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h1r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            end
             cur_labelsR = horzcat(cur_labelsR,units_igrav(plot_axesR.igrav));
             cur_legendR = horzcat(cur_legendR,channels_igrav(plot_axesR.igrav));
         else
             h1r = [];
         end
         if ~isempty(plot_axesR.trilogi) && ~isempty(data.trilogi)           % plot trilogi data if selected/loaded
-            h2r = plot(plot_axes(2),time.trilogi,data.trilogi(:,plot_axesR.trilogi));hold(plot_axes(2),'on')
-            set(h2r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            switch plot_type(2)
+                case 2
+                    h2r = bar(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi),1);hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h2r,'EdgeColor','none');
+                case 3
+                    h2r = area(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h2r,'LineWidth',line_width(2),'EdgeColor','none');
+                case 4
+                    h2r = stem(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h2r,'LineWidth',line_width(2));
+                case 5
+                    h2r = stairs(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h2r,'LineWidth',line_width(2));
+                otherwise
+                    h2r = plot(plot_axes(2),time.trilogi,data.trilogi(:,plot_axesR.trilogi));hold(plot_axes(2),'on')
+                    set(h2r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            end
             cur_labelsR = horzcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
             cur_legendR = horzcat(cur_legendR,channels_trilogi(plot_axesR.trilogi));
         else
             h2r = [];
         end
         if ~isempty(plot_axesR.other1) && ~isempty(data.other1)             % plot other1 data if selected/loaded
-            h3r = plot(plot_axes(2),time.other1,data.other1(:,plot_axesR.other1));hold(plot_axes(2),'on')
-            set(h3r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            switch plot_type(2)
+                case 2
+                    h3r = bar(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1),1);hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h3r,'EdgeColor','none');
+                case 3
+                    h3r = area(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h3r,'LineWidth',line_width(2),'EdgeColor','none'); 
+                case 4
+                    h3r = stem(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h3r,'LineWidth',line_width(2)); 
+                case 5
+                    h3r = stairs(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h3r,'LineWidth',line_width(2)); 
+                otherwise
+                    h3r = plot(plot_axes(2),time.other1,data.other1(:,plot_axesR.other1));hold(plot_axes(2),'on')
+                    set(h3r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            end
             cur_labelsR = horzcat(cur_labelsR,units_other1(plot_axesR.other1));
             cur_legendR = horzcat(cur_legendR,channels_other1(plot_axesR.other1));
         else
             h3r = [];
         end
         if ~isempty(plot_axesR.other2) && ~isempty(data.other2)             % plot other2 data if selected/loaded
-            h4r = plot(plot_axes(2),time.other2,data.other2(:,plot_axesR.other2));hold(plot_axes(2),'on')
-            set(h4r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            switch plot_type(2)
+                case 2
+                    h4r = bar(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2),1);hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h4r,'EdgeColor','none');
+                case 3
+                    h4r = area(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h4r,'LineWidth',line_width(2),'EdgeColor','none');
+                case 4
+                    h4r = stem(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h4r,'LineWidth',line_width(2));
+                case 5
+                    h4r = stairs(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on') % hX = line specification/handle
+                    set(h4r,'LineWidth',line_width(2));
+                otherwise
+                    h4r = plot(plot_axes(2),time.other2,data.other2(:,plot_axesR.other2));hold(plot_axes(2),'on')
+                    set(h4r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
+            end
             cur_labelsR = horzcat(cur_labelsR,units_other2(plot_axesR.other2));
             cur_legendR = horzcat(cur_legendR,channels_other2(plot_axesR.other2));
         else
             h4r = [];
         end
-        h = [h1l',h2l',h3l',h4l',...
-             h1r',h2r',h3r',h4r'];                                          % stack the line handles (for right and left axes)
+        h = [h1l(:)',h2l(:)',h3l(:)',h4l(:)',...
+             h1r(:)',h2r(:)',h3r(:)',h4r(:)'];                                          % stack the line handles (for right and left axes)
         for c = 1:length(h)
-            set(h(c),'color',color_scale(c,:));                             % change the color of each line
+            try 
+                set(h(c),'FaceColor',color_scale(c,:),'EdgeColor','none');
+            catch
+                set(h(c),'color',color_scale(c,:));   % change the color of each line + their width
+            end
         end
         if get(findobj('Tag','plotGrav_check_grid'),'Value')==1             % show grid if required
             grid(plot_axes(1),'on');
@@ -327,8 +550,8 @@ switch switch_plot
             ref_lim = zoom_in;
         end
         xtick_value = linspace(ref_lim(1),ref_lim(2),num_of_ticks_x);                   % create new ticks
-        set(plot_axes(1),'YLimMode','auto','Visible','on','YAxisLocation','left','XLim',ref_lim,'XTick',xtick_value);
-        set(plot_axes(2),'YLimMode','auto','Visible','on','YAxisLocation','right','color','none','XLim',ref_lim,'XTick',xtick_value,'XTickLabel',[]);
+        set(plot_axes(1),'YLimMode','auto','Visible','on','YAxisLocation','left','XLim',ref_lim,'XTick',xtick_value,'FontSize',font_size);
+        set(plot_axes(2),'YLimMode','auto','Visible','on','YAxisLocation','right','color','none','XLim',ref_lim,'XTick',xtick_value,'XTickLabel',[],'FontSize',font_size);
 %         axes(plot_axes(2));                                                 % set R1 as current axes
         rL1 = get(plot_axes(1),'YLim');                                     % get current limits for left axes
         rR1 = get(plot_axes(2),'YLim');                                     % get current limits for right axes

@@ -426,6 +426,11 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('remove_Xsd',char(row));
                     end
+                case 'REMOVE_RANGE'                                         % remove spikes using a range
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = [min max] range
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('remove_set',char(row));
+                    end
                 %% Remove missing/NaN data
                 case 'REMOVE_MISSING'   
                     row = fgetl(fid);count = count + 1;                     % only one input expected = maximum time interval in seconds.
@@ -687,6 +692,12 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1;
                     if ~strcmp(char(row),'[]')
                         plotGrav('set_data_points',char(row));
+                    end 
+                %% Set plot type
+                case 'SET_PLOT_TYPE'
+                    row = fgetl(fid);count = count + 1;                     % read plot type switch vector
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('set_plot_type',char(row));
                     end 
                 %% Set new channel names
                 case 'SET_CHANNELS_IGRAV'                                       % sets new channel names and update the ui-table of iGrav

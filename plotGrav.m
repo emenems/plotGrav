@@ -206,6 +206,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                         uimenu(m2121,'Label','L3','Callback','plotGrav set_y_L3');
                         uimenu(m2121,'Label','R3','Callback','plotGrav set_y_R3');
                     uimenu(m212,'Label','Select','Callback','plotGrav push_zoom_y');
+                uimenu(m2,'Label','Plot type','Tag','plotGrav_view_plot_type','UserData',[1 1 1 1 1 1],'Callback','plotGrav set_plot_type');
                 uimenu(m2,'Label','Reset view','Callback','plotGrav reset_view');
         % Main SHOW menu (plot/show additional informations)
         m3 = uimenu('Label','Show');
@@ -307,7 +308,9 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 						uimenu(m5144,'Label','All','CallBack','plotGrav remove_text');
 						uimenu(m5144,'Label','Last','CallBack','plotGrav remove_text_last');
 			uimenu(m51,'Label','Interval','CallBack','plotGrav remove_interval_selected');
-			uimenu(m51,'Label','Spikes (> X SD)','CallBack','plotGrav remove_Xsd');
+			m515 = uimenu(m51,'Label','Spikes');
+                  uimenu(m515,'Label','> X SD','CallBack','plotGrav remove_Xsd');
+                  uimenu(m515,'Label','Set range','CallBack','plotGrav remove_set');
 			uimenu(m51,'Label','Step','CallBack','plotGrav remove_step_selected');
         
         % (UI) Panels for selecting time series. Each row of such
@@ -1478,7 +1481,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
 						y2 = in(:,16);                                      % Read ending point/Y Value of the correction (used especially for step correction).  
 						y = get(a1(1),'YLim');                              % Get current Y limits to plot the corrections within the same range.
-                        axes(a1(1));                                        % Set axes to be plotted in. 'text' function does not support passing handles.
+                        set(gcf,'CurrentAxes',a1(1));                       % Set axes to be plotted in. 'text' function does not support passing handles.
                         for i = 1:size(in,1)                                % Plot all correctors (regardless if in loaded time range or not)
                             switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file. 
 								case 1                                      % Step removal
@@ -1495,7 +1498,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                     text(x1(i),y(1)+range(y)*0.05,sprintf('%s (spline)',char(description{1,1}(i))),'Rotation',90,'FontSize',font_size-2,'VerticalAlignment','bottom','interpreter','none'); %
                             end
                         end
-                        axes(a1(2));                                        % Set axes back to R1 (otherwise invisible)
+                        set(gcf,'CurrentAxes',a1(2));                       % Set axes back to R1 (otherwise invisible)
 						set(findobj('Tag','plotGrav_text_status'),'String','Correction file plotted.');drawnow % status
 					catch
 						set(findobj('Tag','plotGrav_text_status'),'String','Could not load correction file...');drawnow % status
@@ -1521,6 +1524,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes of the Second plot (left and right axes = L2 and R2)
 				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes of the Third plot (left and right axes = L3 and R3)
                 line_width = get(findobj('Tag','plotGrav_menu_line_width'),'UserData'); % get line width
+                plot_type = get(findobj('Tag','plotGrav_view_plot_type'),'UserData'); % get plot type (line,bar...)
                 
                 % Clear all plots / reset all plots
 				cla(a1(1));legend(a1(1),'off');ylabel(a1(1),[]);            % clear axes and remove legends and labels: First plot left (a1(1))
@@ -1577,7 +1581,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = plot_axesL1;                               % see ploGrav_plotData.m function
 					plot_axesR = [];                                        % see ploGrav_plotData.m function
 					ref_axes = [];                                          % ref_axes is used to synchronize all plots,i.e., to ensure than the XTicks and Limits are the same, Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1),plot_type(1:2)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printting
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
                 end
@@ -1591,7 +1595,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = [];                                        % see ploGrav_plotData function
 					plot_axesR = plot_axesR1;                               % see ploGrav_plotData function
 					ref_axes = [];                                          % Plot1 is the superior axes (L1 -> R1 -> L2 -> R2 -> L3 -> R3)
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(2)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(2),plot_type(1:2)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
                 end
@@ -1605,7 +1609,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					plot_axesL = plot_axesL1;
 					plot_axesR = plot_axesR1;
 					ref_axes = [];
-					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1:2)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a1,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(1:2),plot_type(1:2)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
 				end
@@ -1624,7 +1628,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     else                                                    % otherwise use L1 axes. 
 						ref_axes = a1(1);
 					end
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3)); % call the function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3),plot_type(3:4)); % call the function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend save   % remove settings
                 end
@@ -1644,7 +1648,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     else
 						ref_axes = a1(1);
 					end                                     
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(4)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(4),plot_type(3:4)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save % remove used settings
                 end
@@ -1663,7 +1667,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					else 
 						ref_axes = a1(1);
 					end  
-					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3:4)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(3:4),plot_type(3:4)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save  % remove used settings
 				end
@@ -1687,7 +1691,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2           % use L2 otherwise
 						ref_axes = a2(1);
 					end
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5)); % call the function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5),plot_type(5:6)); % call the function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes    % remove settings
                 end
@@ -1710,7 +1714,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end                                  
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(6)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(6),plot_type(5:6)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes legend_save   % remove used settings
                 end
@@ -1733,7 +1737,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					elseif plot_mode(1) == 0 && plot_mode(2) ~= 2
 						ref_axes = a2(1);
 					end 
-					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5:6)); % call the plotGrav_plotData function
+					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5:6),plot_type(5:6)); % call the plotGrav_plotData function
 					set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save); % store legend for printing
 					clear switch_plot plot_axesL plot_axesR ref_axes    % remove used settings
 				end
@@ -2007,6 +2011,30 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_status'),'String','Coult not set.');drawnow 
                 plotGrav('uitable_push');                                   % re-plot
             end
+        case 'set_plot_type'
+            %% Set plot type (line, bar,...)
+            % Use either GUI (nargin == 1) or script (else)
+            if nargin == 1  
+                set(findobj('Tag','plotGrav_text_status'),'String','Set a vector of integers (6) for plot type...waiting 6 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','1;1;1;1;1;1'); % Make user editable field visible and set the default value 
+                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+            else
+                set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % In case functin has two inputs (for example when called from plotGrav_scriptRun.m)
+            end
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off user input fields
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            plot_type = strsplit(get(findobj('Tag','plotGrav_edit_text_input'),'String'),';'); % split string
+            plot_type = round(str2double(plot_type)); % convert to integers
+            % Check the correct length
+            if length(plot_type) ~= 6
+                set(findobj('Tag','plotGrav_text_status'),'String','Vector with 6 values must be set');drawnow
+            else
+                set(findobj('Tag','plotGrav_view_plot_type'),'UserData',plot_type); % set the values
+                plotGrav('uitable_push');                                   % re-plot
+                set(findobj('Tag','plotGrav_text_status'),'String','Plot type set');drawnow
+            end
+            
 		case 'reset_view'
             %% Reset view
             % Reset view means update all plots = delete all information
@@ -2862,40 +2890,40 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             if ~isempty(quake_time)                                         % Continue only if xml data reading was successful
                 try
                     % After reading GEOFON data, plot the data
-                    a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get first axes handles (Vertical lines showing earhquakes will be plotted to all axes)
+                    a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get first axes handles (Vertical lines showing earthquakes will be plotted to all axes)
                     a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get second axes handles
                     a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get third axes handles
 
                     y = get(a1(1),'YLim');                                  % used Y range of L1 for plotting (do not plot outside the current view)
-                    x = get(a1(1),'XLim');                                  % use to check if loaded earhquakes occurred within plotted window
-                    axes(a1(1));                                            % Set L1 axes as current ('text' does not support axes handle passing)
+                    x = get(a1(1),'XLim');                                  % use to check if loaded earthquakes occurred within plotted window
+                    set(gcf,'CurrentAxes',a1(1));                           % Set L1 axes as current ('text' does not support axes handle passing)
                     for i = 1:length(quake_time)                            % Run for all quakes
                         if quake_time(i) > x(1) && quake_time(i) < x(2)     % Plot only if within plotted time interval
                             plot([quake_time(i),quake_time(i)],y,'k--');    % Add vertical line
                             text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size,'VerticalAlignment','bottom') % +comment
                         end
                     end
-                    axes(a1(2));                                            % Set R1 back (otherwise invisibel)
+                    set(gcf,'CurrentAxes',a1(2));                           % Set R1 back (otherwise invisible)
                     % Do the same for L2 axes
                     y = get(a2(1),'YLim');
                     x = get(a2(1),'XLim');
-                    axes(a2(1));
+                    set(gcf,'CurrentAxes',a2(1));
                     for i = 1:length(quake_time)
                         if quake_time(i) > x(1) && quake_time(i) < x(2)
                             plot([quake_time(i),quake_time(i)],y,'k--');
                         end
                     end
-                    axes(a2(2));                                            % Set R2 back (otherwise invisibel)
+                    set(gcf,'CurrentAxes',a2(2));                            % Set R2 back (otherwise invisible)
                     % Do the same for L3 axes
                     y = get(a3(1),'YLim');
                     x = get(a3(1),'XLim');
-                    axes(a3(1));
+                    set(gcf,'CurrentAxes',a3(1));
                     for i = 1:length(quake_time)
                         if quake_time(i) > x(1) && quake_time(i) < x(2)
                             plot([quake_time(i),quake_time(i)],y,'k--');
                         end
                     end
-                    axes(a3(2));                                            % Set R3 back (otherwise invisibel)
+                    set(gcf,'CurrentAxes',a3(2));                                            % Set R3 back (otherwise invisible)
                     set(findobj('Tag','plotGrav_text_status'),'String','Earthquakes (last 20) have been plotted.');drawnow % status
                 catch
                     set(findobj('Tag','plotGrav_text_status'),'String','Earthquakes retrieved, but NOT plotted.');drawnow % status
@@ -2904,7 +2932,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			
         case 'set_manual_drift'
             %% Set manual drift
-            % Turn visiblity on/off ONLY. No further function. Not related
+            % Turn visibility on/off ONLY. No further function. Not related
             % to fitting functions.
             switch_drift = get(findobj('Tag','plotGrav_pupup_drift'),'Value');
             if switch_drift == 6
@@ -4562,7 +4590,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
                     deg = str2double(st);                                   % convert to double (required for polyfit function)
                     
-                    axes(a1(1));                                            % set axes L1 as current (otherwise could the picked values refere to other axes)
+                    set(gcf,'CurrentAxes',a1(1));                           % set axes L1 as current (otherwise could the picked values refere to other axes)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select first point (start)...');drawnow % send instruction to status bar
 					[selected_x1,~] = ginput(1);
 					set(findobj('Tag','plotGrav_text_status'),'String','Select second point (stop)...');drawnow % status
@@ -4585,8 +4613,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             set(findobj('Tag','plotGrav_text_status'),'String','Could not fit the data.');drawnow % status
                         end
 						clear temp r
-					end
-                    axes(a1(2));                                            % set back R1 (othwerwise invisible)
+                    end
+                    set(gcf,'CurrentAxes',a1(2));                           % set back R1 (othwerwise invisible)
                     set(findobj('Tag','plotGrav_text_status'),'String','Fit for selected interval has been computed and plotted.');drawnow % status
 				end
 			end 
@@ -5744,9 +5772,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
 				
-                if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
+                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)']) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
-				elseif length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
+				elseif length([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)']) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel for L1.');drawnow % status
                 else
                     % Get input from user
@@ -5787,7 +5815,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             end
 				
 		case 'remove_Xsd'
-			%% Remove Spikes
+			%% Remove Spikes: use SD
             % User can remove time series spikes using simple condition
             % based on standard deviation (SD). All values above user defined
             % multiple of SD will be set to NaN. This can be done for all
@@ -5813,7 +5841,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
                 % Check how many channels are selected (minimum one)
-                if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2])
+                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
 					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
                 else
                     try
@@ -5845,6 +5873,85 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                     [ty,tm,td,th,tmm] = datevec(now);       % time for logfile
                                     fprintf(fid,'%s channel %d spikes > %3.1f * standard deviation removed (%04d/%02d/%02d %02d:%02d)\n',...
                                         char(panels(p)),plot_axesL1.(char(panels(p)))(i),sd_mult,ty,tm,td,th,tmm);
+                                end	
+                            end
+                        end
+                        % Store updated values
+                        set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store the updated table
+                        plotGrav('uitable_push');                           % re-plot all to see the changes
+                        fclose(fid);                                        % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','Spikes removed.');drawnow % status
+                    catch error_message
+                        if strcmp(error_message.identifier,'MATLAB:license:checkouterror')
+                            fclose(fid);
+                            set(findobj('Tag','plotGrav_text_status'),'String','Upps, no matlab licence (Statistics_Toolbox?)');drawnow % message
+                        else
+                            fclose(fid);
+                            set(findobj('Tag','plotGrav_text_status'),'String','Spikes has not been removed (unknown reason).');drawnow % message
+                        end
+                    end
+                end
+            else
+                set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % message
+            end
+        case 'remove_set'
+			%% Remove Spikes: set range
+            % User can remove time series spikes by setting a range. All
+            % values above this range will be set to NaN. This can be done
+            % for all panels and channels.
+            % The following code is a modification of 'remove_Xsd'
+            
+            % First get all required inputs
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
+            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            
+            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+				% Open logfile (to document removed time interval)
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                % Find all selected channels
+                panels = {'igrav','trilogi','other1','other2'};  
+                for i = 1:length(panels)
+                    plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                end
+                % Check how many channels are selected (minimum one)
+                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
+					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
+                else
+                    try
+                        % Get input from user = range
+                        if nargin == 1
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set Y range (e.g., 0 0.5)...waiting 6 seconds');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0 0.5'); % Show editable field + set default value
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                            pause(6);                                           % wait 6 seconds for user input
+                        else
+                            set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                        end
+                        set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+                        set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
+                        range_set = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
+                        range_set = str2double(strsplit(range_set,' '));    % Convert to double precision = split and convert. 
+                        % Run loop for all panels and channels
+                        for p = 1:length(panels)                            % loop for panels
+                            if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % check if some chanel selected and data loaded
+                                for i = 1:length(plot_axesL1.(char(panels(p)))) % compute for all selected channels
+                                    temp = data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)); % copy current time series to temporary variable
+                                    r = find(temp>range_set(2) | temp<range_set(1));  % find points outside of range
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        data.(char(panels(p)))(r,plot_axesL1.(char(panels(p)))(i)) = NaN; % remove the data>X*SD directly in original data (not necesary to use 'temp' again)
+                                    end
+                                    clear temp r                            % remove variables used in each loop run
+                                    % Write to logfile
+                                    [ty,tm,td,th,tmm] = datevec(now);       % time for logfile
+                                    fprintf(fid,'%s channel %d spikes outside %.7g - %.7g removed (%04d/%02d/%02d %02d:%02d)\n',...
+                                        char(panels(p)),plot_axesL1.(char(panels(p)))(i),range_set(1),range_set(2),ty,tm,td,th,tmm);
                                 end	
                             end
                         end
