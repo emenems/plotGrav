@@ -320,7 +320,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         % 3. Checking or unchecking of ui-table checkboxes evokes
         % automatically the plotting section.
 		p3 = uipanel(F1,'Units','normalized','Position',[0.01,0.76,0.265,0.33-0.10],... % Settings panel (uppermost panel)
-				'Title','Settings','FontSize',9);
+				'Title','Settings','FontSize',9,'Tag','plotGrav_setting_panel');
         p1 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','iGrav','R1','R2','R3'},... % first panel for iGrav/SG030 (upper left)
 				'Position',[0.01,0.25,0.13,0.50],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
 				'Tag','plotGrav_uitable_igrav_data','Visible','on','FontSize',9,'RowName',[],...
@@ -460,8 +460,11 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   'Tag','plotGrav_text_input','Visible','off',...
                   'Position',[0.02,0.15,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Edit','String','','units','normalized','Visible','off',...
-                  'Position',[0.17,0.16,0.81,0.09],'FontSize',9,'BackgroundColor','w',...
+                  'Position',[0.17,0.16,0.62,0.09],'FontSize',9,'BackgroundColor','w',...
                   'Tag','plotGrav_edit_text_input','HorizontalAlignment','left');
+        uicontrol(p3,'Style','pushbutton','String','Confirm','units','normalized',...
+                  'Position',[0.80,0.16,0.18,0.10],'FontSize',9,'Tag',...
+                  'plotGrav_push_confirm','Visible','off','CallBack','set(findobj(''Tag'',''plotGrav_push_confirm''),''Visible'',''off'')');
 				  
         % Settings Load + status
         uicontrol(p3,'Style','pushbutton','String','Load data','units','normalized',...
@@ -1865,10 +1868,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % is then stored and used afterwards for all plots.
             date_format = get(findobj('Tag','plotGrav_menu_date_format'),'UserData'); % get current date format (to show it to user)
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set date format...waiting 10 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                set(findobj('Tag','plotGrav_text_status'),'String','Set date format and press ''confirm''');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',date_format);  % Make user input dialog visible + show current format
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end
@@ -1895,10 +1900,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % affect all plots (1,2 and 3). Currently plotted time range
             % will be linearly divided into given parts with ticks.
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 9)...waiting 8 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 9)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Make user input dialog visible  
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','9'); % Make user editable field visible and set the default value
-                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1})); 
             end
@@ -1920,10 +1927,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
         case 'set_num_of_ticks_y'
             % Same as previous but for Y ticks, see comments in there.
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 5)...waiting 8 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set number of ticks for X axis (e.g., 5)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Make user input dialog visible    
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','5'); % Make user editable field visible and set the default value 
-                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1})); 
             end
@@ -1952,10 +1961,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get axes of the Second plot (left and right axes = L2 and R2)
 			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get axes of the Third plot (left and right axes = L3 and R3)
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set font size (e.g., 9)...waiting 8 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set font size (e.g., 9)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','9'); % Make user editable field visible and set the default value 
-                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                        
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % In case functin has two inputs (for example when called from plotGrav_scriptRun.m)
             end
@@ -1989,10 +2000,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Use either GUI (nargin == 1) or script (else)
             if nargin == 1  
                 nth = get(findobj('Tag','plotGrav_menu_set_data_points'),'UserData'); % get current values
-                set(findobj('Tag','plotGrav_text_status'),'String','Set integer to plot each n-th data point (e.g., 2)...waiting 6 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set integer to plot each n-th data point (e.g., 2)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',nth); % Make user editable field visible and set the default value 
-                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                      
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % In case functin has two inputs (for example when called from plotGrav_scriptRun.m)
             end
@@ -2018,7 +2031,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_status'),'String','Set a vector of integers (6) for plot type...waiting 6 seconds');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');        % Make user input dialog visible   
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','1;1;1;1;1;1'); % Make user editable field visible and set the default value 
-                pause(8);                                                       % Wait 8 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.                                                       
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                       
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % In case functin has two inputs (for example when called from plotGrav_scriptRun.m)
             end
@@ -2129,18 +2144,21 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
             % Get first (starting point) input from user
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set first date (YYYY MM DD HH MM SS)...waiting 15 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set first date (YYYY MM DD HH MM SS)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       % Show user input dialog. 
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',''); % by default, set to empty 
-                pause(15);                                                      % Wait longer as user muts set 6 numbers (it takes some time). Keep in mind no pushbutton is used for confirming the isertion.
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); 
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
                 selected_date1 = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % read the FIRST input. Read only, will be converted to matlab datenum format later.
                 % Get second (ending point) input from user
-                set(findobj('Tag','plotGrav_text_status'),'String','Set second date (YYYY MM DD HH MM SS)...waiting 15 seconds');drawnow % send message to status bar with instructions
+                set(findobj('Tag','plotGrav_text_status'),'String','Set second date (YYYY MM DD HH MM SS)');drawnow % send message to status bar with instructions
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',''); 
-                pause(15);
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 selected_date2 = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % read the SECOND input. Read only, will be converted to matlab datenum format later.
             else
                 selected_date1 = char(varargin{1});
@@ -2316,10 +2334,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get plot one handles (L1,R1)
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); % get number of tick for y axis
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end
@@ -2341,10 +2361,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % see comments 'set_y_L1'
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData');
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end                                               
@@ -2366,10 +2388,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');  % see comments 'set_y_L1'
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end                                                   
@@ -2391,10 +2415,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');  % see comments 'set_y_L1'
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData');
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end                                                
@@ -2416,10 +2442,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');  % see comments 'set_y_L1'
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end                                                  
@@ -2441,10 +2469,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');  % see comments 'set_y_L1'
                 num_of_ticks_y = get(findobj('Tag','plotGrav_menu_num_of_ticks_y'),'UserData'); 
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)...waiting 10 seconds');drawnow % send instructions to user
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set limis (e.g. -10 10)');drawnow % send instructions to user
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make editable field visible
-                    pause(10);                                                  % wait 10 seconds for user input. Keep in mind user must set two numbers and no pushbutton is used to confirm the insertion
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1})); % if function called with two parameters, get the second one and use it as 'user input'
                 end                                                  
@@ -2532,10 +2562,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end
@@ -2552,10 +2584,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar       
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                 % wait 15 for user input    
@@ -2572,10 +2606,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2592,10 +2628,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar       
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2612,10 +2650,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                    % wait 15 for user input    
@@ -2632,10 +2672,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar    
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2658,10 +2700,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end
@@ -2683,10 +2727,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar    
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2708,10 +2754,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                      % wait 15 for user input    
@@ -2733,10 +2781,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2758,10 +2808,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2783,10 +2835,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input    
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end                                                     % wait 15 for user input    
@@ -2812,10 +2866,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % using this function. The following code contains setting of
             % line width for all axes at onece.
             if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set L1 R1 L2 R2 L3 R3 line width...waiting 15 seconds');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_text_status'),'String','Set L1 R1 L2 R2 L3 R3 line width');drawnow % Sent instructions to status bar
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0.5 0.5 0.5 0.5 0.5 0.5');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
                 set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                pause(15);                                                      % wait 15 for user input     
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
             else
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
             end
@@ -2855,10 +2911,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % earthquaked. By default this value is set to 6.
                 % First, get the GEOFON Data
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set minimum magnitude...waiting 5 seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set minimum magnitude');drawnow % send instructions to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',6); % Make user input fields visible + set default value
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(5);                                                   % wait 5 seconds for user input. No confirmation button is used for this purpose, just elapsed time
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1})); 
                 end
@@ -2900,7 +2958,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     for i = 1:length(quake_time)                            % Run for all quakes
                         if quake_time(i) > x(1) && quake_time(i) < x(2)     % Plot only if within plotted time interval
                             plot([quake_time(i),quake_time(i)],y,'k--');    % Add vertical line
-                            text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size,'VerticalAlignment','bottom') % +comment
+                            text(quake_time(i),y(1)+range(y)*0.05,quake_name{i},'Rotation',90,'FontSize',font_size-1,'VerticalAlignment','bottom') % +comment
                         end
                     end
                     set(gcf,'CurrentAxes',a1(2));                           % Set R1 back (otherwise invisible)
@@ -3251,7 +3309,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 if isnan(data.(char(panels(i)))(1,plot_axesL1.(char(panels(i)))(j)))
                                     data.(char(panels(i)))(:,run_index) = vertcat(NaN,cumsum(data.(char(panels(i)))(2:end,plot_axesL1.(char(panels(i)))(j)))); % compute cumulative sum for current channel.
                                 else
-                                    data.(char(panels(i)))(:,run_index) = cumsum(data.(char(panels(i)))(2:end,plot_axesL1.(char(panels(i)))(j)));
+                                    data.(char(panels(i)))(:,run_index) = vertcat(NaN,cumsum(data.(char(panels(i)))(2:end,plot_axesL1.(char(panels(i)))(j))));
                                 end
                                 units.(char(panels(i)))(run_index) = {char(units.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j)))}; % add diff units. The same as input.
                                 channels.(char(panels(i)))(run_index) = {[char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))),'_sum']}; % add diff name. The same as input + diff.
@@ -3664,10 +3722,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) == 1
                         % Get user input
                         if nargin == 1 
-                            set(findobj('Tag','plotGrav_text_status'),'String','Set moving window length in hours...waiting 6 seconds');drawnow % send instructions to command promtp
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set moving window length in hours');drawnow % send instructions to command promtp
                             set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','96');  % make input text visible
                             set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-                            pause(6);                                                  % wait 10 seconds for user input
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                         else
                             set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                         end
@@ -4519,18 +4579,22 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			%% Fitting polynomials
             % User can fit a polynomial up to degree 3 and subtract the
             % fitted curve.
+            set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
             message_out = plotGrav_fitData(1,[],[],[]);
             set(findobj('Tag','plotGrav_text_status'),'String',message_out);drawnow % status
 		case 'fit_quadratic'
 			% Fit polynomial 2.degree
+            set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
             message_out = plotGrav_fitData(2,[],[],[]);
             set(findobj('Tag','plotGrav_text_status'),'String',message_out);drawnow % status
         case 'fit_cubic'
 			% Fit polynomial 3.degree
+            set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
             message_out = plotGrav_fitData(3,[],[],[]);
             set(findobj('Tag','plotGrav_text_status'),'String',message_out);drawnow % status
 		case 'fit_constant'
 			% Fit polynomial 0.degree = subtract mean
+            set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
             message_out = plotGrav_fitData(0,[],[],[]);
             set(findobj('Tag','plotGrav_text_status'),'String',message_out);drawnow % status
 		case 'fit_user_set'
@@ -4538,11 +4602,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % In this case, user input is required:
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % just to check if some data has been loaded
             if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2)
+                set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
                 if nargin == 1 
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set coefficients of a polynomial (PN PN-1... P0)...waiting 10 seconds');drawnow % send instructions to command promtp
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set coefficients of a polynomial (PN PN-1... P0)');drawnow % send instructions to command promtp
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  % make input text visible
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % make input field visible
-                    pause(10);                                                  % wait 10 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -4978,10 +5045,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         % Get parameters related to maximim possible lag from user
                         if nargin == 1
-                            set(findobj('Tag','plotGrav_text_status'),'String','Set maximum lag (in seconds, e.g. 20)...waiting 6 seconds');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set maximum lag (in seconds, e.g. 20)');drawnow % send instructions to status bar
                             set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','20');  % make input text visible + set default value
                             set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
-                            pause(6);                                           % wait 6 seconds for user input
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                         else
                             set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                         end
@@ -5100,10 +5169,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
                 % Get user input
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)');drawnow % send instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','A2 = A3 + B1 * B1 + T + 1'); % Show editable field
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                    pause(10);
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -5354,10 +5425,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
 				% Get user input
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)...waiting 10 seconds');drawnow % send instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set expression (space separated)');drawnow % send instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','A2 = A3 + B1 * 3'); % Show editable field
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                    pause(10);
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -5458,8 +5531,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Trilogi channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'C'
                                 data.other1(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.other1(:,str2double(st{1}(2:end))) = {'?'};
-                                channels.other1(:,str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
+                                units.other1(str2double(st{1}(2:end))) = {'?'};
+                                channels.other1(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.other1(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
@@ -5679,10 +5752,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 
 				% Get User input
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set maximum missing interval (in seconds)...waiting 6 seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set maximum missing interval (in seconds)');drawnow % send instructions to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','10'); % Show editable field + set default value
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                    pause(6);                                               % wait 6 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -5847,10 +5922,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     try
                         % Get input from user = SD multiplicator
                         if nargin == 1
-                            set(findobj('Tag','plotGrav_text_status'),'String','Set SD multiplicator (data > X *SD=NaN)...waiting 6 seconds');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set SD multiplicator (data > X *SD=NaN)');drawnow % send instructions to status bar
                             set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','3'); % Show editable field + set default value
                             set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                            pause(6);                                           % wait 6 seconds for user input
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                         else
                             set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                         end
@@ -5927,10 +6004,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     try
                         % Get input from user = range
                         if nargin == 1
-                            set(findobj('Tag','plotGrav_text_status'),'String','Set Y range (e.g., 0 0.5)...waiting 6 seconds');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set Y range (e.g., 0 0.5)');drawnow % send instructions to status bar
                             set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0 0.5'); % Show editable field + set default value
                             set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                            pause(6);                                           % wait 6 seconds for user input
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                         else
                             set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                         end
@@ -5998,10 +6077,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
                 % Get input from user = time resolution in seconds
                 if nargin == 1
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new sampling interval (in seconds)...waiting 6 seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new sampling interval (in seconds)');drawnow % send instructions to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','3600');  % make input text visible + set default value, in this case 1 hour (=3600 seconds)
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');   % 
-                    pause(6);                                                   % wait 6 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6076,7 +6157,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','0'); % show editable field + set default value
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                    pause(10);                                              % wait 10 seconds for user input (no confirmation button ise used)
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else % set using plotGrav script option
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6166,11 +6249,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 if nargin == 1
                     % Get user input = station coordinates. Fixed URL is used
                     % to get Polar motion and LOD parameters
-                    set(findobj('Tag','plotGrav_text_status'),'String','Latitude and Longitude (in deg, space separated)...waiting 10 seconds');drawnow % send instructions to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Latitude and Longitude (in deg, space separated)');drawnow % send instructions to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','49.14490 12.87687'); % show editable field + set default values (Wettzell)
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on');  
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
-                    pause(10);                                              % wait 10 seconds for user input (no confirmation button ise used)
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6254,18 +6339,24 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % used to compute the residual effect). Main single admittance
                 % will be used for residual effect (See GUI)
                 if nargin == 1                                              % This function can be called with more then one input. If only one input (function name = 'get_atmacs'), then get user input. Otherwise, use function input for further computation.
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for local part...waiting 8 seconds');drawnow % send instruction to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for local part');drawnow % send instruction to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav');% Show user input field and set default URL (wettzell)
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
-                    pause(8);                                                   % wait 8 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                     atmacs_url_link_loc = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input local URL
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for global part...waiting 8 seconds');drawnow % update send instruction to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for global part');drawnow % update send instruction to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav'); % update Editable field to new/global part URL
-                    pause(8);                                                   % wait 8 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                      % wait 8 seconds for user input
                     atmacs_url_link_glo = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input global URL
-                    set(findobj('Tag','plotGrav_text_status'),'String','iGrav pressure channel (for pressure in mBar)...waiting 8 seconds');drawnow % new instruction to set the channel number
+                    set(findobj('Tag','plotGrav_text_status'),'String','iGrav pressure channel (for pressure in mBar)');drawnow % new instruction to set the channel number
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','2'); % Update the editable field. By default iGrav second channel contains pressure variations
-                    pause(8);                                                   % wait 8 seconds for user input
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                   % wait 8 seconds for user input
                     press_channel = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get pressure channel number
                 else
                     atmacs_url_link_loc = char(varargin{1});                % read url from function inputs       
@@ -6351,10 +6442,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Get new channel names either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6410,10 +6503,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6463,10 +6558,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6516,10 +6613,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6580,10 +6679,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Get new channel units either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6638,10 +6739,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6692,10 +6795,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end
@@ -6746,10 +6851,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             channels.(panels) = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )...waiting 10 seconds');drawnow % send message to status bar with instructions
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    pause(10);                                                      % Wait 10 seconds for user input. This is not the best solution, but this avoids programming additional push button that would confirm the insertion.
+                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
                     set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
                 end

@@ -76,8 +76,8 @@ switch switch_plot
                 otherwise
                     h1 = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
             end
-            cur_labelsL = horzcat(cur_labelsL,units_igrav(plot_axesL.igrav));      % stack ylabels (only unique will be used at the end)
-            cur_legend = horzcat(cur_legend,channels_igrav(plot_axesL.igrav));     % stack legend 
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_igrav(plot_axesL.igrav),[1,length(plot_axesL.igrav)]));      % stack ylabels (only unique will be used at the end)
+            cur_legend = horzcat(cur_legend,reshape(channels_igrav(plot_axesL.igrav),[1,length(plot_axesL.igrav)]));      % stack legend 
         else
             h1 = [];
         end
@@ -88,8 +88,8 @@ switch switch_plot
                 otherwise
                     h2 = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
             end
-            cur_labelsL = horzcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
-            cur_legend = horzcat(cur_legend,channels_trilogi(plot_axesL.trilogi));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_trilogi(plot_axesL.trilogi),[1,length(plot_axesL.trilogi)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_trilogi(plot_axesL.trilogi),[1,length(plot_axesL.trilogi)]));
         else
             h2 = [];
         end
@@ -106,8 +106,8 @@ switch switch_plot
                 otherwise
                     h3 = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
             end
-            cur_labelsL = horzcat(cur_labelsL,units_other1(plot_axesL.other1));
-            cur_legend = horzcat(cur_legend,channels_other1(plot_axesL.other1));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_other1(plot_axesL.other1),[1,length(plot_axesL.other1)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_other1(plot_axesL.other1),[1,length(plot_axesL.other1)]));
         else
             h3 = [];
         end
@@ -124,8 +124,8 @@ switch switch_plot
                 otherwise
                     h4 = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
             end
-            cur_labelsL = horzcat(cur_labelsL,units_other2(plot_axesL.other2));
-            cur_legend = horzcat(cur_legend,channels_other2(plot_axesL.other2));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_other2(plot_axesL.other2),[1,length(plot_axesL.other2)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_other2(plot_axesL.other2),[1,length(plot_axesL.other2)]));
         else
             h4 = [];
         end
@@ -201,8 +201,8 @@ switch switch_plot
                 otherwise
                     h1 = plot(plot_axes(2),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
             end
-            cur_labelsR = horzcat(cur_labelsR,units_igrav(plot_axesR.igrav));
-            cur_legend = horzcat(cur_legend,channels_igrav(plot_axesR.igrav));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_igrav(plot_axesR.igrav),[1,length(plot_axesR.igrav)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_igrav(plot_axesR.igrav),[1,length(plot_axesR.igrav)]));
         else
             h1 = [];
         end
@@ -219,8 +219,8 @@ switch switch_plot
                 otherwise
                     h2 = plot(plot_axes(2),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesR.trilogi));hold(plot_axes(2),'on')
             end
-            cur_labelsR = horzcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
-            cur_legend = horzcat(cur_legend,channels_trilogi(plot_axesR.trilogi));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_trilogi(plot_axesR.trilogi),[1,length(plot_axesR.trilogi)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_trilogi(plot_axesR.trilogi),[1,length(plot_axesR.trilogi)]));
         else
             h2 = [];
         end
@@ -237,8 +237,8 @@ switch switch_plot
                 otherwise
                     h3 = plot(plot_axes(2),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesR.other1));hold(plot_axes(2),'on')
             end
-            cur_labelsR = horzcat(cur_labelsR,units_other1(plot_axesR.other1));
-            cur_legend = horzcat(cur_legend,channels_other1(plot_axesR.other1));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_other1(plot_axesR.other1),[1,length(plot_axesR.other1)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_other1(plot_axesR.other1),[1,length(plot_axesR.other1)]));
         else
             h3 = [];
         end
@@ -255,8 +255,8 @@ switch switch_plot
                 otherwise
                     h4 = plot(plot_axes(2),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesR.other2));hold(plot_axes(2),'on')
             end
-            cur_labelsR = horzcat(cur_labelsR,units_other2(plot_axesR.other2));
-            cur_legend = horzcat(cur_legend,channels_other2(plot_axesR.other2));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_other2(plot_axesR.other2),[1,length(plot_axesR.other2)]));
+            cur_legend = horzcat(cur_legend,reshape(channels_other2(plot_axesR.other2),[1,length(plot_axesR.other2)]));
         else
             h4 = [];
         end
@@ -335,8 +335,8 @@ switch switch_plot
                     h1l = plot(plot_axes(1),time.igrav(1:nth:end),data.igrav(1:nth:end,plot_axesL.igrav));hold(plot_axes(1),'on') % hX = line specification/handle
                     set(h1l,'LineWidth',line_width(1));                             % Unlike in previous code, the line width must be set for left and right plot separately
             end
-            cur_labelsL = horzcat(cur_labelsL,units_igrav(plot_axesL.igrav));
-            cur_legendL = horzcat(cur_legendL,channels_igrav(plot_axesL.igrav));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_igrav(plot_axesL.igrav),[1,length(plot_axesL.igrav)]));
+            cur_legendL = horzcat(cur_legendL,reshape(channels_igrav(plot_axesL.igrav),[1,length(plot_axesL.igrav)]));
         else
             h1l = [];
         end
@@ -358,8 +358,8 @@ switch switch_plot
                     h2l = plot(plot_axes(1),time.trilogi(1:nth:end),data.trilogi(1:nth:end,plot_axesL.trilogi));hold(plot_axes(1),'on')
                     set(h2l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
             end
-            cur_labelsL = horzcat(cur_labelsL,units_trilogi(plot_axesL.trilogi));
-            cur_legendL = horzcat(cur_legendL,channels_trilogi(plot_axesL.trilogi));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_trilogi(plot_axesL.trilogi),[1,length(plot_axesL.trilogi)]));
+            cur_legendL = horzcat(cur_legendL,reshape(channels_trilogi(plot_axesL.trilogi),[1,length(plot_axesL.trilogi)]));
         else
             h2l = [];
         end
@@ -381,8 +381,8 @@ switch switch_plot
                     h3l = plot(plot_axes(1),time.other1(1:nth:end),data.other1(1:nth:end,plot_axesL.other1));hold(plot_axes(1),'on')
                     set(h3l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
             end
-            cur_labelsL = horzcat(cur_labelsL,units_other1(plot_axesL.other1));
-            cur_legendL = horzcat(cur_legendL,channels_other1(plot_axesL.other1));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_other1(plot_axesL.other1),[1,length(plot_axesL.other1)]));
+            cur_legendL = horzcat(cur_legendL,reshape(channels_other1(plot_axesL.other1),[1,length(plot_axesL.other1)]));
         else
             h3l = [];
         end
@@ -404,8 +404,8 @@ switch switch_plot
                     h4l = plot(plot_axes(1),time.other2(1:nth:end),data.other2(1:nth:end,plot_axesL.other2));hold(plot_axes(1),'on')
                     set(h4l,'LineWidth',line_width(1));                             % set line width for left and right plot separately
             end
-            cur_labelsL = horzcat(cur_labelsL,units_other2(plot_axesL.other2));
-            cur_legendL = horzcat(cur_legendL,channels_other2(plot_axesL.other2));
+            cur_labelsL = horzcat(cur_labelsL,reshape(units_other2(plot_axesL.other2),[1,length(plot_axesL.other2)]));
+            cur_legendL = horzcat(cur_legendL,reshape(channels_other2(plot_axesL.other2),[1,length(plot_axesL.other2)]));
         else
             h4l = [];
         end
@@ -430,8 +430,8 @@ switch switch_plot
                     h1r = plot(plot_axes(2),time.igrav,data.igrav(:,plot_axesR.igrav));hold(plot_axes(2),'on') % hX = line specification/handle
                     set(h1r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
             end
-            cur_labelsR = horzcat(cur_labelsR,units_igrav(plot_axesR.igrav));
-            cur_legendR = horzcat(cur_legendR,channels_igrav(plot_axesR.igrav));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_igrav(plot_axesR.igrav),[1,length(plot_axesR.igrav)]));
+            cur_legendR = horzcat(cur_legendR,reshape(channels_igrav(plot_axesR.igrav),[1,length(plot_axesR.igrav)]));
         else
             h1r = [];
         end
@@ -453,8 +453,8 @@ switch switch_plot
                     h2r = plot(plot_axes(2),time.trilogi,data.trilogi(:,plot_axesR.trilogi));hold(plot_axes(2),'on')
                     set(h2r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
             end
-            cur_labelsR = horzcat(cur_labelsR,units_trilogi(plot_axesR.trilogi));
-            cur_legendR = horzcat(cur_legendR,channels_trilogi(plot_axesR.trilogi));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_trilogi(plot_axesR.trilogi),[1,length(plot_axesR.trilogi)]));
+            cur_legendR = horzcat(cur_legendR,reshape(channels_trilogi(plot_axesR.trilogi),[1,length(plot_axesR.trilogi)]));
         else
             h2r = [];
         end
@@ -476,8 +476,8 @@ switch switch_plot
                     h3r = plot(plot_axes(2),time.other1,data.other1(:,plot_axesR.other1));hold(plot_axes(2),'on')
                     set(h3r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
             end
-            cur_labelsR = horzcat(cur_labelsR,units_other1(plot_axesR.other1));
-            cur_legendR = horzcat(cur_legendR,channels_other1(plot_axesR.other1));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_other1(plot_axesR.other1),[1,length(plot_axesR.other1)]));
+            cur_legendR = horzcat(cur_legendR,reshape(channels_other1(plot_axesR.other1),[1,length(plot_axesR.other1)]));
         else
             h3r = [];
         end
@@ -499,8 +499,8 @@ switch switch_plot
                     h4r = plot(plot_axes(2),time.other2,data.other2(:,plot_axesR.other2));hold(plot_axes(2),'on')
                     set(h4r,'LineWidth',line_width(2));                             % set line width for left and right plot separately
             end
-            cur_labelsR = horzcat(cur_labelsR,units_other2(plot_axesR.other2));
-            cur_legendR = horzcat(cur_legendR,channels_other2(plot_axesR.other2));
+            cur_labelsR = horzcat(cur_labelsR,reshape(units_other2(plot_axesR.other2),[1,length(plot_axesR.other2)]));
+            cur_legendR = horzcat(cur_legendR,reshape(channels_other2(plot_axesR.other2),[1,length(plot_axesR.other2)]));
         else
             h4r = [];
         end
