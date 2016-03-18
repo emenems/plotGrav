@@ -105,7 +105,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				m102 = 	uimenu(m10,'Label','TRiLOGi');
 					uimenu(m102,'Label','Path','CallBack','plotGrav select_trilogi');
 					uimenu(m102,'Label','File','CallBack','plotGrav select_trilogi_file');
-                m12  = 	uimenu(m1,'Label','Export');
+            m15 = uimenu(m1,'Label','Append channels');
+                uimenu(m15,'Label','to iGrav','CallBack','plotGrav append_channels igrav');
+                uimenu(m15,'Label','to TRiLOGi','CallBack','plotGrav append_channels trilogi');
+                uimenu(m15,'Label','to Other1','CallBack','plotGrav append_channels other1');
+                uimenu(m15,'Label','to Other2','CallBack','plotGrav append_channels other2');
+            m12  = 	uimenu(m1,'Label','Export');
 				uimenu(m10,'Label','Other1 file','CallBack','plotGrav select_other1');
 				uimenu(m10,'Label','Other2 file','CallBack','plotGrav select_other2');
 				uimenu(m10,'Label','Tides tsf file','CallBack','plotGrav select_tides');
@@ -323,21 +328,21 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				'Title','Settings','FontSize',9,'Tag','plotGrav_setting_panel');
         p1 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','iGrav','R1','R2','R3'},... % first panel for iGrav/SG030 (upper left)
 				'Position',[0.01,0.25,0.13,0.50],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_igrav_data','Visible','on','FontSize',9,'RowName',[],...
+				'Tag','plotGrav_uitable_igrav_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_igrav_file',...
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],...
 				'CellEditCallback','plotGrav uitable_push','UserData',[]);			% UserData container will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
         p2 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','TRiLOGi','R1','R2','R3'},...% second panel for TRiLOGi data (upper right)
 				'Position',[0.145,0.25,0.13,0.50],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_trilogi_data','Visible','on','FontSize',9,'RowName',[],...
+				'Tag','plotGrav_uitable_trilogi_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_trilogi_file',...
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],...
 				'CellEditCallback','plotGrav uitable_push','UserData',[]);		% UserData container will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
         p4 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','Other1','R1','R2','R3'},... % Third panel for Other1 data (lower left)
 				'Position',[0.01,0.02,0.13,0.22],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_other1_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
+				'Tag','plotGrav_uitable_other1_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_other1',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],'CellEditCallback','plotGrav uitable_push');
         p5 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','Other2','R1','R2','R3'},...
 				'Position',[0.145,0.02,0.13,0.22],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_other2_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
+				'Tag','plotGrav_uitable_other2_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_other2',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],'CellEditCallback','plotGrav uitable_push');
         
 		% Settings panel: Time
@@ -383,10 +388,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		% Settings panel: calibration and admittance
         uicontrol(p3,'Style','Text','String','Calibration:','units','normalized',...
                   'Position',[0.54,0.565+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','-914.392','units','normalized',...	% default calibration factor (iGrav)
+        uicontrol(p3,'Style','Edit','String','-914.416','units','normalized',...	% default calibration factor (iGrav)
                   'Position',[0.70,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_factor');
-        uicontrol(p3,'Style','Edit','String','-11.18','units','normalized',...	% default phase delay (iGrav)	
+        uicontrol(p3,'Style','Edit','String','-11.7','units','normalized',...	% default phase delay (iGrav)	
                   'Position',[0.83,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_delay');
         uicontrol(p3,'Style','Text','String','nm/s^2 / V','units','normalized',...
@@ -1248,7 +1253,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 file_name = char(varargin{1});                              % read additional function input
                 name = 1;
             end
-			if name == 0                                                    % Continue only if some correction file selected (not important if valid or not at this stage)
+            if name == 0                                                    % Continue only if some correction file selected (not important if valid or not at this stage)
 				set(findobj('Tag','plotGrav_text_status'),'String','No correction file selected.');drawnow % status
             else                           
 				data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data with all time series. 
@@ -1271,52 +1276,50 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
 						y2 = in(:,16);                                      % Read ending point/Y Value of the correction (used especially for step correction). 
                         for i = 1:size(in,1)                                % Run the correction algorithm for all correctors
-                            if (x1(i) >= time.igrav(1) && x1(i) <= time.igrav(end)) && (x2(i) >= time.igrav(1) && x2(i) <= time.igrav(end)) % Continue only if in loaded interval
-                                switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
-                                    case 1                                      % Step removal. 
-                                        if channel(i) <= size(data.igrav,2)     % continue only if such channel exists
-                                            r = find(time.igrav >= x2(i));      % find points recorded after the step occur.
-                                            if ~isempty(r)                      % continue only if some points have been found
-                                                data.igrav(r,channel(i)) = data.igrav(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
-                                                [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
-                                                fprintf(fid,'iGrav step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                    channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
-                                                    in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),y2(i),ty,tm,td,th,tmm);
-                                            end
-                                            clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
+                            switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
+                                case 1                                      % Step removal. 
+                                    if channel(i) <= size(data.igrav,2)     % continue only if such channel exists
+                                        r = find(time.igrav >= x2(i));      % find points recorded after the step occur.
+                                        if ~isempty(r)                      % continue only if some points have been found
+                                            data.igrav(r,channel(i)) = data.igrav(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                            [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
+                                            fprintf(fid,'iGrav step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
+                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),y2(i),ty,tm,td,th,tmm);
                                         end
-                                    case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
-                                        r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            data.igrav(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'iGrav channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                    case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
-                                        r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                            xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
-                                            data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'linear'); % Interpolate values for the affected interval only (use r as index)
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'iGrav channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                    case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
-                                        r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                            xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
-                                            data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'spline'); % Interpolate values for the affected interval only (use r as index)
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'iGrav channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                end
+                                        clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
+                                    end
+                                case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
+                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        data.igrav(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'iGrav channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
+                                case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
+                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
+                                        data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'iGrav channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
+                                case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
+                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
+                                        data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'spline'); % Interpolate values for the affected interval only (use r as index)
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'iGrav channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
                             end
                         end
 						set(findobj('Tag','plotGrav_text_status'),'String','Data corrected.');drawnow % status
@@ -1392,52 +1395,50 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						y1 = in(:,15);                                      % Read staring point/Y Value of the correction (used especially for step correction). The value itself is no so important. Only the difference y2-y1 is used. 
 						y2 = in(:,16);                                      % Read ending point/Y Value of the correction (used especially for step correction). 
                         for i = 1:size(in,1)                                % Run the correction algorithm for all correctors
-                            if (x1(i) >= time.(panel_use)(1) && x1(i) <= time.(panel_use)(end)) && (x2(i) >= time.(panel_use)(1) && x2(i) <= time.(panel_use)(end)) % Continue only if in loaded interval
-                                switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
-                                    case 1                                      % Step removal. 
-                                        if channel(i) <= size(data.(panel_use),2)     % continue only if such channel exists
-                                            r = find(time.(panel_use) >= x2(i));      % find points recorded after the step occur.
-                                            if ~isempty(r)                      % continue only if some points have been found
-                                                data.(panel_use)(r,channel(i)) = data.(panel_use)(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
-                                                [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
-                                                fprintf(fid,'%s step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                    panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
-                                                    in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),y2(i),ty,tm,td,th,tmm);
-                                            end
-                                            clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
+                            switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
+                                case 1                                      % Step removal. 
+                                    if channel(i) <= size(data.(panel_use),2)     % continue only if such channel exists
+                                        r = find(time.(panel_use) >= x2(i));      % find points recorded after the step occur.
+                                        if ~isempty(r)                      % continue only if some points have been found
+                                            data.(panel_use)(r,channel(i)) = data.(panel_use)(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                            [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
+                                            fprintf(fid,'%s step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
+                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
+                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),y2(i),ty,tm,td,th,tmm);
                                         end
-                                    case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
-                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            data.(panel_use)(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'%s channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                    case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
-                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                            xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
-                                            data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'linear'); % Interpolate values for the affected interval only (use r as index)
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'%s channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                    case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
-                                        r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
-                                        if ~isempty(r)                          % continue only if some points have been found
-                                            ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                            xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
-                                            data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'spline'); % Interpolate values for the affected interval only (use r as index)
-                                            [ty,tm,td,th,tmm] = datevec(now);   % for log file
-                                            fprintf(fid,'%s channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                                panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
-                                                in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
-                                        end
-                                end
+                                        clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
+                                    end
+                                case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
+                                    r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        data.(panel_use)(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'%s channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
+                                case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
+                                    r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
+                                        data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'%s channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
+                                case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
+                                    r = find(time.(panel_use)>x1(i) & time.(panel_use)<x2(i)); % find points within the selected interval. 
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        ytemp = data.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.(panel_use)(time.(panel_use)<x1(i) | time.(panel_use)>x2(i));             % get selected time interval 
+                                        data.(panel_use)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel_use)(r),'spline'); % Interpolate values for the affected interval only (use r as index)
+                                        [ty,tm,td,th,tmm] = datevec(now);   % for log file
+                                        fprintf(fid,'%s channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                                            panel_use,channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
+                                            in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
                             end
                         end
 						set(findobj('Tag','plotGrav_text_status'),'String','Data corrected.');drawnow % status
@@ -4617,7 +4618,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
                 st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
                 set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
-                st = strsplit(st);                                          % split string
+                st = strsplit(st,' ');                                          % split string
                 out_par = str2double(st);                                   % convert to double
                 message_out = plotGrav_fitData(9999,[],[],[],out_par);      % call fitting function
                 set(findobj('Tag','plotGrav_text_status'),'String',message_out);drawnow % status
@@ -7228,7 +7229,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav paht selected.');drawnow 
 			end
 		case 'select_igrav_file'                                            % Select iGrav input file
-			[name,path] = uigetfile({'*.tsf';'*.mat';'*.dat'},'Select iGrav Data File');    % Use cell array {'*.tsf';'*.dat';'*.mat'} as file filter
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                '*.*','All files'},...
+                'Select iGrav Data File');    % Use cell array {'*.tsf';'*.dat';'*.mat'} as file filter
 			if path == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the iGrav file.');drawnow % status
 			else
@@ -7244,7 +7248,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi paht selected.');drawnow 
 			end
 		case 'select_trilogi_file'                                          % Select TRiLOGi input file                                         
-			[name,path] = uigetfile({'*.tsf';'*.mat';'*.dat'},'Select TRiLOGi Data File');
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                '*.*','All files'},...
+                'Select TRiLOGi Data File');
 			if path == 0                                                
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select a TRiLOGi file.');drawnow
 			else
@@ -7252,7 +7259,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi file selected.');drawnow 
 			end
 		case 'select_other1'                                                % Select Other1 input file                                                
-			[name,path] = uigetfile({'*.tsf';'*.dat';'*.mat'},'Select Other1 TSoft/DAT (Soil moisure) or MAT file'); 
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                '*.*','All files'},...
+                'Select Other1 TSoft/DAT (Soil moisure) or MAT file'); 
 			if name == 0                                                    
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected.');drawnow 
 			else
@@ -7260,7 +7270,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','Other1 file selected.');drawnow 
 			end
 		case 'select_other2'                                                % Select Other2 input file      
-			[name,path] = uigetfile({'*.tsf';'*.dat';'*.mat'},'Select Other2 TSoft/DAT (Soil moisure) or MAT file');
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                '*.*','All files'},...
+                'Select Other2 TSoft/DAT (Soil moisure) or MAT file');
 			if name == 0                                            
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected');drawnow 
 			else
@@ -7307,7 +7320,109 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_edit_logfile_file'),'String',[path,name]);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','Unzip file selected.');drawnow 
             end   
+        
+        case 'append_channels'
+            %% Adding channels to panel
+            % This function adds new channels to already loaded panel
+            % providing some data (iGrav have been loaded prior calling
+            % this function). All loaded channels will be resampled to
+            % panel time vector!! New channels will be then appended to
+            % existing ones.
             
+            panel = char(varargin{1});
+            
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time sereis
+            if ~isempty(data.(panel))                                       % continue only if some data have been loaded
+                % Open logfile for appending new message
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                try
+                    % Ge other data = time vector, uitable, existing channels
+                    % and units (new values will be appended)
+                    time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors. Time is used to detect missing values. Filter cannot be applied if missing data are note taking into account.
+                    data_panel = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panel)),'Data');      % get the iGrav ui-table. Will be used to find selected/checked channels
+                    units_panel = get(findobj('Tag',sprintf('plotGrav_text_%s',panel)),'UserData');         % get iGrav units. Will be used to set output/filtered time series units.
+                    channels_panel = get(findobj('Tag',sprintf('plotGrav_edit_%s_path',panel)),'UserData'); % get iGrav channels (names). Will be used to derive output/filtered channel name.
+                    % Prompt user to select new input file
+                    set(findobj('Tag','plotGrav_text_status'),'String','Select file...');drawnow % status
+                    % Open either dialog or use script input
+                    if nargin == 2
+                        [name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
+                            'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                            '*.*','All files'},...
+                            'Select file for appending');
+                        % Continue only if user select some file
+                        if name ~= 0
+                            input_file = fullfile(path,name);
+                            file_selected = 1;
+                        else
+                            file_selected = 0;
+                        end
+                    else
+                        input_file = char(varargin{2});
+                        file_selected = 1;
+                    end
+                    
+                    if file_selected == 0                                            
+                        set(findobj('Tag','plotGrav_text_status'),'String','No file selected');drawnow 
+                    else
+                        % Get file type
+                        switch input_file(end-2:end)
+                            case 'tsf'
+                                format_switch = 1;
+                            case 'mat'
+                                format_switch = 2;
+                            case 'dat'
+                                format_switch = 3;
+                            case '029'
+                                format_switch = 1;
+                            case '030'
+                                format_switch = 1;
+                            otherwise
+                                format_switch = 0;
+                        end
+                        set(findobj('Tag','plotGrav_text_status'),'String','Appending new channels...');drawnow % status
+                        % Load data
+                        [time_new,data_new,channels_new,units_new] = plotGrav_loadData(input_file,format_switch,[],[],[],panel);
+                        % Get the current number of channels in panel
+                        current_num = size(data.(panel),2);
+                        % Interpolate to default time resolution
+                        if ~isempty(time_new)
+                            data.(panel)(:,current_num+1:current_num+size(data_new,2)) = interp1(time_new,data_new,time.(panel));
+                            % Append new channel names and units
+                            channels_panel = horzcat(reshape(channels_panel,[1,length(channels_panel)]),reshape(channels_new,[1,length(channels_new)]));
+                            units_panel = horzcat(reshape(units_panel,[1,length(units_panel)]),reshape(units_new,[1,length(units_new)]));
+                            % Append names to ui-table
+                            for i = 1:length(channels_new)
+                                data_panel(current_num+i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',...
+                                    current_num+i,char(channels_new(i)),char(units_new(i))),false,false,false};
+                            end
+                            % Store updated variables
+                            set(findobj('Tag','plotGrav_push_load'),'UserData',data);
+                            set(findobj('Tag','plotGrav_text_status'),'UserData',time);
+                            set(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panel)),'Data',data_panel);      
+                            set(findobj('Tag',sprintf('plotGrav_text_%s',panel)),'UserData',units_panel);         
+                            set(findobj('Tag',sprintf('plotGrav_edit_%s_path',panel)),'UserData',channels_panel);
+                            % Writte message to logfile
+                            ttime = datevec(now);
+                            fprintf(fid,'New channels appended to %s: %s (%04d/%02d/%02d %02d:%02d)\n',panel,input_file,...
+                                ttime(1),ttime(2),ttime(3),ttime(4),ttime(5));
+                            fclose(fid);
+                            set(findobj('Tag','plotGrav_text_status'),'String','Channels appended.');drawnow % status
+                        end
+                    end
+                catch
+                    if exist('fid','var') == 1
+                        fclose(fid);
+                    end
+                    set(findobj('Tag','plotGrav_text_status'),'String','Data not appended.');drawnow % status
+                end
+            else
+                set(findobj('Tag','plotGrav_text_status'),'String','Load main data first.');drawnow % status
+            end
         case 'show_paths'
 			%% SHOW PATHS
             % To see what files have been selected, user can open a new

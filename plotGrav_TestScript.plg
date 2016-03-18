@@ -81,6 +81,7 @@
 % STATISTICS			compute basic statistics for selected channels. No input expected (like LOAD_DATA).
 % SPECTRAL_ANALYSIS		perform spectral analysis. Input is a switch between: 1 = maximum valid interval (no interpolation prior to analysis), 2 = interpolate prior to analysis (to remove NaNs), 3 = spectrogram. In this case the second number gives the window length in hours (3;20 = spectrogram for window length 24 hours).
 % TIME_SHIFT			time shift introduced to selected channel. Input example: 12 => introduces a time shift of 12 second to SELECTED channel. The result will be appended as the last channel. Use UITABLE_XXXX_L for channel selection.
+% APPEND_CHANNELS 		append channels to selected panel. Input: fist string = switch between panels (igrav,trilogi,other1,other2), second input = full file name. Example: igrav;\\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
 % SCRIPT_END			terminates the script run. No input.
 %
 % 25.09.2015, M. Mikolaj, mikolaj@gfz-potsdam.de

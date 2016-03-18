@@ -84,7 +84,7 @@ try
                 case 9999
                     out_par = varargin{1};                                  % get user input (varargin = variable number of arguments on input {1} = first input after defined ones)
                     out_fit = polyval(out_par,time.(char(panels(i))));      % evaluate the polynomial coefficients
-					out_res = data.igrav(:,plot_axesL1.(char(panels(i)))) - out_fit;
+					out_res = data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))) - out_fit;
             end
             % Two channels will be added/appended, first = fit result, second = residuals
             units.(char(panels(i)))(channel_number) = units.(char(panels(i)))(plot_axesL1.(char(panels(i)))); % append/duplicate units = fit result

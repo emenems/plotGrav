@@ -821,6 +821,14 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('plot_earthquake',row)
                     end 
+                %% Append channels
+                case 'APPEND_CHANNELS'
+                    row = fgetl(fid);count = count + 1;
+                    if ~strcmp(char(row),'[]')
+                        row = strsplit(row,';');
+                        plotGrav('append_channels',row{1},row{2})
+                    end 
+                    row = row{1};
                 %% Visibility
                 % Somethime is is preferable to do not show the plotGrav GUI
                 % (like when running on server).
