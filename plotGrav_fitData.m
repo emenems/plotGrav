@@ -33,111 +33,100 @@ end
 data = get(findobj('Tag','plotGrav_push_load'),'UserData');                 % load all data 
 time = get(findobj('Tag','plotGrav_text_status'),'UserData');               % load time vectors
 
-%% Get ui-table, channel names and units. These variables will be used to
-% find selected channels and to create new channel names and untis
-% Get iGrav data
-data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the iGrav ui-table. For finding selected/checked time series + to update the ui-table
-units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
-channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
-% Get TRiLOGi
-data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');  % get the TRiLOGi ui-table. 
-units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');     % get TRiLOGi units
-channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels (names)      
-% Get Other1
-data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');    % get the Other1 table
-units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');       % get Other1 units
-channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get Other1 channels (names)
-% Get Other2
-data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');    % get the Other2 table
-units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');       % get Other2 units
-channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get Other2 channels (names)
+%% Get ui-table, channel names and units. 
+% These variables will be used to find selected channels and to create new
+% channel names and untis 
 
+% Set panel 'official' panel names. To reduce the code length, use a for loop for
+% all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
+% filling the structure arrays.
+panels = {'igrav','trilogi','other1','other2'};  
+% First get all channel names, units and data tables + find selected channels
+for i = 1:length(panels)
+     % Get units. Will be used for output/plot
+    units.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_text_%s',panels{i})),'UserData');
+    % get channels names. Will be used for output/plot
+    channels.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_edit_%s_path',panels{i})),'UserData');
+    % Get UI tables
+    data_table.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data'); 
+    % Get selected channels (L1) for each panel
+    plot_axesL1.(panels{i}) = find(cell2mat(data_table.(panels{i})(:,1))==1); 
+end
 
 try
-    %% Find selected channles
-    % Set panel 'official' names. To reduce the code length, use a for loop for
-    % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
-    % filling the structure arrays.
-    panels = {'igrav','trilogi','other1','other2'};  
-    % First find all selected channels
-    for i = 1:length(panels)
-        plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
-    end
     %% Fit data
     for i = 1:length(panels)
-        % First check if iGrav data selected        & loaded                    & only one channel selected (function does not work if more than one channel selected for fitting)
-        if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i)))) && length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) == 1
-            channel_number = size(data.(char(panels(i))),2)+1;                  % get current number of channels. Two new channels will be appended (first = fit, second = input-fit)
-            if ~isempty(start) && ~isempty(stop)                                % Check if starting and ending time has been inserted
-                data.(char(panels(i)))(time.(char(panels(i)))<start | time.(char(panels(i)))>stop,:) = []; % remove data outside required time interval
-                time.(char(panels(i)))(time.(char(panels(i)))<start | time.(char(panels(i)))>stop,:) = [];              
+        % First check if any data selected        & loaded               
+        if ~isempty(plot_axesL1.(panels{i})) && ~isempty(data.(panels{i}))
+            % Run for all selected channels
+            for j = 1:length(plot_axesL1.(panels{i}))
+                % get current number of channels. New channels will be appended (first = fit, second = input-fit)
+                channel_number = size(data.(panels{i}),2)+1;                % the side of data.(panels{i}) updates with each run (j)                  
+                % Check if starting and ending time has been inserted. This
+                % feature (local fitting) works, however, only if exact one
+                % channel is selected
+                if ~isempty(start) && ~isempty(stop) && length(plot_axesL1.(panels{i})) == 1                     
+                    data.(panels{i})(time.(panels{i})<start | time.(panels{i})>stop,plot_axesL1.(panels{i})(j)) = []; % remove data outside required time interval
+                    time.(panels{i})(time.(panels{i})<start | time.(panels{i})>stop,:) = [];              
+                end
+                % Depending on polynomial degree, fit the data
+                switch deg
+                    case 0
+                        [out_par,~,out_fit,out_res] = plotGrav_fit(time.(panels{i}),data.(panels{i})(:,plot_axesL1.(panels{i})(j)),'poly0');
+                    case 1
+                        [out_par,~,out_fit,out_res] = plotGrav_fit(time.(panels{i}),data.(panels{i})(:,plot_axesL1.(panels{i})(j)),'poly1');
+                    case 2
+                        [out_par,~,out_fit,out_res] = plotGrav_fit(time.(panels{i}),data.(panels{i})(:,plot_axesL1.(panels{i})(j)),'poly2');
+                    case 3
+                        [out_par,~,out_fit,out_res] = plotGrav_fit(time.(panels{i}),data.(panels{i})(:,plot_axesL1.(panels{i})(j)),'poly3');
+                    case 9999                                               % user sets the polynomial coefficients
+                        out_par = varargin{1};                              % get user input (varargin = variable number of arguments on input {1} = first input after defined ones)
+                        out_fit = polyval(out_par,time.(panels{i}));        % evaluate the polynomial coefficients
+                        out_res = data.(panels{i})(:,plot_axesL1.(panels{i})(j)) - out_fit;
+                end
+                % Two channels will be added/appended, first = fit result, second = residuals
+                units.(panels{i})(channel_number) = units.(panels{i})(plot_axesL1.(panels{i})(j)); % append/duplicate units = fit result
+                units.(panels{i})(channel_number+1) = units.(panels{i})(plot_axesL1.(panels{i})(j)); % append/duplicate units = fit residuals
+                channels.(panels{i})(channel_number) = {sprintf('%s_fit_p%1d',char(channels.(panels{i})(plot_axesL1.(panels{i})(j))),deg)}; % add channel name = fit result
+                channels.(panels{i})(channel_number+1) = {sprintf('%s_fitRes_p%1d',char(channels.(panels{i})(plot_axesL1.(panels{i})(j))),deg)}; % add channel name = fit residuals
+                data_table.(panels{i})(channel_number,1:7) = {false,false,false,...  % add/append to ui-table = fit result
+                                    sprintf('[%2d] %s (%s)',channel_number,char(channels.(panels{i})(channel_number)),char(units.(panels{i})(channel_number))),false,false,false};
+                data_table.(panels{i})(channel_number+1,1:7) = {false,false,false,...% add/append to ui-table = fit residuals
+                                    sprintf('[%2d] %s (%s)',channel_number+1,char(channels.(panels{i})(channel_number+1)),char(units.(panels{i})(channel_number+1))),false,false,false};
+                data.(panels{i})(:,channel_number) = out_fit;               % add data = fit
+                data.(panels{i})(:,channel_number+1) = out_res;             % add residuals (see plotGrav_fit.m function for outputs)
+                
+                % Write to logfile. Due to variable number of estimated
+                % parameters (depends on 'deg'), the message is written to
+                % logfile in three steps: 1. main message, 2. estimated
+                % coefficients, 3. message ending = date of computation.
+                [ty,tm,td,th,tmm] = datevec(now);                                       % Time for logfile
+                fprintf(fid,'%s channel %d pol%1d fitted = %2.0f, estim. coefficients = ',... % Main massage
+                        panels{i},plot_axesL1.(panels{i})(j),deg,channel_number);
+                for c = 1:length(out_par)
+                    fprintf(fid,'%10.8f, ',out_par(c));                         % Estimated coefficients
+                end
+                fprintf(fid,'(%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);    % date of compuation
+                % Add comment about the new channel with residuals
+                fprintf(fid,'%s channel %d pol%1d residuals = %2.0f (%04d/%02d/%02d %02d:%02d)\n',...
+                        panels{i},plot_axesL1.(panels{i})(j),deg,channel_number+1,ty,tm,td,th,tmm);
+                clear out_par out_sig out_fit out_res
+                clear time_resolution                     % remove variables
+            
+                % Store data only if no cutting options (start/stop) on
+                % input + only once at the end of each panel run
+                if (isempty(start) && isempty(stop)) &&   j == length(plot_axesL1.(panels{i}))                                    
+                    % Store copied channel names, units and data table
+                    set(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data',data_table.(panels{i})); 
+                    set(findobj('Tag',sprintf('plotGrav_text_%s',panels{i})),'UserData',units.(panels{i})); 
+                    set(findobj('Tag',sprintf('plotGrav_edit_%s_path',panels{i})),'UserData',channels.(panels{i})); 
+                    % Store data
+                    set(findobj('Tag','plotGrav_push_load'),'UserData',data);
+                end
             end
-            switch deg
-                case 0
-                    [out_par,~,out_fit,out_res] = plotGrav_fit(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))),'poly0');
-                case 1
-                    [out_par,~,out_fit,out_res] = plotGrav_fit(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))),'poly1');
-                case 2
-                    [out_par,~,out_fit,out_res] = plotGrav_fit(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))),'poly2');
-                case 3
-                    [out_par,~,out_fit,out_res] = plotGrav_fit(time.(char(panels(i))),data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))),'poly3');
-                case 9999
-                    out_par = varargin{1};                                  % get user input (varargin = variable number of arguments on input {1} = first input after defined ones)
-                    out_fit = polyval(out_par,time.(char(panels(i))));      % evaluate the polynomial coefficients
-					out_res = data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))) - out_fit;
-            end
-            % Two channels will be added/appended, first = fit result, second = residuals
-            units.(char(panels(i)))(channel_number) = units.(char(panels(i)))(plot_axesL1.(char(panels(i)))); % append/duplicate units = fit result
-            units.(char(panels(i)))(channel_number+1) = units.(char(panels(i)))(plot_axesL1.(char(panels(i)))); % append/duplicate units = fit residuals
-            channels.(char(panels(i)))(channel_number) = {sprintf('%s_fit_p%1d',char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i))))),deg)}; % add channel name = fit result
-            channels.(char(panels(i)))(channel_number+1) = {sprintf('%s_fitRes_p%1d',char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i))))),deg)}; % add channel name = fit residuals
-            data_table.(char(panels(i)))(channel_number,1:7) = {false,false,false,...  % add/append to ui-table = fit result
-                                    sprintf('[%2d] %s (%s)',channel_number,char(channels.(char(panels(i)))(channel_number)),char(units.(char(panels(i)))(channel_number))),false,false,false};
-            data_table.(char(panels(i)))(channel_number+1,1:7) = {false,false,false,...% add/append to ui-table = fit residuals
-                                    sprintf('[%2d] %s (%s)',channel_number+1,char(channels.(char(panels(i)))(channel_number+1)),char(units.(char(panels(i)))(channel_number+1))),false,false,false};
-            data.(char(panels(i)))(:,channel_number) = out_fit;                 % add data = fit
-            data.(char(panels(i)))(:,channel_number+1) = out_res;               % add residuals (see plotGrav_fit.m function for outputs)
-            % Write to logfile. Due to variable number of estimated
-            % parameters (depends on 'deg'), the message is written to
-            % logfile in three steps: 1. main message, 2. estimated
-            % coefficients, 3. message ending = date of computation.
-            [ty,tm,td,th,tmm] = datevec(now);                                       % Time for logfile
-            fprintf(fid,'iGrav channel %d pol%1d fitted = %2.0f, estim. coefficients = ',... % Main massage
-                    plot_axesL1.(char(panels(i))),deg,channel_number);
-            for c = 1:length(out_par)
-                fprintf(fid,'%10.8f, ',out_par(c));                         % Estimated coefficients
-            end
-            fprintf(fid,'(%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);    % date of compuation
-            % Add comment about the new channel with residuals
-            fprintf(fid,'iGrav channel %d pol%1d residuals = %2.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                    plot_axesL1.(char(panels(i))),deg,channel_number+1,ty,tm,td,th,tmm);
-            clear out_par out_sig out_fit out_res
-            clear time_resolution                     % remove variables
         end
     end
-    %% Store data
-    % This part cannot be in the 'panels' for loop because of the way how the
-    % data is stored in uicontrol's UserData containers, e.g.,'Tag','plotGrav_uitable_igrav_data'
-    if isempty(start) && isempty(stop)                                      % store data only if no cutting options (start/stop) on input
-        set(findobj('Tag','plotGrav_push_load'),'UserData',data);           % store the data matrices
-        % iGrav
-        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % update table
-        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);   % update iGrav units
-        set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); % update iGrav channels (names)
-        % TRiLOGi
-        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi); 
-        set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
-        set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi); 
-        % Other1
-        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
-        set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
-        set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
-        % Other2
-        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2); 
-        set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
-        set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2); 
-    end
-    message_out = 'Data fitted (providing one channle was selected).';
+    message_out = 'Data fitted.';
     fclose(fid);
 catch error_message
     if strcmp(error_message.identifier,'MATLAB:license:checkouterror')
