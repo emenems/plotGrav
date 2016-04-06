@@ -100,25 +100,29 @@ if ~isempty(ms)
     data(ms,5) = 0;
 end
 
+% Prepare output format
+switch decimal
+    case 1
+        out_format = '%12.1f';
+    case 2
+        out_format = '%12.2f';
+    case 3
+        out_format = '%12.3f';
+    case 4
+        out_format = '%12.4f';
+    otherwise
+        out_format = '%12.5f';
+end
+for j = 2:size(data,2)-6
+    out_format = [out_format,' %8.1f'];
+end
 for i = 1:r
     % Write date
     fprintf(vypis,'%4d %02d %02d %02d %02.0f %02.0f ',...
                 data(i,1),data(i,2),data(i,3),data(i,4),data(i,5),data(i,6));
     % Write remaining columns
-    for j = 1:ss
-        switch decimal
-            case 1
-                fprintf(vypis,'%12.1f ',data(i,6+j));
-            case 2
-                fprintf(vypis,'%12.2f ',data(i,6+j));
-            case 3
-                fprintf(vypis,'%12.3f ',data(i,6+j));
-            case 4
-                fprintf(vypis,'%12.4f ',data(i,6+j));
-            otherwise
-                fprintf(vypis,'%12.5f ',data(i,6+j));
-        end
-    end
+    fprintf(vypis,out_format,data(i,7:end));
+    % Move to new row
     fprintf(vypis,'\n');
 end
 

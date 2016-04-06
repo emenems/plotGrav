@@ -453,6 +453,14 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('compute_decimate',char(row));
                     end
+                %% Resample time series of Selected panel
+                case 'RESAMPLE_SELECT'
+                    row = fgetl(fid);count = count + 1;                     % 2 input values expected = panel;time resolution in seconds
+                    if ~strcmp(char(row),'[]')
+                        row = strsplit(row,';');
+                        plotGrav('compute_decimate_select',row{1},row{2})
+                    end 
+                    row = row{1};
                 %% Channels algebra
                 case 'CHANNELS_ALGEBRA'
                     row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical expression
