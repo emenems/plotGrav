@@ -651,6 +651,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if ~isempty(data.igrav)
                         igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
                     end
+                elseif strcmp(file_path_igrav(end-3:end),'.csv')
+                    % LOAD CSV file, i.e., data in Dygraph csv format.
+                    % Requres fixed header (1 rows) and delimiter (','). 
+                    % 'Loading, no stacking'
+                    set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/csv data...');drawnow % send message to status bar
+                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,4,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                            uitable_data,'UserData',uitable_data);
+                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
+                    if ~isempty(data.igrav)
+                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
+                    end
 				elseif strcmp(file_path_igrav(end-3:end),'.030') || strcmp(file_path_igrav(end-3:end),'.029')   
                     % LOAD SG030 files, i.e. SG030 data stored in tsf format
                     % file_path_igrav = full file name of one of the files with SG030 data. Not Path, but file!
@@ -845,6 +858,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 if ~isempty(data.trilogi)
                     trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
                 end
+                elseif strcmp(file_path_trilogi(end-3:end),'.csv')
+                    set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/csv data...');drawnow % send message to status bar
+                    [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,4,start_time,end_time,fid,'TRiLOGi');
+                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                        uitable_data,'UserData',uitable_data);
+                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
+                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
+                    if ~isempty(data.trilogi)
+                        trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                    end
             elseif ~isempty(file_path_trilogi)
                 % LOAD TRiLOGi controller files stored in tsf format
                 % file_path_trilogi = file path (not name) to all input data
@@ -935,6 +958,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     case '.dat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/dat data...');drawnow % send message to status bar
                         [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,3,start_time,end_time,fid,'Other1');
+                    case '.csv'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/csv data...');drawnow % send message to status bar
+                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,4,start_time,end_time,fid,'Other2');
                     otherwise
                         time.other1 = [];data.other1 = [];channels_other1 = [];units_other1 = [];
                         uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
@@ -967,6 +993,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     case '.dat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/dat data...');drawnow % send message to status bar
                         [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,3,start_time,end_time,fid,'Other2');
+                    case '.csv'
+                        set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/csv data...');drawnow % send message to status bar
+                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,4,start_time,end_time,fid,'Other2');
                     otherwise
                         time.other2 = [];data.other2 = [];channels_other2 = [];units_other2 = [];
                         uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
@@ -6860,8 +6889,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav paht selected.');drawnow 
 			end
 		case 'select_igrav_file'                                            % Select iGrav input file
-			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
-                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.csv',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029,*.csv)';...
                 '*.*','All files'},...
                 'Select iGrav Data File');    % Use cell array {'*.tsf';'*.dat';'*.mat'} as file filter
 			if path == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
@@ -6879,8 +6908,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi paht selected.');drawnow 
 			end
 		case 'select_trilogi_file'                                          % Select TRiLOGi input file                                         
-			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
-                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.csv',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029,*.csv)';...
                 '*.*','All files'},...
                 'Select TRiLOGi Data File');
 			if path == 0                                                
@@ -6890,10 +6919,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi file selected.');drawnow 
 			end
 		case 'select_other1'                                                % Select Other1 input file                                                
-			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
-                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.csv',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.csv)';...
                 '*.*','All files'},...
-                'Select Other1 TSoft/DAT (Soil moisure) or MAT file'); 
+                'Select Other1 TSoft/DAT (Soil moisure), MAT or CSV file'); 
 			if name == 0                                                    
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected.');drawnow 
 			else
@@ -6901,10 +6930,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','Other1 file selected.');drawnow 
 			end
 		case 'select_other2'                                                % Select Other2 input file      
-			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
-                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.csv',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.csv)';...
                 '*.*','All files'},...
-                'Select Other2 TSoft/DAT (Soil moisure) or MAT file');
+                'Select Other2 TSoft/DAT (Soil moisure), MAT or CSV file');
 			if name == 0                                            
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected');drawnow 
 			else

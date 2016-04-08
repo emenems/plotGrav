@@ -104,17 +104,22 @@ end
 switch decimal
     case 1
         out_format = '%12.1f';
+		out_decimal = ' %12.1f';
     case 2
         out_format = '%12.2f';
+		out_decimal = ' %12.2f';
     case 3
         out_format = '%12.3f';
+		out_decimal = ' %12.3f';
     case 4
         out_format = '%12.4f';
+		out_decimal = ' %12.4f';
     otherwise
         out_format = '%12.5f';
+		out_decimal = ' %12.5f';
 end
 for j = 2:size(data,2)-6
-    out_format = [out_format,' %8.1f'];
+    out_format = [out_format,out_decimal];
 end
 for i = 1:r
     % Write date
