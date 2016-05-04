@@ -288,9 +288,6 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                     uimenu(m523,'Label','TRiLOGi','CallBack','plotGrav edit_channel_units_trilogi');
                     uimenu(m523,'Label','Other1','CallBack','plotGrav edit_channel_units_other1');
                     uimenu(m523,'Label','Other2','CallBack','plotGrav edit_channel_units_other2');
-                m524 = uimenu(m52,'Label','Interp. interval');
-                    uimenu(m524,'Label','Select','CallBack','plotGrav interpolate_interval_linear');
-                    uimenu(m524,'Label','Auto','CallBack','plotGrav interpolate_interval_auto');
                 m522 = uimenu(m52,'Label','Object');
                     uimenu(m522,'Label','Ellipse','CallBack','plotGrav insert_circle',...
                         'Tag','plotGrav_insert_circle','UserData',[]); 			% UserData will be used to store references to inserted circles (to have the option to delete them)
@@ -301,6 +298,11 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                     uimenu(m522,'Label','Rectangle','CallBack','plotGrav insert_rectangle',...
                         'Tag','plotGrav_insert_rectangle','UserData',[]); 		% UserData will be used to store references to inserted rectangles (to have the option to delete them)
 			m51 = uimenu(m5,'Label','Remove');
+                m511 = uimenu(m51,'Label','Ambiguities');
+                    uimenu(m511,'Label','iGrav','CallBack','plotGrav compute_remove_ambiguities igrav');
+                    uimenu(m511,'Label','TRiLOGi','CallBack','plotGrav compute_remove_ambiguities trilogi');
+                    uimenu(m511,'Label','Other1','CallBack','plotGrav compute_remove_ambiguities other1');
+                    uimenu(m511,'Label','Other2','CallBack','plotGrav compute_remove_ambiguities other2');
 				uimenu(m51,'Label','Channel','CallBack','plotGrav compute_remove_channel');
 					% Sub-Sub-Sub EDIT menu
 				m514 = uimenu(m51,'Label','Inserted');
@@ -322,7 +324,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   uimenu(m515,'Label','> X SD','CallBack','plotGrav remove_Xsd');
                   uimenu(m515,'Label','Set range','CallBack','plotGrav remove_set');
 			uimenu(m51,'Label','Step','CallBack','plotGrav remove_step_selected');
-        
+            m53  = uimenu(m5,'Label','Replace');
+                m524 = uimenu(m53,'Label','Interp. interval');
+                    uimenu(m524,'Label','Select','CallBack','plotGrav interpolate_interval_linear');
+                    uimenu(m524,'Label','Auto','CallBack','plotGrav interpolate_interval_auto');
+                	uimenu(m53,'Label','Out of range','CallBack','plotGrav replace_range_by');
+            
         % (UI) Panels for selecting time series. Each row of such
         % ui-table referes to a matrix column. The loaded time series are
         % store namely in matrices (one matrix per input/file/panel). The
@@ -5202,7 +5209,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Find all selected channels
                 panels = {'igrav','trilogi','other1','other2'};  
                 for i = 1:length(panels)
-                    plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                    plot_axesL1.(panels{i}) = find(cell2mat(data_table.(panels{i})(:,1))==1); % get selected channels (L1) for each panel
                 end
 				
 				if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
@@ -5219,12 +5226,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         selected_x = sort([selected_x1,selected_x2]);       % sort = ascending (in case second is first and the other way around)
                         % Remove interval
                         for i = 1:length(panels)                            % run loop for all panels
-                            if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i))))
-                                temp = data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))); % get selected channel and copy the values to temporary variable
-                                r = find(time.igrav>selected_x(1) & time.igrav<selected_x(2)); % find points within the selected interval
+                            if ~isempty(plot_axesL1.(panels{i})) && ~isempty(data.(panels{i}))
+                                temp = data.(panels{i})(:,plot_axesL1.(panels{i})); % get selected channel and copy the values to temporary variable
+                                r = find(time.(panels{i})>selected_x(1) & time.(panels{i})<selected_x(2)); % find points within the selected interval
                                 if ~isempty(r)                              % continue only if some points have been found
                                     temp(r) = NaN;                          % remove the points
-                                    data.(char(panels(i)))(:,plot_axesL1.(char(panels(i)))) = temp; % update data
+                                    data.(panels{i})(:,plot_axesL1.(panels{i})) = temp; % update data
                                 end
                                 clear temp r
                                 % Write to logfile
@@ -5232,7 +5239,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty1,tm1,td1,th1,tmm1,ts1] = datevec(selected_x1); % first/starting point date and time
                                 [ty2,tm2,td2,th2,tmm2,ts2] = datevec(selected_x2); % second/ending point date and time
                                 fprintf(fid,'%s channel %d time interval removed: First point = %04d/%02d/%02d %02d:%02d:%02.0f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
-                                    char(panels(i)),plot_axesL1.(char(panels(i))),ty1,tm1,td1,th1,tmm1,ts1,ty2,tm2,td2,th2,tmm2,ts2,ty,tm,td,th,tmm);
+                                    panels{i},plot_axesL1.(panels{i}),ty1,tm1,td1,th1,tmm1,ts1,ty2,tm2,td2,th2,tmm2,ts2,ty,tm,td,th,tmm);
                             end
                         end
                         % Store the updated data
@@ -5656,7 +5663,98 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % message
             end
+        case 'replace_range_by'
+			%% Set all values out of range to selected value
+            % Similar to 'remove_set' but values outside the range are
+            % replace by values set by user
             
+            % First get all required inputs
+			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
+            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
+            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
+            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            
+            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+				% Open logfile (to document removed time interval)
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
+				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+                % Find all selected channels
+                panels = {'igrav','trilogi','other1','other2'};  
+                for i = 1:length(panels)
+                    plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
+                end
+                % Check how many channels are selected (minimum one)
+                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
+					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
+                else
+                    try
+                        % Get input from user = range
+                        if nargin == 1
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set Y range (e.g., 0 0.5)');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0 0.5'); % Show editable field + set default value
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','on');  
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar  
+                            range_set = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
+                            range_set = str2double(strsplit(range_set,' '));    % Convert to double precision = split and convert.
+                            set(findobj('Tag','plotGrav_text_status'),'String','Set new value (e.g., 0)');drawnow % send instructions to status bar
+                            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','0');  
+                            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar  
+                            % Get value used to replace value out of range
+                            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                            new_value = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
+                            new_value = str2double(new_value);
+                        else
+                            set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                            temp = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
+                            temp = strsplit(temp,';');
+                            range_set = str2double(strsplit(temp{1},' '));  % Convert to double precision = split and convert. 
+                            new_value = str2double(temp{2});                % Convert to double precision (only one value)
+                        end
+                        set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off
+                        set(findobj('Tag','plotGrav_text_input'),'Visible','off');  
+                        % Run loop for all panels and channels
+                        for p = 1:length(panels)                            % loop for panels
+                            if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % check if some chanel selected and data loaded
+                                for i = 1:length(plot_axesL1.(char(panels(p)))) % compute for all selected channels
+                                    temp = data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)); % copy current time series to temporary variable
+                                    r = find(temp>range_set(2) | temp<range_set(1));  % find points outside of range
+                                    if ~isempty(r)                          % continue only if some points have been found
+                                        data.(char(panels(p)))(r,plot_axesL1.(char(panels(p)))(i)) = new_value; % remove the data>X*SD directly in original data (not necesary to use 'temp' again)
+                                    end
+                                    clear temp r                            % remove variables used in each loop run
+                                    % Write to logfile
+                                    [ty,tm,td,th,tmm] = datevec(now);       % time for logfile
+                                    fprintf(fid,'%s channel %d spikes outside %.7g - %.7g set to %.7g (%04d/%02d/%02d %02d:%02d)\n',...
+                                        char(panels(p)),plot_axesL1.(char(panels(p)))(i),range_set(1),range_set(2),new_value,ty,tm,td,th,tmm);
+                                end	
+                            end
+                        end
+                        % Store updated values
+                        set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store the updated table
+                        plotGrav('uitable_push');                           % re-plot all to see the changes
+                        fclose(fid);                                        % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','Spikes removed.');drawnow % status
+                    catch error_message
+                        if strcmp(error_message.identifier,'MATLAB:license:checkouterror')
+                            fclose(fid);
+                            set(findobj('Tag','plotGrav_text_status'),'String','Upps, no matlab licence (Statistics_Toolbox?)');drawnow % message
+                        else
+                            fclose(fid);
+                            set(findobj('Tag','plotGrav_text_status'),'String','Spikes has not been removed (unknown reason).');drawnow % message
+                        end
+                    end
+                end
+            else
+                set(findobj('Tag','plotGrav_text_status'),'String','Load data first.');drawnow % message
+            end
 		case 'compute_decimate'
 			%% Re-interpolated data ALL panels (decimate/resample)
             % This option allows the re-itnerpolation/decimation of all
@@ -5776,9 +5874,67 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
 					set(findobj('Tag','plotGrav_text_status'),'UserData',time); 
 					set(findobj('Tag','plotGrav_text_status'),'String',sprintf('All %s channels have been re-sampled',panel));drawnow % status
+                catch error_message
+                    if strcmp(error_message.message,'The grid vectors are not strictly monotonic increasing.')
+                        [ty,tm,td,th,tmm] = datevec(now); % time for logfile
+                        fprintf(fid,'Could not re-sample %s: input time vector contains ambiguities. Run ''Remove-Ambiguities'' first (%04d/%02d/%02d %02d:%02d).\n',...
+                            char(panel),ty,tm,td,th,tmm);
+                        fclose(fid);                                            % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','Run ''Remove-Ambiguities''.');drawnow % status
+                    else
+                        [ty,tm,td,th,tmm] = datevec(now); % time for logfile
+                        fprintf(fid,'Could not re-sample %s: Error: %s (%04d/%02d/%02d %02d:%02d).\n',...
+                            char(panel),error_message.message,ty,tm,td,th,tmm);
+                        fclose(fid);                                            % close logfile
+                        set(findobj('Tag','plotGrav_text_status'),'String','Could not perform interpolation (see logfile).');drawnow % status
+                    end
+				end
+			else
+				set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow % status
+            end
+        case 'compute_remove_ambiguities'
+            %% Remove ambiguities = correct non-monochromatic time vector
+            % This option allows to correct time vectors that contain
+            % ambiguous data points = same time value more that onece. This
+            % typicaly prevents the intepolation. This function remove all
+            % duplicate values
+            
+            % Get panel name (defined in button/menu 'CallBack')
+            panel = char(varargin{1});
+            
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all time sereis
+            time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
+            if ~isempty(data.(panel))                                       % continue only if some data have been loaded
+                % Open logfile for appending new message
+                try
+					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
 				catch
+					fid = fopen('plotGrav_LOG_FILE.log','a');
+                end
+				try
+                    set(findobj('Tag','plotGrav_text_status'),'String','Removing...');drawnow % status
+                    time_temp = time.(panel); % store time vector
+                    data_temp = data.(panel); % get data. Data will be re-arranged according to time vector
+                    % Sort the time vector and data
+                    [time_temp,temp_index] = sort(time_temp,1);
+                    data_temp = data_temp(temp_index,:);
+                    % Use unique time values only
+                    [time.(panel),temp_index] = unique(time_temp);
+                    data.(panel) = data_temp(temp_index,:);
+                    % Write to logfile
+                    [ty,tm,td,th,tmm] = datevec(now); % time for logfile
+                    fprintf(fid,'%s time vector corrected (%04d/%02d/%02d %02d:%02d).\n',panel,ty,tm,td,th,tmm);
                     fclose(fid);                                            % close logfile
-					set(findobj('Tag','plotGrav_text_status'),'String','Could not perform interpolation (unkonw error).');drawnow % status
+					% Store new data and time vectors
+					set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
+					set(findobj('Tag','plotGrav_text_status'),'UserData',time); 
+					set(findobj('Tag','plotGrav_text_status'),'String',sprintf('%s time vector corrected',panel));drawnow % status
+                catch error_message
+                    [ty,tm,td,th,tmm] = datevec(now); % time for logfile
+                    fprintf(fid,'Could not re-sample %s: Error: %s (%04d/%02d/%02d %02d:%02d).\n',...
+                        char(panel),error_message.message,ty,tm,td,th,tmm);
+                    fclose(fid);                                            % close logfile
+                    set(findobj('Tag','plotGrav_text_status'),'String','Could not correct time vector (see logfile).');drawnow % status
 				end
 			else
 				set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow % status

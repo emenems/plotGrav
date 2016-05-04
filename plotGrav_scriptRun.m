@@ -431,6 +431,11 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('remove_set',char(row));
                     end
+                case 'REPLACE_RANGE'                                        % replace spikes using a range and new value
+                    row = fgetl(fid);count = count + 1;                     % only one input expected = [min max];newvalue. Will be processed in main plotGrav code
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('replace_range_by',char(row));
+                    end
                 %% Remove missing/NaN data
                 case 'REMOVE_MISSING'   
                     row = fgetl(fid);count = count + 1;                     % only one input expected = maximum time interval in seconds.
@@ -461,6 +466,12 @@ try                                                                         % ca
                         plotGrav('compute_decimate_select',row{1},row{2})
                     end 
                     row = row{1};
+                %% Correct time vector = remove ambiguities
+                case 'REMOVE_AMBIGUOUS'
+                    row = fgetl(fid);count = count + 1;                     % 1 input values expected = panel
+                    if ~strcmp(char(row),'[]')
+                        plotGrav('compute_remove_ambiguities',row)
+                    end 
                 %% Channels algebra
                 case 'CHANNELS_ALGEBRA'
                     row = fgetl(fid);count = count + 1;                     % only one input expected = mathematical expression

@@ -68,6 +68,8 @@
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
 % REMOVE_RANGE			remove spikes using a [min max] condition. Input: min, max vector used to remove all values outside this Y range. Example: -50 50
+% REMOVE_AMBIGUOUS		remove any ambiguities in required time vector/panel. Input: string = switch between panels (igrav,trilogi,other1,other2). Example: igrav
+% REPLACE_RANGE			set values outside [min max] condition to new value. Input: min max vector; new value used to replace all values outside given Y range. Example: -50 50;0
 % REMOVE_MISSING		remove missing, i.e., NaN data points in the selected channels giving a maximum time intervals (in seconds) used to find neighbouring valid data points used for linear interpolation. Input example: 10 => 10 seconds. Only selected channel will be affected!
 % FILTER_SELECTED		filter selected (L1) channels using FILE_IN_FILTER filter. Always keep in mind the temporal resolution of selected channels and designed filter!! No input.
 % FIT_POLYNOMIAL		fit a polynomial to a selected time series. Input is a switch: 0 => constant value, 1 => linear, 2 => quadratic, 3 => cubic, SET => user defined values. If SET than following values determine the coefficients delimited by ;. Example1: 1. Example2: SET;0.05;1  => a linear fit 0.05*time + 1. Example3: SET;0.05;1;2  => a quadratic fit 0.05*time^2 + 1*time + 2. Only one channel can be selected.
