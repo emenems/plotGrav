@@ -442,6 +442,13 @@ try                                                                         % ca
                     if ~strcmp(char(row),'[]')
                         plotGrav('interpolate_interval_auto',char(row));
                     end
+                %% Interpolate between two points
+                case 'INTERP_INTERVAL'   
+                    row = fgetl(fid);count = count + 1;                     
+                    if ~strcmp(char(row),'[]')
+                        in = strsplit(row,';');                                 % two inputs expected (starting and end date)
+                        plotGrav('interpolate_interval_linear',in{1},in{2});
+                    end
                 %% Filter channels
                 case 'FILTER_SELECTED'                                      % will filter selected channels
                     plotGrav('compute_filter_channel',char(row));                       % no input required

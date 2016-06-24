@@ -70,11 +70,11 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% G U I %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Generate GUI
         % SET PATHS!!														% Default paths to input time series. These parameters can be (after start) manually via GUI
-        path_igrav = '\\dms\hygra\iGrav\iGrav006 Data\';					% ROOT file path to iGrav data, i.e., without year, month and day information. 
+        path_igrav = '';%'\\dms\hygra\iGrav\iGrav006 Data\';					% ROOT file path to iGrav data, i.e., without year, month and day information. 
 																			% This folder contains sub-folder with year (iGrav006_2015) which contains folder with each day (0305) 
 																			% To load SG030 time series, set this parameter to arbitrary SG030 file, e.g. \\dms\hygra\DataWettzell\Gravity\RawData\SG030_BKG\G1150306.030
 																			% Another option is to select directly file (will not be corrected as iGrav and SG030) in supported file format (*.tsf,*.mat);
-        path_trilogi = '\\dms\hygra\iGrav\iGrav006 Data\Controller Data\';	% Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
+        path_trilogi = '';%'\\dms\hygra\iGrav\iGrav006 Data\Controller Data\';	% Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
 																			% Another option is to select directly file in supported file format (*.tsf,*.mat);
         file_tides = '\\dms\hygra\iGrav\Corrections\Tides\WE_wet2009_TideEffect_CurrentFile_60sec.tsf'; % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
         file_filter = '\\dms\hygra\\iGrav\Corrections\Filters\N01S1M01.NLF';	% File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
@@ -5296,10 +5296,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 else
                     % Get input from user
                     try
-                        set(findobj('Tag','plotGrav_text_status'),'String','Select first point...');drawnow % send instruction to status bar
-                        [x1,~] = ginput(1);                                 % first/starting point
-                        set(findobj('Tag','plotGrav_text_status'),'String','Select second point...');drawnow % send instruction to status bar
-                        [x2,~] = ginput(1);                                 % second/ending point. 
+                        % Get User input
+                        if nargin == 1
+                            set(findobj('Tag','plotGrav_text_status'),'String','Select first point...');drawnow % send instruction to status bar
+                            [x1,~] = ginput(1);                                 % first/starting point
+                            set(findobj('Tag','plotGrav_text_status'),'String','Select second point...');drawnow % send instruction to status bar
+                            [x2,~] = ginput(1);                                 % second/ending point. 
+                        else
+                            x1 = datenum(varargin{1},'yyyy mm dd HH MM SS');
+                            x2 = datenum(varargin{2},'yyyy mm dd HH MM SS');
+                        end
                         % Interpolate interval
                         for i = 1:length(panels)                            % run loop for all panels
                             if ~isempty(plot_axesL1.(char(panels(i)))) && ~isempty(data.(char(panels(i)))) % check if current panel selected and data loaded
