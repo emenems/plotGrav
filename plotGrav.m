@@ -6768,18 +6768,42 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			set(findobj('Tag','plotGrav_insert_line'),'UserData',cur);
 			set(findobj('Tag','plotGrav_text_status'),'String','Line inserted.');drawnow 
 		case 'insert_text'
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size
-			set(findobj('Tag','plotGrav_text_status'),'String','Start writing...waiting 10 seconds');drawnow % send instructions to status bar
+            % Get sring
+			set(findobj('Tag','plotGrav_text_status'),'String','Set string');drawnow % send instructions to status bar
 			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','Text here'); % show editable field ans set default text
-			set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-			pause(10);                                                      % wait 10 seconds for user input
-			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off editable fields
-			set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-			set(findobj('Tag','plotGrav_text_status'),'String','Select position (centre)...');drawnow % update instructions
+            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); %
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+            string_in = get(findobj('Tag','plotGrav_edit_text_input'),'String');
+            % Get fontsize
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData'); % get font size
+            set(findobj('Tag','plotGrav_text_status'),'String','Set fontsize');drawnow % send instructions to status bar
+			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',font_size); % show editable field ans set default text
+            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); %
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+            font_size = str2double(get(findobj('Tag','plotGrav_edit_text_input'),'String'));
+            % Alignment
+            set(findobj('Tag','plotGrav_text_status'),'String','Set Alignment');drawnow % send instructions to status bar
+			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','center'); % show editable field ans set default text
+            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); %
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+            alignment = get(findobj('Tag','plotGrav_edit_text_input'),'String');
+            % Color
+            set(findobj('Tag','plotGrav_text_status'),'String','Set color');drawnow % send instructions to status bar
+			set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','k'); % show editable field ans set default text
+            set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+            waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); %
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');
+            col = get(findobj('Tag','plotGrav_edit_text_input'),'String');
+            
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
+			set(findobj('Tag','plotGrav_text_status'),'String','Select position...');drawnow % update instructions
 			[select_x(1),select_y(1)] = ginput(1);                          % get possition                         
-			r = text(select_x,select_y,get(findobj('Tag','plotGrav_edit_text_input'),'String'),'HorizontalAlignment','center',...
-					'FontSize',font_size,'FontWeight','bold');              % place text
-			set(r,'Color','k');
+			r = text(select_x,select_y,string_in,'HorizontalAlignment',alignment,...
+					'FontSize',font_size);              % place text
+			set(r,'Color',col);
 			cur = get(findobj('Tag','plotGrav_insert_text'),'UserData');
 			cur = [cur,r];
 			set(findobj('Tag','plotGrav_insert_text'),'UserData',cur);
