@@ -671,17 +671,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if ~isempty(data.igrav)
                         igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
                     end
-				elseif strcmp(file_path_igrav(end-3:end),'.030') || strcmp(file_path_igrav(end-3:end),'.029')   
-                    % LOAD SG030 files, i.e. SG030 data stored in tsf format
-                    % file_path_igrav = full file name of one of the files with SG030 data. Not Path, but file!
+				elseif strcmp(file_path_igrav(end-3:end-2),'.0') 
+                    % LOAD SG0XX files, i.e. SG0XX data stored in tsf format
+                    % file_path_igrav = full file name of one of the files with SG0XX data. Not Path, but file!
                     % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
                     % These time series will be stacked, filtered and calibrated (only lower sensor)
                     % Additionaly, these time series will be corrected for tides, atmosphere and drift (if selected so). 'Loading, and stacking'
-					set(findobj('Tag','plotGrav_text_status'),'String','Loading SG030/SG029 data...');drawnow % send (general) message to status bar
+					set(findobj('Tag','plotGrav_text_status'),'String','Loading SG0XX data...');drawnow % send (general) message to status bar
 					for i = 1:length(time_in(:,7))                          % for loop for each day
 						try  
 							set(findobj('Tag','plotGrav_text_status'),'String',...
-								sprintf('Loading SG030/029 data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow % send (specific) message to status bar
+								sprintf('Loading SG0XX data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow % send (specific) message to status bar
 							file_name = sprintf('%s%02d%02d%02d%s',file_path_igrav(1:end-10),abs(time_in(i,1)-2000),time_in(i,2),time_in(i,3),file_path_igrav(end-3:end)); % create file name: file path and file name = file_path_igrav. Last 10 characters specify the year, month and day of the file.
 							[ttime,tdata] = plotGrav_loadtsf(file_name);    % load file and store to temporary variables. Do not read channel names and units, as these are known and constant.
                             % Now, check if the loaded time series contains non-constant sampling, i.e., missing data.
@@ -692,29 +692,29 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								tdata = interp1(ttime,tdata,ntime,'linear');% interpolate value for new time vector (temporary variable)
 								ttime = ntime;clear ntime;                  % remove the temporary time vector to clear memory. The temporary data matrix will be used in the following part.
 								% It is important to write to the logfile that data has been interpolated
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 missing data interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX missing data interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
                             end
                             % Do the same as above for NaNs (missing data~= NaNs!)
 							ntime = ttime;ndata = tdata;                    % temp. variables (see the comment above)
-							ntime(isnan(sum(ndata(:,1:3),2))) = [];         % remove time samples where at least one data column is NaN (sum of [1 NaN 3] = NaN)
-							ndata(isnan(sum(ndata(:,1:3),2)),:) = [];       % remove data samples where at least one column is NaN
+							ntime(isnan(sum(ndata(:,1:end),2))) = [];         % remove time samples where at least one data column is NaN (sum of [1 NaN 3] = NaN)
+							ndata(isnan(sum(ndata(:,1:end),2)),:) = [];       % remove data samples where at least one column is NaN
 							if max(abs(diff(ntime))) > 1.9/86400 && max(abs(diff(ntime))) <= 10/86400 % interpolate if max missing time interval is < 10 seconds (and >= 2 seconds)
 								tdata = interp1(ntime,ndata,ttime,'linear');% interpolate value for new time vector
 								clear ntime ndata;
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 NaNs interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX NaNs interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
 							end
 							igrav_loaded = 3;                               % 3 => SG030 loaded time series will be corrected/calibrated/filtered. At least one of the inteded files must be loaded (it is not necesary to load all files)
                         catch error_message
 							ttime = datenum(time_in(i,1:3));                % if data has not been loaded correctly, add a dummy for stacking (to make sure the missing files result in missing data!)
 							tdata(1,1:3) = NaN;                             % insert NaNs (see comment above)
                             if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF') % switch between error IDs. See plotGrav_loadtsf.m function for error handling
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX file: %s could NOT read header (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRD')
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0X file: %s could NOT read data (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             else
-                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030 file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
+                                [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                             end
 						end
 						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
@@ -724,11 +724,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values
 						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
 						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG030/029 data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
 						data.igrav = [];                                    % otherwise empty
 						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG030/029 input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG0XX input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
 					end
 					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % update the ui-table
 						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
@@ -1145,7 +1145,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         column_id = -18;                                    % will be added to default column numbering
                         column_g_id = 1;                                    % column with gravity variations (1 = lower sphere, 2 = upper sphere)
                         column_p_id = 3;                                    % column with pressure variations
-                        gravi_string = 'SG030';                             % will be used for logfile
+                        % Adjust order in case single sphere SG loaded
+                        if size(data.igrav,2) == 2
+                            data.igrav(:,3) = data.igrav(:,2);
+                            data.igrav(:,2) = 0;
+                        end
+                        gravi_string = 'SG0XX';                             % will be used for logfile
                         plotGrav('reset_tables_sg030');                     % Change the ui-table to SG030 (by default for iGrav)
                 end
                 try                   
@@ -1191,34 +1196,34 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						switch drift_fit                                    % select drift approximation
 							case 1
 								data.igrav(:,29+column_id) = 0;             % no drift estimated
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 							case 2
                                 out_par = mean(data.igrav(~isnan(data.igrav(:,24+column_id)),24+column_id)); % mean value
 								data.igrav(:,29+column_id) = out_par;       % can use scalar because data.igrav is defined as matrix = will be used for all rows of 29th column.
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Constant: %6.2f (%04d/%02d/%02d %02d:%02d)\n',out_par,ty,tm,td,th,tmm);
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Constant: %6.2f (%04d/%02d/%02d %02d:%02d)\n',out_par,ty,tm,td,th,tmm);
 							case 3
 								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly1');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Linear coefficients: %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),ty,tm,td,th,tmm);
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Linear coefficients: %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),ty,tm,td,th,tmm);
 							case 4
 								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly2');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Quadratic coefficients: %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),ty,tm,td,th,tmm);
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Quadratic coefficients: %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),ty,tm,td,th,tmm);
 							case 5
 								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly3');
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: Cubic coefficients: %10.8f, %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),out_par(4),ty,tm,td,th,tmm);
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Cubic coefficients: %10.8f, %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),out_par(4),ty,tm,td,th,tmm);
                             case 6                                          % In this case, user defined coeficients are used.
                                 out_par = get(findobj('Tag','plotGrav_edit_drift_manual'),'String'); % get iser input
                                 out_par = str2double(strsplit(out_par,' ')); % split the sring and covert to double
 								out_fit = polyval(out_par,time.igrav);     % compute the drift curve (will automatically depend on number of coefficients)
 								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
-								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data drift removal: User coefficients: %s (%04d/%02d/%02d %02d:%02d)\n',get(findobj('Tag','plotGrav_edit_drift_manual'),'String'),ty,tm,td,th,tmm);
+								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: User coefficients: %s (%04d/%02d/%02d %02d:%02d)\n',get(findobj('Tag','plotGrav_edit_drift_manual'),'String'),ty,tm,td,th,tmm);
 						end
 						data.igrav(:,25+column_id) = data.igrav(:,24+column_id) - data.igrav(:,29+column_id); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
                     else
 						data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;              % set to zero if filtered data not available (except atmospheric effect)
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data correction due to unseccessful filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No Gravity data correction due to unseccessful filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                     end
                 catch error_message
                     if strcmp(error_message.identifier,'MATLAB:griddedInterpolant:NonMonotonicCompVecsErrId')
@@ -7075,8 +7080,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav paht selected.');drawnow 
 			end
 		case 'select_igrav_file'                                            % Select iGrav input file
-			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.csv',...
-                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029,*.csv)';...
+			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.038;*.csv',...
+                'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029;*.038,*.csv)';...
                 '*.*','All files'},...
                 'Select iGrav Data File');    % Use cell array {'*.tsf';'*.dat';'*.mat'} as file filter
 			if path == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
@@ -7196,8 +7201,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_text_status'),'String','Select file...');drawnow % status
                     % Open either dialog or use script input
                     if nargin == 2
-                        [name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029',...
-                            'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029)';...
+                        [name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.038',...
+                            'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029,*.038)';...
                             '*.*','All files'},...
                             'Select file for appending');
                         % Continue only if user select some file
@@ -7226,6 +7231,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             case '029'
                                 format_switch = 1;
                             case '030'
+                                format_switch = 1;
+                            case '038'
                                 format_switch = 1;
                             otherwise
                                 format_switch = 0;
