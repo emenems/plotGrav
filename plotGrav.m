@@ -6167,19 +6167,26 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % used to compute the residual effect). Main single admittance
                 % will be used for residual effect (See GUI)
                 if nargin == 1                                              % This function can be called with more then one input. If only one input (function name = 'get_atmacs'), then get user input. Otherwise, use function input for further computation.
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for local part');drawnow % send instruction to status bar
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for local part (if needed use , as delimiter)');drawnow % send instruction to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav');% Show user input field and set default URL (wettzell)
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
                     set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
                     waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                    atmacs_url_link_loc = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input local URL
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for global part');drawnow % update send instruction to status bar
+                    temp = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input local URL
+                    % Split string in case several links on input 
+                    if isempty(temp)
+                        atmacs_url_link_loc = '';
+                    else
+                        atmacs_url_link_loc = strsplit(temp,',');
+                    end
+                    set(findobj('Tag','plotGrav_text_status'),'String','Set url for global part (if needed use , as delimiter)');drawnow % update send instruction to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav'); % update Editable field to new/global part URL
                     set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
                     waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                      % wait 8 seconds for user input
-                    atmacs_url_link_glo = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input global URL
+                    temp = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get User Input global URL
+                    atmacs_url_link_glo = strsplit(temp,',');
                     set(findobj('Tag','plotGrav_text_status'),'String','iGrav pressure channel (for pressure in mBar)');drawnow % new instruction to set the channel number
                     set(findobj('Tag','plotGrav_edit_text_input'),'String','2'); % Update the editable field. By default iGrav second channel contains pressure variations
                     set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
@@ -6217,12 +6224,28 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         if ~isempty(press_channel)                              % add residual effect if local pressure available
                             dp = data.igrav(:,str2double(press_channel)) - pressure/100; % pressure difference = local - model. /100 => convert Pa to hPa
                             data.igrav(:,length(channels.igrav)) = -atmo_corr + admittance_factor*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=%s, global url=%s) (%04d/%02d/%02d %02d:%02d)\n',...
-                                length(channels.igrav),admittance_factor,atmacs_url_link_loc,atmacs_url_link_glo,ty,tm,td,th,tmm); % Write to logfile
+                            % Write to logfile
+                            fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',length(channels.igrav),admittance_factor);
+                            for j = 1:length(atmacs_url_link_loc);
+                                fprintf(fid,'%s,',atmacs_url_link_loc{j});
+                            end
+                            fprintf(fid,' global url=');
+                            for j = 1:length(atmacs_url_link_loc);
+                                fprintf(fid,'%s,',atmacs_url_link_glo{j});
+                            end
+                            fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                         else
                             data.igrav(:,length(channels.igrav)) = -atmo_corr;  % add data (convert correction to effect)
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect without residaul effect. Local url=%s, Global url=%s (%04d/%02d/%02d %02d:%02d)\n',...
-                                length(channels.igrav),atmacs_url_link_loc,atmacs_url_link_glo,ty,tm,td,th,tmm);
+                            % Write to logfile
+                            fprintf(fid,'iGrav channel %d == Atmacs total effect without residaul effect. Local url=',length(channels.igrav));
+                            for j = 1:length(atmacs_url_link_loc);
+                                fprintf(fid,'%s,',atmacs_url_link_loc{j});
+                            end
+                            fprintf(fid,' global url=');
+                            for j = 1:length(atmacs_url_link_loc);
+                                fprintf(fid,'%s,',atmacs_url_link_glo{j});
+                            end
+                            fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                         end
                         % Append new time series: Atmacs pressure (to be able
                         % to reconstruct the residual effect)

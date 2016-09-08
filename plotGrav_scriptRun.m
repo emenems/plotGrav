@@ -397,12 +397,16 @@ try                                                                         % ca
                 %% Atmacs atmospheric effect
                 case 'GET_ATMACS'
                     row = fgetl(fid);count = count + 1;
-                    in = strsplit(row,';');                                     % two or three inputs expected
-                    if ~strcmp(char(in(1)),'[]')
+                    in = strsplit(row,';');                                 % two or three inputs expected
+                    if ~strcmp(char(row),'[]')
+                        % Convert [] to '' (= empty)
+                        if strcmp(in{1},'[]')
+                            in{1} = '';
+                        end
                         if length(in) == 2
-                            plotGrav('get_atmacs',char(in(1)),char(in(2)),'');                         % In this case 2 inputs for plotGrav function. First calls the function/section and second sets th additional input. This way, no ui input fields are required.
+                            plotGrav('get_atmacs',in{1},char(in(2)),''); % In this case 2 inputs for plotGrav function. First calls the function/section and second sets th additional input. This way, no ui input fields are required.
                         elseif length(in) == 3
-                            plotGrav('get_atmacs',char(in(1)),char(in(2)),char(in(3)));
+                            plotGrav('get_atmacs',in{1},char(in(2)),char(in(3)));
                         end
                     end
                 %% Correction file (apply or show)

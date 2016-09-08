@@ -9,8 +9,20 @@ function [pol_corr,lod_corr,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and
 %   ref_time            ...     input time vector (in matlab format)
 %   Lat                 ...     latitude of the gravimter (degrees)
 %   Lon                 ...     longitude of the gravimter (degrees)
-%   atmacs_url_link_loc ...     atmacs url to local component (lm)
-%   atmacs_url_link_glo ...     atmacs url to global component (icon384)
+%   atmacs_url_link_loc ...     atmacs url to local component (lm). Set
+%                               either one string or cell containing all
+%                               urls. In such case, the downloaded time
+%                               series will be concatenated. Set the links
+%                               in chronological order! 
+%                               If atmacs_url_link_loc is empty and
+%                               atmacs_url_link_glo NOT then global model
+%                               convering whole Earth is assumed to be
+%                               used.
+%   atmacs_url_link_glo ...     atmacs url to global componentet. Set
+%                               either one string or cell containing all
+%                               urls. In such case, the downloaded time
+%                               series will be concatenated. Set the links
+%                               in chronological order!
 % 
 % Output:
 %   pol_corr            ...     polar motion correction (nm/s^2)
@@ -121,67 +133,298 @@ catch
 end
 %%%%%%%%%%%%%%%%%%%% ATMACS CORRECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 try
-    %% Read Atmacs Local data
-    if isempty(atmacs_url_link_loc) || isempty(atmacs_url_link_glo)          % do not compute if no input
+    %% Read Atmacs data
+    if isempty(atmacs_url_link_loc) && isempty(atmacs_url_link_glo)          % do not compute if no input
         corr_check(3) = 0;
         atmo_corr = NaN;
         pressure = NaN;
-    else
-        url_header = 1;                                                             % number of neader characters (not rows!)
-        url_rows = 51;                                                              % number of characters in a row (now data columns!)
-        str = urlread(atmacs_url_link_loc);                                         % get url string
-        str = str(url_header:end);                                                  % cut off header
-        str_mat = reshape(str,url_rows,length(str)/url_rows);                       % reshape to row oriented matrix
-        year = str_mat(1:4,:)';                                                     % select year
-        month = str_mat(5:6,:)';
-        day = str_mat(7:8,:)';
-        hour = str_mat(9:10,:)';
-        p_str = str_mat(12:25,:)';
-        l_str = str_mat(26:38,:)';
-        r_str = str_mat(39:50,:)';
-        % Prepare variables
-        time_loc(1:size(year),1) = NaN;
-        pressure(1:size(year),1) = NaN;
-        l(1:size(year),1) = NaN;
-        r(1:size(year),1) = NaN;
-        % Convert to doubles
-        for li = 1:size(year,1)                                                     % convert strings to doubles
-            time_loc(li,1) = datenum(str2double(year(li,:)),str2double(month(li,:)),str2double(day(li,:)),str2double(hour(li,:)),0,0); % time vector (in matlab format)
-            pressure(li,1) = str2double(p_str(li,:));                               % pressure (Pa)
-            l(li,1) = str2double(l_str(li,:));                                      % local part (m/s^2)
-            r(li,1) = str2double(r_str(li,:));                                      % regional part (m/s^2)
+    % Read Global model data only (ICON), i.e. one file contain all
+    % required time series
+    elseif isempty(atmacs_url_link_loc) && ~isempty(atmacs_url_link_glo)
+        url_header = 1;                                                     % number of header characters (not rows!)
+        url_rows = 64;                                                      % number of characters in a row (now data columns!)
+        % Run loop for all input links. The time series will be than
+        % concatenated. First though, check if user set one url link 
+        % (=> not a cell) or number of links as cell 
+        if ~iscell(atmacs_url_link_glo)
+            % Convert to cell so it can be used in following loop (= go
+            % through all links in the cell array)
+            atmacs_url_link_glo = {atmacs_url_link_glo};
         end
-        pressure = interp1(time_loc,pressure,ref_time);
-        clear year month day hour p_str l_str r_str url_link url_header url_rows str str_mat li
-
-        %% Read Atmacs Global data
-        url_header = 1;                                                             % number of neader characters (not rows!)
-        url_rows = 37;                                                              % number of characters in a row (now data columns!)
-        str = urlread(atmacs_url_link_glo);                                         % get url string
-        str = str(url_header:end);                                                  % cut off header
-        str_mat = reshape(str,url_rows,length(str)/url_rows);                       % reshape to row oriented matrix
-        year = str_mat(1:4,:)';                                                     % select year
-        month = str_mat(5:6,:)';
-        day = str_mat(7:8,:)';
-        hour = str_mat(9:10,:)';
-        g_str = str_mat(11:24,:)';
-        d_str = str_mat(25:36,:)';
-        % Prepare variables
-        time_glo(1:size(year),1) = NaN;
-        g(1:size(year),1) = NaN;
-        d(1:size(year),1) = NaN;
-        % Convert to doubles
-        for li = 1:size(year,1)                                                     % convert strings to doubles
-            time_glo(li,1) = datenum(str2double(year(li,:)),str2double(month(li,:)),str2double(day(li,:)),str2double(hour(li,:)),0,0); % time vector (in matlab format)
-            g(li,1) = str2double(g_str(li,:));                                      % global attraction (m/s^2)
-            d(li,1) = str2double(d_str(li,:));                                      % deformation part part (m/s^2)
+        % Declare vector for appending
+        time_total = [];
+        l_total = [];
+        g_total = [];
+        d_total = [];
+        p_total = [];
+        for i = 1:length(atmacs_url_link_glo)
+            % get url string
+            str = urlread(atmacs_url_link_glo{i});   
+            % cut off header (useful only if only if url_header ~= 1)
+            str = str(url_header:end);         
+            % reshape to row oriented matrix
+            str_mat = reshape(str,url_rows,length(str)/url_rows);   
+            % Get/extract all columns
+            year = str_mat(1:4,:)';
+            month = str_mat(5:6,:)';
+            day = str_mat(7:8,:)';
+            hour = str_mat(9:10,:)';
+            p_str = str_mat(12:25,:)';
+            l_str = str_mat(26:38,:)';
+            g_str = str_mat(39:50,:)';
+            d_str = str_mat(51:63,:)';
+            % Declare variables
+            time_glo(1:size(year),1) = NaN;
+            p(1:size(year),1) = NaN;
+            l(1:size(year),1) = NaN;
+            g(1:size(year),1) = NaN;
+            d(1:size(year),1) = NaN;
+            % convert strings to doubles
+            for li = 1:size(year,1)    
+                % time vector (in matlab format)
+                time_glo(li,1) = datenum(str2double(year(li,:)),str2double(month(li,:)),str2double(day(li,:)),str2double(hour(li,:)),0,0); 
+                % pressure in Pa!
+                p(li,1) = str2double(p_str(li,:));     
+                % local part (m/s^2)
+                l(li,1) = str2double(l_str(li,:)); 
+                % global part (m/s^2)
+                g(li,1) = str2double(g_str(li,:));   
+                % Deformation part
+                d(li,1) = str2double(d_str(li,:));   
+            end
+            % Concatenate
+            if isempty(time_total) % for the first data set
+                time_total = time_glo;
+                l_total = l;
+                g_total = g;
+                d_total = d;
+                p_total = p;
+            else
+                % Check date (for overlapping or missing data)
+                r = find(time_total(end) == time_glo);
+                % No such time exist => check how big is the gap
+                if isempty(r)
+                    time_diff = time_total(end) - time_glo(1);
+                    time_res = time_total(end) - time_total(end-1);
+                    % If the missing data is > then model resolution insert
+                    % NaN (for further interpolation). Multiply by 2 to
+                    % take increase of resolution into account
+                    if (time_diff*-1 > time_res*2) && (time_diff < 0)
+                        time_total = vertcat(time_total,time_total(end)+time_res,time_glo);
+                        l_total = vertcat(l_total,NaN,l);
+                        g_total = vertcat(g_total,NaN,g);
+                        d_total = vertcat(d_total,NaN,d);
+                        p_total = vertcat(p_total,NaN,p);
+                    elseif (time_diff*-1 <= time_res*2) && (time_diff < 0)
+                        time_total = vertcat(time_total,time_glo);
+                        l_total = vertcat(l_total,l);
+                        g_total = vertcat(g_total,g);
+                        d_total = vertcat(d_total,d);
+                        p_total = vertcat(p_total,p);
+                    elseif time_diff > 0
+                        % In case the current time series starts before
+                        % already loaded + no overlapping
+                        time_total = vertcat(time_total,time_total(end)+time_res);
+                        l_total = vertcat(l_total,NaN);
+                        g_total = vertcat(g_total,NaN);
+                        d_total = vertcat(d_total,NaN);
+                        p_total = vertcat(p_total,NaN);
+                    end  
+                else
+                    % In case overlapping exist, check for offsets
+                    l_diff = l_total(end) - l(r);
+                    g_diff = g_total(end) - g(r);
+                    d_diff = d_total(end) - d(r);
+                    p_diff = p_total(end) - p(r);
+                    % Apply offsets
+                    time_total = vertcat(time_total,time_glo(r+1:end));
+                    l_total = vertcat(l_total,l(r+1:end)+l_diff);
+                    g_total = vertcat(g_total,g(r+1:end)+g_diff);
+                    d_total = vertcat(d_total,d(r+1:end)+d_diff);
+                    p_total = vertcat(p_total,p(r+1:end)+p_diff);
+                end
+            end
+            clear l_diff g_diff d_diff p_diff l g d p time_glo year month day hour g_str d_str l_str p_str str str_mat li
         end
-        atmo_corr = (interp1(time_loc,l,ref_time) + ...
-                     interp1(time_loc,r,ref_time) + ...
-                     interp1(time_glo,g,ref_time) + ...
-                     interp1(time_glo,d,ref_time))*1e+9;                            % add all effects + convert to nm/s^2
+        % Add all effects + interpolate to ref time vecotr + convert to nm/s^2
+        atmo_corr = interp1(time_total,l_total+g_total+d_total,ref_time)*1e+9;
+        % Interpolate pressure vector
+        pressure = interp1(time_total,p_total,ref_time);
         corr_check(3) = 1;
-        clear year month day hour g_str d_str time_glo g d l r url_link url_header url_rows str str_mat li
+    % Read Global and local data
+    else
+        url_header = 1;                                                             % number of header characters (not rows!)
+        url_rows = 51;                                                              % number of characters in a row (now data columns!)
+        % Run loop for all input links. The time series will be than
+        % concatenated. First though, check if user set one url link 
+        % (=> not a cell) or number of links as cell 
+        if ~iscell(atmacs_url_link_loc)
+            % Convert to cell so it can be used in following loop (= go
+            % through all links in the cell array)
+            atmacs_url_link_loc = {atmacs_url_link_loc};
+        end
+        % Do the same with Global links
+        if ~iscell(atmacs_url_link_glo)
+            atmacs_url_link_glo = {atmacs_url_link_glo};
+        end
+        % Declare vector for appending
+        time_total_loc = [];
+        time_total_glo = [];
+        l_total = [];
+        r_total = [];
+        p_total = [];
+        d_total = [];
+        g_total = [];
+        for i = 1:length(atmacs_url_link_loc)
+            % get url string
+            str = urlread(atmacs_url_link_loc{i});                                         
+            str = str(url_header:end);
+            str_mat = reshape(str,url_rows,length(str)/url_rows);
+            year = str_mat(1:4,:)';                                                     
+            month = str_mat(5:6,:)';
+            day = str_mat(7:8,:)';
+            hour = str_mat(9:10,:)';
+            p_str = str_mat(12:25,:)';
+            l_str = str_mat(26:38,:)';
+            r_str = str_mat(39:50,:)';
+            % Prepare variables
+            time_loc(1:size(year),1) = NaN;
+            p(1:size(year),1) = NaN;
+            l(1:size(year),1) = NaN;
+            r(1:size(year),1) = NaN;
+            % Convert to doubles
+            for li = 1:size(year,1) 
+                % time vector (in matlab format)
+                time_loc(li,1) = datenum(str2double(year(li,:)),str2double(month(li,:)),str2double(day(li,:)),str2double(hour(li,:)),0,0); 
+                % pressure (Pa)
+                p(li,1) = str2double(p_str(li,:));   
+                % local part (m/s^2)
+                l(li,1) = str2double(l_str(li,:));
+                % regional part (m/s^2)
+                r(li,1) = str2double(r_str(li,:));                                      
+            end
+            % Concatenate
+            if isempty(time_total_loc) % for the first data set
+                time_total_loc = time_loc;
+                l_total = l;
+                r_total = r;
+                p_total = p;
+            else
+                % Check date (for overlapping or missing data)
+                rf = find(time_total_loc(end) == time_loc);
+                % No such time exist => check how big is the gap
+                if isempty(rf)
+                    time_diff = time_total_loc(end) - time_loc(1);
+                    time_res = time_total_loc(end) - time_total_loc(end-1);
+                    % If the missing data is > then model resolution insert
+                    % NaN (for further interpolation). Multiply by 2 to
+                    % take increase of resolution into account
+                    if (time_diff*-1 > time_res*2) && (time_diff < 0)
+                        time_total_loc = vertcat(time_total_loc,time_total_loc(end)+time_res,time_loc);
+                        l_total = vertcat(l_total,NaN,l);
+                        r_total = vertcat(r_total,NaN,r);
+                        p_total = vertcat(p_total,NaN,p);
+                    elseif (time_diff*-1 <= time_res*2) && (time_diff < 0)
+                        time_total_loc = vertcat(time_total_loc,time_loc);
+                        l_total = vertcat(l_total,l);
+                        r_total = vertcat(r_total,r);
+                        p_total = vertcat(p_total,p);
+                    elseif time_diff > 0
+                        % In case the current time series starts before
+                        % already loaded + no overlapping
+                        time_total_loc = vertcat(time_total_loc,time_total_loc(end)+time_res);
+                        l_total = vertcat(l_total,NaN);
+                        r_total = vertcat(r_total,NaN);
+                        p_total = vertcat(p_total,NaN);
+                    end  
+                else
+                    % In case overlapping exist, check for offsets
+                    l_diff = l_total(end) - l(rf);
+                    r_diff = r_total(end) - r(rf);
+                    p_diff = p_total(end) - p(rf);
+                    % Apply offsets
+                    time_total_loc = vertcat(time_total_loc,time_loc(rf+1:end));
+                    l_total = vertcat(l_total,l(rf+1:end)+l_diff);
+                    r_total = vertcat(r_total,r(rf+1:end)+r_diff);
+                    p_total = vertcat(p_total,p(rf+1:end)+p_diff);
+                end
+            end
+            clear year month day hour p_str l_str r_str str str_mat li l r p rf time_diff time_res time_loc
+        end
+        % Interpolate output pressure
+        pressure = interp1(time_total_loc,p_total,ref_time);
+
+        % Read Atmacs Global data
+        url_header = 1;
+        url_rows = 37;
+        for i = 1:length(atmacs_url_link_glo)
+            % get url string
+            str = urlread(atmacs_url_link_glo{i}); 
+            str = str(url_header:end);
+            str_mat = reshape(str,url_rows,length(str)/url_rows);
+            year = str_mat(1:4,:)';
+            month = str_mat(5:6,:)';
+            day = str_mat(7:8,:)';
+            hour = str_mat(9:10,:)';
+            g_str = str_mat(11:24,:)';
+            d_str = str_mat(25:36,:)';
+            % Prepare variables
+            time_glo(1:size(year),1) = NaN;
+            g(1:size(year),1) = NaN;
+            d(1:size(year),1) = NaN;
+            % Convert to doubles
+            for li = 1:size(year,1)                                                     % convert strings to doubles
+                time_glo(li,1) = datenum(str2double(year(li,:)),str2double(month(li,:)),str2double(day(li,:)),str2double(hour(li,:)),0,0); % time vector (in matlab format)
+                g(li,1) = str2double(g_str(li,:));                                      % global attraction (m/s^2)
+                d(li,1) = str2double(d_str(li,:));                                      % deformation part part (m/s^2)
+            end
+            % Concatenate
+            if isempty(time_total_glo) % for the first data set
+                time_total_glo = time_glo;
+                g_total = g;
+                d_total = d;
+            else
+                % Check date (for overlapping or missing data)
+                rf = find(time_total_glo(end) == time_glo);
+                % No such time exist => check how big is the gap
+                if isempty(rf)
+                    time_diff = time_total_glo(end) - time_glo(1);
+                    time_res = time_total_glo(end) - time_total_glo(end-1);
+                    % If the missing data is > then model resolution insert
+                    % NaN (for further interpolation). Multiply by 2 to
+                    % take increase of resolution into account
+                    if (time_diff*-1 > time_res*2) && (time_diff < 0)
+                        time_total_glo = vertcat(time_total_glo,time_total_glo(end)+time_res,time_glo);
+                        g_total = vertcat(g_total,NaN,g);
+                        d_total = vertcat(d_total,NaN,d);
+                    elseif (time_diff*-1 <= time_res*2) && (time_diff < 0)
+                        time_total_glo = vertcat(time_total_glo,time_glo);
+                        g_total = vertcat(g_total,g);
+                        d_total = vertcat(d_total,d);
+                    elseif time_diff > 0
+                        % In case the current time series starts before
+                        % already loaded + no overlapping
+                        time_total_glo = vertcat(time_total_glo,time_total_glo(end)+time_res);
+                        g_total = vertcat(g_total,NaN);
+                        d_total = vertcat(d_total,NaN);
+                    end  
+                else
+                    % In case overlapping exist, check for offsets
+                    g_diff = g_total(end) - g(rf);
+                    d_diff = d_total(end) - d(rf);
+                    % Apply offsets
+                    time_total_glo = vertcat(time_total_glo,time_glo(rf+1:end));
+                    g_total = vertcat(g_total,g(rf+1:end)+g_diff);
+                    d_total = vertcat(d_total,d(rf+1:end)+d_diff);
+                end
+            end
+            clear g_diff d_diffg d g time_glo year month day hour g_str d_str str str_mat li time_diff time_res rf time_glo
+        end
+        % Add all effects + interpolate to output time vector + convert to
+        % nm/s^2 
+        atmo_corr = (interp1(time_total_loc,l_total+r_total,ref_time) + ...
+                     interp1(time_total_glo,g_total+d_total,ref_time))*1e+9;
+        corr_check(3) = 1;
     end
 catch
     corr_check(3) = 0;
