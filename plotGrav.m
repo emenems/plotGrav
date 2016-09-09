@@ -6194,8 +6194,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                   % wait 8 seconds for user input
                     press_channel = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get pressure channel number
                 else
-                    atmacs_url_link_loc = char(varargin{1});                % read url from function inputs       
-                    atmacs_url_link_glo = char(varargin{2});
+                    if isempty(varargin{1})
+                        atmacs_url_link_loc = '';
+                    else
+                        atmacs_url_link_loc = strsplit(varargin{1},',');
+                    end   
+                    atmacs_url_link_glo = strsplit(varargin{2},',');
                     press_channel = char(varargin{3});                  
                 end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off editable fields
