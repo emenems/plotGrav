@@ -6194,6 +6194,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar                                                   % wait 8 seconds for user input
                     press_channel = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get pressure channel number
                 else
+                    % Make sure the input is either empty string or cell
+                    % containing all urls
                     if isempty(varargin{1})
                         atmacs_url_link_loc = '';
                     else
@@ -6230,11 +6232,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             data.igrav(:,length(channels.igrav)) = -atmo_corr + admittance_factor*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
                             % Write to logfile
                             fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',length(channels.igrav),admittance_factor);
-                            for j = 1:length(atmacs_url_link_loc);
+                            for j = 1:length(atmacs_url_link_loc)
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
                             fprintf(fid,' global url=');
-                            for j = 1:length(atmacs_url_link_loc);
+                            for j = 1:length(atmacs_url_link_glo)
                                 fprintf(fid,'%s,',atmacs_url_link_glo{j});
                             end
                             fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
@@ -6246,7 +6248,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
                             fprintf(fid,' global url=');
-                            for j = 1:length(atmacs_url_link_loc);
+                            for j = 1:length(atmacs_url_link_glo);
                                 fprintf(fid,'%s,',atmacs_url_link_glo{j});
                             end
                             fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
