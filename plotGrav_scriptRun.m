@@ -36,33 +36,33 @@ try                                                                         % ca
         if ~strcmp(row(1),'%')                                              % run code only if not comment
             switch row                                                      % switch between commands depending on the Script switch.
                 %% Setting file paths
-                case 'FILE_IN_IGRAV'
+                case 'FILE_IN_DATA_A'
                     row = fgetl(fid);count = count + 1;                     % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
                     if strcmp(row,'[]')                                     % [] symbol means no input                           
-                        set(findobj('Tag','plotGrav_edit_igrav_path'),'String','');
+                        set(findobj('Tag','plotGrav_edit_data_a_path'),'String','');
                     else
-                        set(findobj('Tag','plotGrav_edit_igrav_path'),'String',row); % otherwise set the input file
+                        set(findobj('Tag','plotGrav_edit_data_a_path'),'String',row); % otherwise set the input file
                     end
-                case 'FILE_IN_TRILOGI'
+                case 'FILE_IN_DATA_B'
                     row = fgetl(fid);count = count + 1; 
                     if strcmp(row,'[]')
-                        set(findobj('Tag','plotGrav_edit_trilogi_path'),'String','');
+                        set(findobj('Tag','plotGrav_edit_data_b_path'),'String','');
                     else
-                        set(findobj('Tag','plotGrav_edit_trilogi_path'),'String',row);
+                        set(findobj('Tag','plotGrav_edit_data_b_path'),'String',row);
                     end
-                case 'FILE_IN_OTHER1'
+                case 'FILE_IN_DATA_C'
                     row = fgetl(fid);count = count + 1; 
                     if strcmp(row,'[]')
-                        set(findobj('Tag','plotGrav_edit_other1_path'),'String','');
+                        set(findobj('Tag','plotGrav_edit_data_c_path'),'String','');
                     else
-                        set(findobj('Tag','plotGrav_edit_other1_path'),'String',row);
+                        set(findobj('Tag','plotGrav_edit_data_c_path'),'String',row);
                     end
-                case 'FILE_IN_OTHER2'
+                case 'FILE_IN_DATA_D'
                     row = fgetl(fid);count = count + 1; 
                     if strcmp(row,'[]')
-                        set(findobj('Tag','plotGrav_edit_other2_path'),'String','');
+                        set(findobj('Tag','plotGrav_edit_data_d_path'),'String','');
                     else
-                        set(findobj('Tag','plotGrav_edit_other2_path'),'String',row);
+                        set(findobj('Tag','plotGrav_edit_data_d_path'),'String',row);
                     end
                 case 'FILE_IN_TIDES'
                     row = fgetl(fid);count = count + 1; 
@@ -156,7 +156,7 @@ try                                                                         % ca
                     if ~strcmp(row,'[]')                                        % proceed/set only if required
                         set(findobj('Tag','plotGrav_edit_admit_factor'),'String',row);
                     end
-                case 'RESAMPLE_IGRAV'
+                case 'RESAMPLE_DATA_A'
                     row = fgetl(fid);count = count + 1;
                     if ~strcmp(row,'[]')                                        % proceed/set only if required
                         set(findobj('Tag','plotGrav_edit_resample'),'String',row);
@@ -174,11 +174,11 @@ try                                                                         % ca
                         end
                     end
                 %% Channels selection/checking
-                case 'UITABLE_IGRAV_L'                                         % iGrav panel, LX axes (X=>for all left-axes)
+                case 'UITABLE_DATA_A_L'                                         % iGrav panel, LX axes (X=>for all left-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                  % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -190,15 +190,15 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
-                case 'UITABLE_IGRAV_R'                                         % iGrav panel, RX axes (X=>for all right-axes)
+                case 'UITABLE_DATA_A_R'                                         % iGrav panel, RX axes (X=>for all right-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                    % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                  % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -210,16 +210,16 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
 
-                case 'UITABLE_TRILOGI_L'                                        % TRiLOGi panel, LX axes (X=>for all left-axes)
+                case 'UITABLE_DATA_B_L'                                        % TRiLOGi panel, LX axes (X=>for all left-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -231,15 +231,15 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
-                case 'UITABLE_TRILOGI_R'                                        % TRiLOGi panel, RX axes (X=>for all right-axes)
+                case 'UITABLE_DATA_B_R'                                        % TRiLOGi panel, RX axes (X=>for all right-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -251,16 +251,16 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
 
-                case 'UITABLE_OTHER1_L'                                         % Other1 panel, LX axes (X=>for all left-axes)
+                case 'UITABLE_DATA_C_L'                                         % Other1 panel, LX axes (X=>for all left-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -272,15 +272,15 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
-                case 'UITABLE_OTHER1_R'                                         % Other1 panel, RX axes (X=>for all right-axes)
+                case 'UITABLE_DATA_C_R'                                         % Other1 panel, RX axes (X=>for all right-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -292,16 +292,16 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
 
-                case 'UITABLE_OTHER2_L'                                         % Other2 panel, LX axes (X=>for all left-axes)
+                case 'UITABLE_DATA_D_L'                                         % Other2 panel, LX axes (X=>for all left-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -313,15 +313,15 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
-                case 'UITABLE_OTHER2_R'                                         % Other2 panel, RX axes (X=>for all right-axes)
+                case 'UITABLE_DATA_D_R'                                         % Other2 panel, RX axes (X=>for all right-axes)
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                                   % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                                 % proceed/set only if required
-                        data_table = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the ui-table.
+                        data_table = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the ui-table.
                         channel_numbers = str2double(chan);                     % convert to double. Keep in mind, that first value shows the axes!
                         if channel_numbers(1) >= 1 || channel_numbers(1) <= 3   % Proceed only if logical input (only 3 plots available)
                             for i = 1:size(data_table,1)                        % run for whole data table. Channels on stated on input will be turned off/unchecked
@@ -333,7 +333,7 @@ try                                                                         % ca
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table); % update ui-table using 
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table); % update ui-table using 
                         plotGrav('uitable_push');                               % Re-plot data
                         pause(1);                                               % wait until plotting finished
                     end
@@ -363,27 +363,27 @@ try                                                                         % ca
                             switch char(in(1))                                  % switch between panels
                                 case '1'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_igrav_all',char(in(3)));
+                                        plotGrav('export_data_a_all',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_igrav_sel',char(in(3)));
+                                        plotGrav('export_data_a_sel',char(in(3)));
                                     end
                                 case '2'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_trilogi_all',char(in(3)));
+                                        plotGrav('export_data_b_all',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_trilogi_sel',char(in(3)));
+                                        plotGrav('export_data_b_sel',char(in(3)));
                                     end
                                 case '3'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_other1_all',char(in(3)));
+                                        plotGrav('export_data_c_all',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_other1_sel',char(in(3)));
+                                        plotGrav('export_data_c_sel',char(in(3)));
                                     end
                                 case '4'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_other2_all',char(in(3)));
+                                        plotGrav('export_data_d_all',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_other2_sel',char(in(3)));
+                                        plotGrav('export_data_d_sel',char(in(3)));
                                     end
                             end
                         end
@@ -730,46 +730,46 @@ try                                                                         % ca
                         plotGrav('set_plot_type',char(row));
                     end 
                 %% Set new channel names
-                case 'SET_CHANNELS_IGRAV'                                       % sets new channel names and update the ui-table of iGrav
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
+                case 'SET_CHANNELS_DATA_A'                                       % sets new channel names and update the ui-table of iGrav
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_igrav',char(row));
+                        plotGrav('edit_channel_names_data_a',char(row));
                     end 
-                case 'SET_CHANNELS_TRILOGI'                                       % sets new channel names and update the ui-table of TRiLOGi
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
+                case 'SET_CHANNELS_DATA_B'                                       % sets new channel names and update the ui-table of TRiLOGi
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_trilogi',char(row));
+                        plotGrav('edit_channel_names_data_b',char(row));
                     end 
-                case 'SET_CHANNELS_OTHER1'                                       % sets new channel names and update the ui-table of Other1
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
+                case 'SET_CHANNELS_DATA_C'                                       % sets new channel names and update the ui-table of Other1
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_other1',char(row));
+                        plotGrav('edit_channel_names_data_c',char(row));
                     end 
-                case 'SET_CHANNELS_OTHER2'                                       % sets new channel names and update the ui-table of Other2
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
+                case 'SET_CHANNELS_DATA_D'                                       % sets new channel names and update the ui-table of Other2
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_other2',char(row));
+                        plotGrav('edit_channel_names_data_d',char(row));
                     end 
                 %% Set new channel units
-                case 'SET_UNITS_IGRAV'                                          % sets new channel units and update the ui-table of iGrav
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_igrav'
+                case 'SET_UNITS_DATA_A'                                          % sets new channel units and update the ui-table of iGrav
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_igrav',char(row));
+                        plotGrav('edit_channel_units_data_a',char(row));
                     end 
-                case 'SET_UNITS_TRILOGI'                                        % sets new channel units and update the ui-table of TRiLOGi
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_igrav'
+                case 'SET_UNITS_DATA_B'                                        % sets new channel units and update the ui-table of TRiLOGi
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_trilogi',char(row));
+                        plotGrav('edit_channel_units_data_b',char(row));
                     end 
-                case 'SET_UNITS_OTHER1'                                         % sets new channel units and update the ui-table of Other1
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_igrav'
+                case 'SET_UNITS_DATA_C'                                         % sets new channel units and update the ui-table of Other1
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_other1',char(row));
+                        plotGrav('edit_channel_units_data_c',char(row));
                     end 
-                case 'SET_UNITS_OTHER2'                                         % sets new channel units and update the ui-table of Other2
-                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_igrav'
+                case 'SET_UNITS_DATA_D'                                         % sets new channel units and update the ui-table of Other2
+                    row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_other2',char(row));
+                        plotGrav('edit_channel_units_data_d',char(row));
                     end 
 
                 %% Load data
@@ -785,23 +785,23 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1;
                     chan = strsplit(row,';');                               % multiple input possible = selected channels
                     if ~strcmp(char(chan),'[]')                             % proceed/set only if required
-                        data_table_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the A ui-table.
-                        data_table_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the B ui-table.
-                        data_table_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the C ui-table.
-                        data_table_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the D ui-table.
+                        data_table_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the A ui-table.
+                        data_table_data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the B ui-table.
+                        data_table_data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the C ui-table.
+                        data_table_data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the D ui-table.
                         % First, uncheck all channels so channels selected
                         % prior to calling this part will NOT be deleted
-                        for i = 1:size(data_table_igrav,1)
-                            data_table_igrav(i,1) = {false};
+                        for i = 1:size(data_table_data_a,1)
+                            data_table_data_a(i,1) = {false};
                         end
-                        for i = 1:size(data_table_trilogi,1)
-                            data_table_trilogi(i,1) = {false};
+                        for i = 1:size(data_table_data_b,1)
+                            data_table_data_b(i,1) = {false};
                         end
-                        for i = 1:size(data_table_other1,1)
-                            data_table_other1(i,1) = {false};
+                        for i = 1:size(data_table_data_c,1)
+                            data_table_data_c(i,1) = {false};
                         end
-                        for i = 1:size(data_table_other2,1)
-                            data_table_other2(i,1) = {false};
+                        for i = 1:size(data_table_data_d,1)
+                            data_table_data_d(i,1) = {false};
                         end
                         
                         % Run for all input values
@@ -810,28 +810,28 @@ try                                                                         % ca
                                 channel_number = str2double(char(chan{i}(2:end))); % get the channel number
                                 switch char(chan{i}(1)) % switch between panels
                                     case 'A' % A == iGrav
-                                        if channel_number <= size(data_table_igrav,1) % check if required channel exists
-                                            data_table_igrav(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        if channel_number <= size(data_table_data_a,1) % check if required channel exists
+                                            data_table_data_a(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
                                         end
-                                    case 'B' % B == trilogi
-                                        if channel_number <= size(data_table_trilogi,1) % check if required channel exists
-                                            data_table_trilogi(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                    case 'B' % B == data_b
+                                        if channel_number <= size(data_table_data_b,1) % check if required channel exists
+                                            data_table_data_b(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
                                         end
                                     case 'C' % C == Other1
-                                        if channel_number <= size(data_table_other1,1) % check if required channel exists
-                                            data_table_other1(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        if channel_number <= size(data_table_data_c,1) % check if required channel exists
+                                            data_table_data_c(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
                                         end
                                     case 'D' % D == Other2
-                                        if channel_number <= size(data_table_other2,1) % check if required channel exists
-                                            data_table_other2(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
+                                        if channel_number <= size(data_table_data_d,1) % check if required channel exists
+                                            data_table_data_d(str2double(chan{i}(2:end)),1) = {true}; % select the channel as given on input
                                         end
                                 end
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table_igrav); % update ui-table
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table_trilogi); % update ui-table 
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table_other1); % update ui-table
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table_other2); % update ui-table
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table_data_a); % update ui-table
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table_data_b); % update ui-table 
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table_data_c); % update ui-table
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table_data_d); % update ui-table
                         % The plotGrav 'compute_remove_channel' removes 
                         % automatically all selected channels
                         plotGrav('compute_remove_channel');                 % Call removing function

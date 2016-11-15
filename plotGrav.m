@@ -70,23 +70,23 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% G U I %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Generate GUI
         % Set default values before reading init file
-        path_igrav = '';                                                    % ROOT file path to iGrav data, i.e., without year, month and day information. 
-        path_trilogi = '';                                                  % Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
-		file_other1 = '';                                                   % Full file name for Other1 time series. If empty ('', or []) not loaded.
-        file_other2 = '';                                                   % Full file name for Other2 time series. If empty ('', or []) not loaded.
-        file_tides = '';                                                    % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
-        file_filter = '';                                                   % File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
+        path_data_a = '';                                                    % ROOT file path to data_a data, i.e., without year, month and day information. 
+        path_data_b = '';                                                  % Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
+		file_data_c = '';                                                   % Full file name for Other1 time series. If empty ('', or []) not loaded.
+        file_data_d = '';                                                   % Full file name for Other2 time series. If empty ('', or []) not loaded.
+        file_tides = '';                                                    % File in *.tsf format with Tidal effect (first channel). This file will be used only if data_a or SG030 data are loaded.
+        file_filter = '';                                                   % File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if data_a or SG030 data are loaded.
         file_logfile = 'plotGrav_LOG_FILE.log';								% Full file name for Log-file with all important information
         path_webcam = '';                                                   % Path to Webcam Snapshots
         earthquake_web = 'http://geofon.gfz-potsdam.de/eqinfo/list.php';	% URL to webpage with earthquake information. This parameter CANNOT be changed within GUI
         earthquake_data = 'http://geofon.gfz-potsdam.de/eqinfo/list.php?latmin=&latmax=&lonmin=&lonmax=&magmin='; % SQL data with list of last earthquakes. This parameter CANNOT be changed within GUI
 		set_admittance = '-3.0';                                            % admittance factor
-        set_calib_factor = '1';                                             % calibration factor = multiplicator (for iGrav only)
-        set_calib_phase = '0';                                              % phase delay in seconds (for iGrav only)
-        set_resample_a = '60';                                              % resampling intraval in second (for iGrav only)
+        set_calib_factor = '1';                                             % calibration factor = multiplicator (for data_a only)
+        set_calib_phase = '0';                                              % phase delay in seconds (for data_a only)
+        set_resample_a = '60';                                              % resampling intraval in second (for data_a only)
         set_start = datevec(now-7);                                         % starting time
         set_stop = datevec(now-1);                                          % end time
-        igrav_prefix = 'iGrav006'                                           % Instrument name for igrav panel data reading
+        data_a_prefix = 'iGrav006';                                          % Instrument name for data_a panel data reading
         % Read initial setting file
         try
             count = 0; % count lines to point to possible error
@@ -131,7 +131,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                                     end
                                 end
                             end
-                        case 'RESAMPLE_A' % affect only iGrav panel and only if iGrav original data is loaded!
+                        case 'RESAMPLE_A' % affect only data_a panel and only if data_a original data is loaded!
                             row = fgetl(fid);count = count + 1; 
                             if strcmp(row,'[]')
                                 set_resample_a = 1; % no resampling for resolution < 2 seconds
@@ -139,33 +139,33 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                                 set_resample_a = row;
                             end
                         %% Setting file paths
-                        case 'FILE_IN_IGRAV'
+                        case 'FILE_IN_DATA_A'
                             row = fgetl(fid);count = count + 1;                 % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
                             if strcmp(row,'[]')                                 % [] symbol means no input                           
-                                path_igrav = '';
+                                path_data_a = '';
                             else
-                                path_igrav = row;                               % otherwise set the input file
+                                path_data_a = row;                               % otherwise set the input file
                             end
-                        case 'FILE_IN_TRILOGI'
+                        case 'FILE_IN_DATA_B'
                             row = fgetl(fid);count = count + 1;                 % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
                             if strcmp(row,'[]')                                 % [] symbol means no input                           
-                                path_trilogi = '';
+                                path_data_b = '';
                             else
-                                path_trilogi = row;                             % otherwise set the input file
+                                path_data_b = row;                             % otherwise set the input file
                             end
-                        case 'FILE_IN_OTHER1'
+                        case 'FILE_IN_DATA_C'
                             row = fgetl(fid);count = count + 1; 
                             if strcmp(row,'[]')
-                                file_other1 = '';
+                                file_data_c = '';
                             else
-                                file_other1 = row;
+                                file_data_c = row;
                             end
-                        case 'FILE_IN_OTHER2'
+                        case 'FILE_IN_DATA_D'
                             row = fgetl(fid);count = count + 1; 
                             if strcmp(row,'[]')
-                                file_other2 = '';
+                                file_data_d = '';
                             else
-                                file_other2 = row;
+                                file_data_d = row;
                             end
                         case 'FILE_IN_TIDES'
                             row = fgetl(fid);count = count + 1; 
@@ -199,12 +199,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                         case 'DATA_A_PREFIX_NAME'
                             row = fgetl(fid);count = count + 1; 
                             if strcmp(row,'[]')
-                                igrav_prefix = 'iGrav006';
+                                data_a_prefix = 'iGrav006';
                             else
-                                igrav_prefix = row;
+                                data_a_prefix = row;
                             end
                         
-                        %% Set admittance & calibration & Drift (iGrav panel)
+                        %% Set admittance & calibration & Drift (data_a panel)
                         case 'ADMITTANCE_FACTOR'
                             row = fgetl(fid);count = count + 1; 
                             if strcmp(row,'[]')
@@ -260,7 +260,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		F1 = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],...       % create main window
                     'Tag','plotGrav_main_menu','Resize','on','Menubar','none','ToolBar','none',...
                     'NumberTitle','off','Color',[0.941 0.941 0.941],...
-                    'Name','plotGrav: plot iGrav data');
+                    'Name','plotGrav: plot gravity time series');
 					
         % Start creating interface menu
 		% Main FILE menu (selection of files: inputs and outputs)
@@ -268,38 +268,38 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			% Sub-FILE menu
 			m10  = 	uimenu(m1,'Label','Select');
 				% Sub-Sub-FILE menu
-				m101 = 	uimenu(m10,'Label','iGrav');
-					uimenu(m101,'Label','Path','CallBack','plotGrav select_igrav');
-					uimenu(m101,'Label','File','CallBack','plotGrav select_igrav_file',...
-                        'Tag','plotGrav_menu_igrav_file','UserData',igrav_prefix);
+				m101 = 	uimenu(m10,'Label','Data A');
+					uimenu(m101,'Label','Path','CallBack','plotGrav select_data_a');
+					uimenu(m101,'Label','File','CallBack','plotGrav select_data_a_file',...
+                        'Tag','plotGrav_menu_data_a_file','UserData',data_a_prefix);
 				m102 = 	uimenu(m10,'Label','TRiLOGi');
-					uimenu(m102,'Label','Path','CallBack','plotGrav select_trilogi');
-					uimenu(m102,'Label','File','CallBack','plotGrav select_trilogi_file');
+					uimenu(m102,'Label','Path','CallBack','plotGrav select_data_b');
+					uimenu(m102,'Label','File','CallBack','plotGrav select_data_b_file');
             m15 = uimenu(m1,'Label','Append channels');
-                uimenu(m15,'Label','to iGrav','CallBack','plotGrav append_channels igrav');
-                uimenu(m15,'Label','to TRiLOGi','CallBack','plotGrav append_channels trilogi');
-                uimenu(m15,'Label','to Other1','CallBack','plotGrav append_channels other1');
-                uimenu(m15,'Label','to Other2','CallBack','plotGrav append_channels other2');
+                uimenu(m15,'Label','to DATA A','CallBack','plotGrav append_channels data_a');
+                uimenu(m15,'Label','to DATA B','CallBack','plotGrav append_channels data_b');
+                uimenu(m15,'Label','to DATA C','CallBack','plotGrav append_channels data_c');
+                uimenu(m15,'Label','to DATA D','CallBack','plotGrav append_channels data_d');
             m12  = 	uimenu(m1,'Label','Export');
-				uimenu(m10,'Label','Other1 file','CallBack','plotGrav select_other1');
-				uimenu(m10,'Label','Other2 file','CallBack','plotGrav select_other2');
+				uimenu(m10,'Label','Other1 file','CallBack','plotGrav select_data_c');
+				uimenu(m10,'Label','Other2 file','CallBack','plotGrav select_data_d');
 				uimenu(m10,'Label','Tides tsf file','CallBack','plotGrav select_tides');
 				uimenu(m10,'Label','Filter file','CallBack','plotGrav select_filter');
 				uimenu(m10,'Label','Webcam path','CallBack','plotGrav select_webcam');
 				uimenu(m10,'Label','7zip exe','CallBack','plotGrav select_unzip');
 				uimenu(m10,'Label','Log File','CallBack','plotGrav select_logfile');
-				m121 = 	uimenu(m12,'Label','iGrav data');
-					uimenu(m121,'Label','All channels','Callback','plotGrav export_igrav_all');
-					uimenu(m121,'Label','Selected channels (L1)','Callback','plotGrav export_igrav_sel');
+				m121 = 	uimenu(m12,'Label','DATA A');
+					uimenu(m121,'Label','All channels','Callback','plotGrav export_data_a_all');
+					uimenu(m121,'Label','Selected channels (L1)','Callback','plotGrav export_data_a_sel');
 				m122  = uimenu(m12,'Label','TRiLOGi data');
-					uimenu(m122,'Label','All channels','Callback','plotGrav export_trilogi_all');
-					uimenu(m122,'Label','Selected channels (L1)','Callback','plotGrav export_trilogi_sel');
+					uimenu(m122,'Label','All channels','Callback','plotGrav export_data_b_all');
+					uimenu(m122,'Label','Selected channels (L1)','Callback','plotGrav export_data_b_sel');
 				m123 = 	uimenu(m12,'Label','Other1 data');
-					uimenu(m123,'Label','All channels','Callback','plotGrav export_other1_all');
-					uimenu(m123,'Label','Selected channels (L1)','Callback','plotGrav export_other1_sel');
+					uimenu(m123,'Label','All channels','Callback','plotGrav export_data_c_all');
+					uimenu(m123,'Label','Selected channels (L1)','Callback','plotGrav export_data_c_sel');
 				m124  = uimenu(m12,'Label','Other2 data');
-					uimenu(m124,'Label','All channels','Callback','plotGrav export_other2_all');
-					uimenu(m124,'Label','Selected channels (L1)','Callback','plotGrav export_other2_sel');
+					uimenu(m124,'Label','All channels','Callback','plotGrav export_data_d_all');
+					uimenu(m124,'Label','Selected channels (L1)','Callback','plotGrav export_data_d_sel');
 			m13 = 	uimenu(m1,'Label','Print');
 				uimenu(m13,'Label','All plots','CallBack','plotGrav print_all',...	
 					'Tag','plotGrav_menu_print_all','UserData',[]); 		% this uimenu will be used to store file name for printing output (plot all)
@@ -426,10 +426,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			uimenu(m4,'Label','Regression','CallBack','plotGrav regression_simple');
 			m45 = uimenu(m4,'Label','Re-sample');
                 uimenu(m45,'Label','All','CallBack','plotGrav compute_decimate');
-                uimenu(m45,'Label','iGrav','CallBack','plotGrav compute_decimate_select igrav');
-                uimenu(m45,'Label','TRiLOGi','CallBack','plotGrav compute_decimate_select trilogi');
-                uimenu(m45,'Label','Other1','CallBack','plotGrav compute_decimate_select other1');
-                uimenu(m45,'Label','Other2','CallBack','plotGrav compute_decimate_select other2');
+                uimenu(m45,'Label','DATA A','CallBack','plotGrav compute_decimate_select data_a');
+                uimenu(m45,'Label','DATA B','CallBack','plotGrav compute_decimate_select data_b');
+                uimenu(m45,'Label','DATA C','CallBack','plotGrav compute_decimate_select data_c');
+                uimenu(m45,'Label','DATA D','CallBack','plotGrav compute_decimate_select data_d');
 			m41 =  uimenu(m4,'Label','Spectral analysis');
 				uimenu(m41,'Label','Max valid interval','Callback','plotGrav compute_spectral_valid');
 				uimenu(m41,'Label','Ignore NaNs (interpolate)','Callback','plotGrav compute_spectral_interp');
@@ -447,15 +447,15 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				% Sub-Sub-EDIT menu
                 uimenu(m52,'Label','Copy channel','CallBack','plotGrav compute_copy_channel');
                 m521 = uimenu(m52,'Label','Channel names');
-                    uimenu(m521,'Label','iGrav','CallBack','plotGrav edit_channel_names_igrav');
-                    uimenu(m521,'Label','TRiLOGi','CallBack','plotGrav edit_channel_names_trilogi');
-                    uimenu(m521,'Label','Other1','CallBack','plotGrav edit_channel_names_other1');
-                    uimenu(m521,'Label','Other2','CallBack','plotGrav edit_channel_names_other2');
+                    uimenu(m521,'Label','DATA A','CallBack','plotGrav edit_channel_names_data_a');
+                    uimenu(m521,'Label','DATA B','CallBack','plotGrav edit_channel_names_data_b');
+                    uimenu(m521,'Label','DATA C','CallBack','plotGrav edit_channel_names_data_c');
+                    uimenu(m521,'Label','DATA D','CallBack','plotGrav edit_channel_names_data_d');
                 m523 = uimenu(m52,'Label','Channel units');
-                    uimenu(m523,'Label','iGrav','CallBack','plotGrav edit_channel_units_igrav');
-                    uimenu(m523,'Label','TRiLOGi','CallBack','plotGrav edit_channel_units_trilogi');
-                    uimenu(m523,'Label','Other1','CallBack','plotGrav edit_channel_units_other1');
-                    uimenu(m523,'Label','Other2','CallBack','plotGrav edit_channel_units_other2');
+                    uimenu(m523,'Label','DATA A','CallBack','plotGrav edit_channel_units_data_a');
+                    uimenu(m523,'Label','DATA B','CallBack','plotGrav edit_channel_units_data_b');
+                    uimenu(m523,'Label','DATA C','CallBack','plotGrav edit_channel_units_data_c');
+                    uimenu(m523,'Label','DATA D','CallBack','plotGrav edit_channel_units_data_d');
                 m522 = uimenu(m52,'Label','Object');
                     uimenu(m522,'Label','Ellipse','CallBack','plotGrav insert_circle',...
                         'Tag','plotGrav_insert_circle','UserData',[]); 			% UserData will be used to store references to inserted circles (to have the option to delete them)
@@ -467,10 +467,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                         'Tag','plotGrav_insert_rectangle','UserData',[]); 		% UserData will be used to store references to inserted rectangles (to have the option to delete them)
 			m51 = uimenu(m5,'Label','Remove');
                 m511 = uimenu(m51,'Label','Ambiguities');
-                    uimenu(m511,'Label','iGrav','CallBack','plotGrav compute_remove_ambiguities igrav');
-                    uimenu(m511,'Label','TRiLOGi','CallBack','plotGrav compute_remove_ambiguities trilogi');
-                    uimenu(m511,'Label','Other1','CallBack','plotGrav compute_remove_ambiguities other1');
-                    uimenu(m511,'Label','Other2','CallBack','plotGrav compute_remove_ambiguities other2');
+                    uimenu(m511,'Label','DATA A','CallBack','plotGrav compute_remove_ambiguities data_a');
+                    uimenu(m511,'Label','DATA B','CallBack','plotGrav compute_remove_ambiguities data_b');
+                    uimenu(m511,'Label','DATA C','CallBack','plotGrav compute_remove_ambiguities data_c');
+                    uimenu(m511,'Label','DATA D','CallBack','plotGrav compute_remove_ambiguities data_d');
 				uimenu(m51,'Label','Channel','CallBack','plotGrav compute_remove_channel');
 					% Sub-Sub-Sub EDIT menu
 				m514 = uimenu(m51,'Label','Inserted');
@@ -506,23 +506,23 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         % automatically the plotting section.
 		p3 = uipanel(F1,'Units','normalized','Position',[0.01,0.76,0.265,0.33-0.10],... % Settings panel (uppermost panel)
 				'Title','Settings','FontSize',9,'Tag','plotGrav_setting_panel');
-        p1 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','iGrav','R1','R2','R3'},... % first panel for iGrav/SG030 (upper left)
+        p1 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','A','R1','R2','R3'},... % first A panel 
 				'Position',[0.01,0.25,0.13,0.50],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_igrav_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_igrav_file',...
+				'Tag','plotGrav_uitable_data_a_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_data_a_file',...
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],...
 				'CellEditCallback','plotGrav uitable_push','UserData',[]);			% UserData container will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
-        p2 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','TRiLOGi','R1','R2','R3'},...% second panel for TRiLOGi data (upper right)
+        p2 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','B','R1','R2','R3'},...% second panel for TRiLOGi data (upper right)
 				'Position',[0.145,0.25,0.13,0.50],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_trilogi_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_trilogi_file',...
+				'Tag','plotGrav_uitable_data_b_data','Visible','on','FontSize',9,'RowName',[],'ButtonDownFcn','plotGrav select_data_b_file',...
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],...
 				'CellEditCallback','plotGrav uitable_push','UserData',[]);		% UserData container will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
-        p4 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','Other1','R1','R2','R3'},... % Third panel for Other1 data (lower left)
+        p4 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','C','R1','R2','R3'},... % Third panel for Other1 data (lower left)
 				'Position',[0.01,0.02,0.13,0.22],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_other1_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_other1',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
+				'Tag','plotGrav_uitable_data_c_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_data_c',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],'CellEditCallback','plotGrav uitable_push');
-        p5 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','Other2','R1','R2','R3'},...
+        p5 = uitable(F1,'Units','normalized','ColumnName',{'L1','L2','L3','D','R1','R2','R3'},...
 				'Position',[0.145,0.02,0.13,0.22],'ColumnFormat',{'logical','logical','logical','char','logical','logical','logical'},...
-				'Tag','plotGrav_uitable_other2_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_other2',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
+				'Tag','plotGrav_uitable_data_d_data','Visible','on','FontSize',9,'RowName',[],'UserData',[],'ButtonDownFcn','plotGrav select_data_d',... % UserData will be used to store check/unchecked fields for this panel (use as switch to plot selected time series)
 				'ColumnWidth',{24,24,24,'auto',24,24,24},'ColumnEditable',[true,true,true,false,true,true,true],'CellEditCallback','plotGrav uitable_push');
         
 		% Settings panel: Time
@@ -566,10 +566,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		% Settings panel: calibration and admittance
         uicontrol(p3,'Style','Text','String','Calibration:','units','normalized',...
                   'Position',[0.54,0.565+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String',set_calib_factor,'units','normalized',...	% default calibration factor (iGrav)
+        uicontrol(p3,'Style','Edit','String',set_calib_factor,'units','normalized',...	% default calibration factor
                   'Position',[0.70,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_factor');
-        uicontrol(p3,'Style','Edit','String',set_calib_phase,'units','normalized',...	% default phase delay (iGrav)	
+        uicontrol(p3,'Style','Edit','String',set_calib_phase,'units','normalized',...	% default phase delay	
                   'Position',[0.83,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_delay');
         uicontrol(p3,'Style','Text','String','nm/s^2 / V','units','normalized',...
@@ -599,7 +599,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         end
         uicontrol(p3,'Style','Text','String','Re-sample:','units','normalized',...
                   'Position',[0.54,0.59,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String',set_resample_a,'units','normalized',...		% default re-sampling interval (of iGrav/SG030). Will not be used for TRiLOGi, Other1 and Other2 time series
+        uicontrol(p3,'Style','Edit','String',set_resample_a,'units','normalized',...		% default re-sampling interval (of DATA A). Will not be used for TRiLOGi, Other1 and Other2 time series
                   'Position',[0.7,0.595,0.12,0.09],'FontSize',9,'Tag','plotGrav_edit_resample','backgroundcolor','w');
         uicontrol(p3,'Style','Text','String','seconds','units','normalized',...
                   'Position',[0.83,0.59,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
@@ -663,30 +663,30 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		% Auxiliary Panel with Paths/files (invisible). A window with the same content will be shown after pressing 'View->File paths'
         p30 = uipanel(F1,'Units','normalized','Position',[0.01,0.76,0.265,0.33-0.10],...
                      'Title','Settings','FontSize',9,'Visible','off');
-		uicontrol(p30,'Style','Text','String','iGrav path:','units','normalized',...
-                  'Tag','plotGrav_text_igrav','UserData',[],...								% Use UseData to store iGrav units
+		uicontrol(p30,'Style','Text','String','DATA A path:','units','normalized',...
+                  'Tag','plotGrav_text_data_a','UserData',[],...								% Use UseData to store data_a units
                   'Position',[0.02,0.89,0.13,0.06],'FontSize',9,'HorizontalAlignment','left');
-		uicontrol(p30,'Style','Edit','String',path_igrav,'units','normalized',...			% set default igrav path
+		uicontrol(p30,'Style','Edit','String',path_data_a,'units','normalized',...			% set default data_a path
 				  'Position',[0.17,0.90,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-				  'Tag','plotGrav_edit_igrav_path','HorizontalAlignment','left','UserData',[]);
+				  'Tag','plotGrav_edit_data_a_path','HorizontalAlignment','left','UserData',[]);
 		uicontrol(p30,'Style','Text','String','TRiLOGi:','units','normalized',...
-				  'Tag','plotGrav_text_trilogi','UserData',[],...							% Use UseData to store TRiLOGi units
+				  'Tag','plotGrav_text_data_b','UserData',[],...							% Use UseData to store TRiLOGi units
 				  'Position',[0.02,0.82,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-		uicontrol(p30,'Style','Edit','String',path_trilogi,'units','normalized',...			% set default TRiLOGi path
+		uicontrol(p30,'Style','Edit','String',path_data_b,'units','normalized',...			% set default TRiLOGi path
 				  'Position',[0.17,0.83,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-				  'Tag','plotGrav_edit_trilogi_path','HorizontalAlignment','left','UserData',[]);
+				  'Tag','plotGrav_edit_data_b_path','HorizontalAlignment','left','UserData',[]);
 		uicontrol(p30,'Style','Text','String','Other1 file:','units','normalized','UserData',[],...
 				  'Position',[0.02,0.75,0.145,0.06],'FontSize',9,'HorizontalAlignment','left',...
-				  'Tag','plotGrav_text_other1','UserData',[]);								% Use UseData to store Ohter1 units
-		uicontrol(p30,'Style','Edit','String',file_other1,'units','normalized','UserData',[],...% set default other1 file name
+				  'Tag','plotGrav_text_data_c','UserData',[]);								% Use UseData to store Ohter1 units
+		uicontrol(p30,'Style','Edit','String',file_data_c,'units','normalized','UserData',[],...% set default data_c file name
 				  'Position',[0.17,0.76,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-				  'Tag','plotGrav_edit_other1_path','HorizontalAlignment','left','UserData',[]);
+				  'Tag','plotGrav_edit_data_c_path','HorizontalAlignment','left','UserData',[]);
 		uicontrol(p30,'Style','Text','String','Other2 file:','units','normalized',...
 				  'Position',[0.02,0.68,0.145,0.06],'FontSize',9,'HorizontalAlignment','left',...
-				  'Tag','plotGrav_text_other2','UserData',[]);								% Use UseData to store Ohter2 units
-		uicontrol(p30,'Style','Edit','String',file_other2,'units','normalized','UserData',[],...% set default Other2 file name
+				  'Tag','plotGrav_text_data_d','UserData',[]);								% Use UseData to store Ohter2 units
+		uicontrol(p30,'Style','Edit','String',file_data_d,'units','normalized','UserData',[],...% set default Other2 file name
 				  'Position',[0.17,0.69,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-				  'Tag','plotGrav_edit_other2_path','HorizontalAlignment','left');
+				  'Tag','plotGrav_edit_data_d_path','HorizontalAlignment','left');
 		uicontrol(p30,'Style','Text','String','Tide/Pol file:','units','normalized',...
 				  'Position',[0.02,0.61,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
 		uicontrol(p30,'Style','Edit','String',file_tides,'units','normalized',...			% set default tides file
@@ -739,7 +739,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
     switch in_switch														% Switch between code blocs
 %%%%%%%%%%%%%%%%%%% L O A D I N G   D A T A %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		case 'load_all_data'												% Start loading data. This part starts after pressing 'Load data' button.			
-			plotGrav('reset_tables');	                                   	% reset all tables. Set all uitables (igrav,trilogi,other1,other2) to default values. The tables will be updated after loading data.
+			plotGrav('reset_tables');	                                   	% reset all tables. Set all uitables (data_a,data_b,data_c,data_d) to default values. The tables will be updated after loading data.
 			%% Get user inputs
 			set(findobj('Tag','plotGrav_text_status'),'String','Starting...');drawnow % Send message to status bar (for user). drawnow = right now
 			% Time
@@ -752,10 +752,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						str2double(get(findobj('Tag','plotGrav_edit_time_stop_day'),'String')),...   % day
 						str2double(get(findobj('Tag','plotGrav_edit_time_stop_hour'),'String')),0,0];% hour (minutes and seconds == 0)  
 			% File paths/names
-			file_path_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'String'); 		% iGrav path (stored in GUI UserData). The files will be loaded later.
-			file_path_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'String'); 	% get TRiLOGi path
-			file_path_other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'String'); 	% get Ohter1 path
-			file_path_other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'String'); 	% get Other2 path
+			file_path_data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'String'); 		% data_a path (stored in GUI UserData). The files will be loaded later.
+			file_path_data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'String'); 	% get TRiLOGi path
+			file_path_data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'String'); 	% get Ohter1 path
+			file_path_data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'String'); 	% get Other2 path
 			tide_file = get(findobj('Tag','plotGrav_edit_tide_file'),'String'); 			% get tidal effect file
 			filter_file = get(findobj('Tag','plotGrav_edit_filter_file'),'String'); 		% get filter file
 			% Calibration factor, admittance and drift approximation. Get values only. Will be used later.
@@ -764,11 +764,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			admittance_factor = str2double(get(findobj('Tag','plotGrav_edit_admit_factor'),'String')); % get admittance factor (same as for 'calibration factor', In addition, will be used when calling plotGrav_Atmacs_and_EOP.m function)
 			drift_fit = get(findobj('Tag','plotGrav_pupup_drift'),'Value');  				% get drift switch,1 = none, 2 = linear,... (same as for 'calibration factor')
 			% Additional variables
-			igrav_prefix = get(findobj('Tag','plotGrav_menu_igrav_file'),'UserData'); % iGrav file prefix (used during data loading). No prefix for SG030, the selected input file (file_path_igrav) will be used also for file prefix.
-			trilogi_suffix = '_ENC12345.tsf';                               % trilogi file suffix (except 001, 002,...)
-			trilogi_channels = 40;                                          % number of trilogi channels
-			igrav_channels = 21;                                            % number of igrav channels (original file)
-			igrav_time_resolution = 1;                                      % igrav time sampling in seconds (fixed, iGrav and SG030 measure with 1 second resolutin => do no use for 10 second data)
+			data_a_prefix = get(findobj('Tag','plotGrav_menu_data_a_file'),'UserData'); % DATA A file prefix (used during data loading). No prefix for SG030, the selected input file (file_path_data_a) will be used also for file prefix.
+			data_b_suffix = '_ENC12345.tsf';                               % data_b file suffix (except 001, 002,...)
+			data_b_channels = 40;                                          % number of data_b channels
+			data_a_channels = 21;                                            % number of DATA A channels (original file)
+			data_a_time_resolution = 1;                                      % DATA A time sampling in seconds (fixed, iGrav and SG030 measure with 1 second resolutin => do no use for 10 second data)
 			time_in(:,7) = [datenum(start_time):1:datenum(end_time)]';      % Convert the input starting time and ending time to matlab format and create a time vector. Time step is ONE day = one file per day written by iGrav or SG
 			time_in(:,1:6) = datevec(time_in(:,7));                         % crate input time matrix (calendar date + time), e.g., [2015,3,1,0,0,0,736024]. These information will be used to create file name to be loaded.            
 			leap_second = [2015 06 30 23 59 59];                            % excact data for of leap seconds. These values will be used to find the leap second and to REMOVE it (otherwise redundant data permiting filterin = non-monotonic time vector)
@@ -782,67 +782,67 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			fprintf(fid,'plotGrav LogFile: recording since pressing Load Data button\nLoading data between: %04d/%02d/%02d %02d  - %04d/%02d/%02d %02d\n',...
 				time_in(1,1),time_in(1,2),time_in(1,3),time_in(1,4),time_in(end,1),time_in(end,2),time_in(end,3),time_in(end,4));
             
-			%% Load iGrav data
-			if ~isempty(file_path_igrav)                                    % start following code only if igrav/SG file path/name is selected. Otherwise set iGrav/SG data to []
-				time.igrav = [];                                            % prepare variable (time.igrav will store time in matlab format). The variable name '.igrav' is used also for SG data or other data loaded with iGrav time series loader.
-				data.igrav = [];                                            % prepare variable (data.igrav will store all tsoft channels/observed time series)
-				igrav_loaded = 0;                                           % aux. variable to check if at least one file has been loaded. 
+			%% Load DATA A data
+			if ~isempty(file_path_data_a)                                    % start following code only if data_a/SG file path/name is selected. Otherwise set data_a/SG data to []
+				time.data_a = [];                                            % prepare variable (time.data_a will store time in matlab format). The variable name '.data_a' is used also for SG data or other data loaded with iGrav time series loader.
+				data.data_a = [];                                            % prepare variable (data.data_a will store all tsoft channels/observed time series)
+				data_a_loaded = 0;                                           % aux. variable to check if at least one file has been loaded. 
                                                                             % This switch will be used for further time series correction. 0 == no file loaded, 1 = at least one iGrav file (to be corrected), 2 = 'ready' file that does not need any further correction, 3 = SG030 file (to be corrected) 
-				if strcmp(file_path_igrav(end-3:end),'.tsf')                % switch between file/folder input
+				if strcmp(file_path_data_a(end-3:end),'.tsf')                % switch between file/folder input
                     % LOAD Tsoft file: the time series will not be
                     % corrected for tide or filtered. 'Just loading, no
                     % stacking'
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/tsf data...');drawnow % send message to status bar
-                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,1,start_time,end_time,fid,'iGrav');
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',...
+                    [time.data_a,data.data_a,channels_data_a,units_data_a,uitable_data] = plotGrav_loadData(file_path_data_a,1,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',...
                             uitable_data,'UserData',uitable_data); % store the updated ui-table.
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store the loaded channel units 
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-                    if ~isempty(data.igrav)
-                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a); % store the loaded channel units 
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a); % store channel names
+                    if ~isempty(data.data_a)
+                        data_a_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.data_a
                     end
-				elseif strcmp(file_path_igrav(end-3:end),'.mat')                            
+				elseif strcmp(file_path_data_a(end-3:end),'.mat')                            
                     % LOAD MAT file, i.e. in plotGrav supported file format (array): containing following layers: 
                     % *.data (vector or matrix), *.time (matlab format or civil calender format), *.channels (cell array), *.units (cell array). 
                     % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/mat data...');drawnow % send message to status bar
-                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,2,start_time,end_time,fid,'iGrav');
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                    [time.data_a,data.data_a,channels_data_a,units_data_a,uitable_data] = plotGrav_loadData(file_path_data_a,2,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
                             uitable_data,'UserData',uitable_data);
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-                    if ~isempty(data.igrav)
-                        igrav_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.igrav
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a); % store channel names
+                    if ~isempty(data.data_a)
+                        data_a_loaded = 2;                               % set the switch to 2 = no further correction will be applied to data.data_a
                     end
-                elseif strcmp(file_path_igrav(end-3:end),'.dat')
+                elseif strcmp(file_path_data_a(end-3:end),'.dat')
                     % LOAD DAT file, i.e., soil moisture cluste data stored
                     % in csv format. This howerver, requred fixed header (4
                     % rows) and delimiter (','). 'Loading, no stacking'
                     set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/dat data...');drawnow % send message to status bar
-                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,3,start_time,end_time,fid,'iGrav');
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                    [time.data_a,data.data_a,channels_data_a,units_data_a,uitable_data] = plotGrav_loadData(file_path_data_a,3,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
                             uitable_data,'UserData',uitable_data);
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-                    if ~isempty(data.igrav)
-                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a); % store channel names
+                    if ~isempty(data.data_a)
+                        data_a_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.data_a
                     end
-                elseif strcmp(file_path_igrav(end-3:end),'.csv')
+                elseif strcmp(file_path_data_a(end-3:end),'.csv')
                     % LOAD CSV file, i.e., data in Dygraph csv format.
                     % Requres fixed header (1 rows) and delimiter (','). 
                     % 'Loading, no stacking'
                     set(findobj('Tag','plotGrav_text_status'),'String','Loading iGrav/csv data...');drawnow % send message to status bar
-                    [time.igrav,data.igrav,channels_igrav,units_igrav,uitable_data] = plotGrav_loadData(file_path_igrav,4,start_time,end_time,fid,'iGrav');
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
+                    [time.data_a,data.data_a,channels_data_a,units_data_a,uitable_data] = plotGrav_loadData(file_path_data_a,4,start_time,end_time,fid,'iGrav');
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',... % update the ui-table / store the ui-table data (not time series)
                             uitable_data,'UserData',uitable_data);
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav); % store loaded units
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav); % store channel names
-                    if ~isempty(data.igrav)
-                        igrav_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.igrav
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a); % store loaded units
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a); % store channel names
+                    if ~isempty(data.data_a)
+                        data_a_loaded = 2;                                   % set the switch to 2 = no further correction will be applied to data.data_a
                     end
-				elseif strcmp(file_path_igrav(end-3:end-2),'.0') 
+				elseif strcmp(file_path_data_a(end-3:end-2),'.0') 
                     % LOAD SG0XX files, i.e. SG0XX data stored in tsf format
-                    % file_path_igrav = full file name of one of the files with SG0XX data. Not Path, but file!
+                    % file_path_data_a = full file name of one of the files with SG0XX data. Not Path, but file!
                     % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
                     % These time series will be stacked, filtered and calibrated (only lower sensor)
                     % Additionaly, these time series will be corrected for tides, atmosphere and drift (if selected so). 'Loading, and stacking'
@@ -851,7 +851,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						try  
 							set(findobj('Tag','plotGrav_text_status'),'String',...
 								sprintf('Loading SG0XX data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow % send (specific) message to status bar
-							file_name = sprintf('%s%02d%02d%02d%s',file_path_igrav(1:end-10),abs(time_in(i,1)-2000),time_in(i,2),time_in(i,3),file_path_igrav(end-3:end)); % create file name: file path and file name = file_path_igrav. Last 10 characters specify the year, month and day of the file.
+							file_name = sprintf('%s%02d%02d%02d%s',file_path_data_a(1:end-10),abs(time_in(i,1)-2000),time_in(i,2),time_in(i,3),file_path_data_a(end-3:end)); % create file name: file path and file name = file_path_data_a. Last 10 characters specify the year, month and day of the file.
 							[ttime,tdata] = plotGrav_loadtsf(file_name);    % load file and store to temporary variables. Do not read channel names and units, as these are known and constant.
                             % Now, check if the loaded time series contains non-constant sampling, i.e., missing data.
                             % If so, try to interpolate the missing intervals but only if the missing interval does not exceed 10 seconds!
@@ -872,7 +872,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								clear ntime ndata;
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX NaNs interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
 							end
-							igrav_loaded = 3;                               % 3 => SG030 loaded time series will be corrected/calibrated/filtered. At least one of the inteded files must be loaded (it is not necesary to load all files)
+							data_a_loaded = 3;                               % 3 => SG030 loaded time series will be corrected/calibrated/filtered. At least one of the inteded files must be loaded (it is not necesary to load all files)
                         catch error_message
 							ttime = datenum(time_in(i,1:3));                % if data has not been loaded correctly, add a dummy for stacking (to make sure the missing files result in missing data!)
 							tdata(1,1:3) = NaN;                             % insert NaNs (see comment above)
@@ -886,24 +886,24 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                             end
 						end
-						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
-						data.igrav = vertcat(data.igrav,tdata);             % stack the temporary variable on already loaded ones (data)
+						time.data_a = vertcat(time.data_a,ttime);             % stack the temporary variable on already loaded ones (the time.data_a variable has been declared in the beginning of the iGrav section)
+						data.data_a = vertcat(data.data_a,tdata);             % stack the temporary variable on already loaded ones (data)
 						clear ttime tdata file_name                         % remove used variables    
 					end
-					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values
-						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
+					if length(find(isnan(data.data_a))) ~= numel(data.data_a) % check if loaded data contains numeric values
+						data.data_a(time.data_a<datenum(start_time) | time.data_a>datenum(end_time),:) = []; % remove time epochs out of requested range
+						time.data_a(time.data_a<datenum(start_time) | time.data_a>datenum(end_time),:) = []; % do the same for time vector
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'SG0XX data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
-						data.igrav = [];                                    % otherwise empty
-						time.igrav = [];
+						data.data_a = [];                                    % otherwise empty
+						time.data_a = [];
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in SG0XX input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
 					end
-					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % update the ui-table
-						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
+					set(findobj('Tag','plotGrav_uitable_data_a_data'),'data',... % update the ui-table
+						get(findobj('Tag','plotGrav_uitable_data_a_data'),'UserData')); 
 				else
                     % LOAD iGrav files, i.e. iGrav-006 data stored in tsf format
-                    % file_path_igrav = file path (not name) to all input data
+                    % file_path_data_a = file path (not name) to all input data
                     % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
                     % These time series will be stacked, filtered and calibrated
                     % Additionaly, these time series will be corrected for tides, atmosphere and drift (if selected so). 'Loading, and stacking'
@@ -912,15 +912,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 						try  
                             % First find out if sub-folder with daily iGrav data exists, i.e. 
                             % if the data sent by iGrav has been unzipped. 
-                            if exist(fullfile(file_path_igrav,...           % if folder /iGrav006_YYYY/DDMM/ does not exists, it is assumed the data is still unzipped
-                                sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),'dir') ~= 7 % exist function return 7 if such folder exists
-                                file_in = fullfile(file_path_igrav,...      % create input file name = file path + file prefix + date + .zip
-                                    sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%s_%04d%02d%02d.zip',igrav_prefix,time_in(i,1),time_in(i,2),time_in(i,3)));
-                                file_out = fullfile(file_path_igrav,...     % create output PATH = file path + folder with year (iGrav are zipped in folders: /DDMM/
-                                    sprintf('%s_%04d',igrav_prefix,time_in(i,1))); 
+                            if exist(fullfile(file_path_data_a,...           % if folder /iGrav006_YYYY/DDMM/ does not exists, it is assumed the data is still unzipped
+                                sprintf('%s_%04d',data_a_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),'dir') ~= 7 % exist function return 7 if such folder exists
+                                file_in = fullfile(file_path_data_a,...      % create input file name = file path + file prefix + date + .zip
+                                    sprintf('%s_%04d',data_a_prefix,time_in(i,1)),sprintf('%s_%04d%02d%02d.zip',data_a_prefix,time_in(i,1),time_in(i,2),time_in(i,3)));
+                                file_out = fullfile(file_path_data_a,...     % create output PATH = file path + folder with year (iGrav are zipped in folders: /DDMM/
+                                    sprintf('%s_%04d',data_a_prefix,time_in(i,1))); 
                                 if exist(file_in,'file') == 2               % 2 = file exist
                                     set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
-                                        sprintf('Unzipping %s data...%04d/%02d/%02d',time_in(i,1),igrav_prefix,time_in(i,2),time_in(i,3)));drawnow 
+                                        sprintf('Unzipping %s data...%04d/%02d/%02d',time_in(i,1),data_a_prefix,time_in(i,2),time_in(i,3)));drawnow 
                                     unzip(file_in,file_out);                % unzip using built in matlab function
 %                                 else
 %                                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file unzipping: %s does NOT exist (%04d/%02d/%02d %02d:%02d)\n',file_in,ty,tm,td,th,tmm); % write to logfile
@@ -929,8 +929,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             % Start loading iGrav data
 							set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
 								sprintf('Loading iGrav data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow 
-							file_name = fullfile(file_path_igrav,...        % create input (not zip) file name = file path + file prefix + date + .tsf
-								sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3)),sprintf('Data_%s_%02d%02d.tsf',igrav_prefix,time_in(i,2),time_in(i,3)));
+							file_name = fullfile(file_path_data_a,...        % create input (not zip) file name = file path + file prefix + date + .tsf
+								sprintf('%s_%04d',data_a_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3)),sprintf('Data_%s_%02d%02d.tsf',data_a_prefix,time_in(i,2),time_in(i,3)));
 							[ttime,tdata] = plotGrav_loadData(file_name,1,[],[],fid,'iGrav'); % load file and store to temporary variables (do not read channels and units as these are known and constant)
                             % Check if the loaded time series contains non-constant sampling, i.e., missing data (same as for SG030).
                             % If so, try to interpolate the missing intervals but only if the missing interval does not exceed 10 seconds!
@@ -949,10 +949,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 								% It is important to write to the logfile that data has been interpolated
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav missing data interpolation (max 10 seconds):%s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % write to logfile
                             end
-							igrav_loaded = 1;                               % 1 => iGrav time series will be corrected/calibrated filtered
+							data_a_loaded = 1;                               % 1 => iGrav time series will be corrected/calibrated filtered
                         catch error_message
 							ttime = datenum(time_in(i,1:3));                % if data has not been loaded correctly, add a dummy to make sure the missig file results in missing data
-							tdata(1,1:igrav_channels) = NaN;                % insert NaNs. Same as above.
+							tdata(1,1:data_a_channels) = NaN;                % insert NaNs. Same as above.
 							if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF') % switch between error IDs. See plotGrav_loadtsf.m function for error handling
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                             elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
@@ -963,118 +963,118 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                             end
 						end
-						time.igrav = vertcat(time.igrav,ttime);             % stack the temporary variable on already loaded ones (the time.igrav variable has been declared in the beginning of the iGrav section)
-						data.igrav = vertcat(data.igrav,tdata);             % do the same for data matrices
+						time.data_a = vertcat(time.data_a,ttime);             % stack the temporary variable on already loaded ones (the time.data_a variable has been declared in the beginning of the iGrav section)
+						data.data_a = vertcat(data.data_a,tdata);             % do the same for data matrices
 						clear ttime tdata file_name                         % remove used variables    
 					end
-					if length(find(isnan(data.igrav))) ~= numel(data.igrav) % check if loaded data contains numeric values: for logfile 
-						data.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % remove time epochs out of requested range
-						time.igrav(time.igrav<datenum(start_time) | time.igrav>datenum(end_time),:) = []; % do the same for time vector
+					if length(find(isnan(data.data_a))) ~= numel(data.data_a) % check if loaded data contains numeric values: for logfile 
+						data.data_a(time.data_a<datenum(start_time) | time.data_a>datenum(end_time),:) = []; % remove time epochs out of requested range
+						time.data_a(time.data_a<datenum(start_time) | time.data_a>datenum(end_time),:) = []; % do the same for time vector
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 					else
-						data.igrav = [];                                    % otherwise empty
-						time.igrav = [];
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_igrav,ty,tm,td,th,tmm);
+						data.data_a = [];                                    % otherwise empty
+						time.data_a = [];
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data in iGrav input file (in selected time interval): %s (%04d/%02d/%02d %02d:%02d)\n',file_path_data_a,ty,tm,td,th,tmm);
 					end
-					set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % store the ui-table data
-						get(findobj('Tag','plotGrav_uitable_igrav_data'),'UserData')); 
+					set(findobj('Tag','plotGrav_uitable_data_a_data'),'data',... % store the ui-table data
+						get(findobj('Tag','plotGrav_uitable_data_a_data'),'UserData')); 
 				end
             else                                                        
                 % Only if file_path_igra == []; 
-				data.igrav = [];                                            % if no iGrav paht selected, set time and data to []
-				time.igrav = [];
-				set(findobj('Tag','plotGrav_uitable_igrav_data'),'data',... % set ui-table to 'NotAvailable' (one row only)
+				data.data_a = [];                                            % if no iGrav paht selected, set time and data to []
+				time.data_a = [];
+				set(findobj('Tag','plotGrav_uitable_data_a_data'),'data',... % set ui-table to 'NotAvailable' (one row only)
 					{false,false,false,'NotAvailable',false,false,false}); % update table
-				igrav_loaded = 0;                                           % 0 => no further processing of iGrav time series
+				data_a_loaded = 0;                                           % 0 => no further processing of iGrav time series
 				[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data not selected/loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
 			end
 			
 			%% Load TRiLOGi data
-            trilogi_loaded = 0;                                             % aux. variable to check if at least one file has been loaded
+            data_b_loaded = 0;                                             % aux. variable to check if at least one file has been loaded
             % Switch beween file formats
-            if isempty(file_path_trilogi)
+            if isempty(file_path_data_b)
                 fprintf(fid,'No TRiLOGi data loaded\n');                    % if no or empty TRiLOGi path has been selected
-                time.trilogi = [];
-                data.trilogi = [];
-                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                time.data_b = [];
+                data.data_b = [];
+                set(findobj('Tag','plotGrav_uitable_data_b_data'),'data',...
                     {false,false,false,'NotAvailable',false,false,false});  % update ui-table
-            elseif strcmp(file_path_trilogi(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
+            elseif strcmp(file_path_data_b(end-3:end),'.tsf')                  %  Use last 4 characters to switch between formats
                 % LOAD Tsoft file: the file contains the whole time series. 'Just loading, no stacking'
                 % Only condition is, the file is stored in tsoft format
                 % with standard header. The TRiLOGi data are NEVER corrected/calibrated/filtered!
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/tsf data...');drawnow % send message to status bar
-                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,1,start_time,end_time,fid,'TRiLOGi');
-                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                [time.data_b,data.data_b,channels_data_b,units_data_b,uitable_data] = plotGrav_loadData(file_path_data_b,1,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',... % update the ui-table
                         uitable_data,'UserData',uitable_data);
-                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
-                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
-                if ~isempty(data.trilogi)
-                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                set(findobj('Tag','plotGrav_text_data_b'),'UserData',units_data_b); % store data_b units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels_data_b); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.data_b)
+                    data_b_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.data_a
                 end
-			elseif strcmp(file_path_trilogi(end-3:end),'.mat')              
+			elseif strcmp(file_path_data_b(end-3:end),'.mat')              
                 % LOAD MAT file, i.e. in plotGrav supported file format (array): containing following layers: 
                 % *.data (vector or matrix), *.time (matlab format or civil calender format), *.channels (cell array), *.units (cell array). 
                 % File may contain other channels, but the above stated are mandatory. 'Just loading, no stacking'
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/mat data...');drawnow % send message to status bar
-                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,2,start_time,end_time,fid,'TRiLOGi');
-                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                [time.data_b,data.data_b,channels_data_b,units_data_b,uitable_data] = plotGrav_loadData(file_path_data_b,2,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',... % update the ui-table
                         uitable_data,'UserData',uitable_data);
-                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
-                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
-                if ~isempty(data.trilogi)
-                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                set(findobj('Tag','plotGrav_text_data_b'),'UserData',units_data_b); % store data_b units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels_data_b); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.data_b)
+                    data_b_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.data_a
                 end
-            elseif strcmp(file_path_trilogi(end-3:end),'.dat')              
+            elseif strcmp(file_path_data_b(end-3:end),'.dat')              
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/dat data...');drawnow % send message to status bar
-                [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,3,start_time,end_time,fid,'TRiLOGi');
-                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                [time.data_b,data.data_b,channels_data_b,units_data_b,uitable_data] = plotGrav_loadData(file_path_data_b,3,start_time,end_time,fid,'TRiLOGi');
+                set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',... % update the ui-table
                         uitable_data,'UserData',uitable_data);
-                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
-                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
-                if ~isempty(data.trilogi)
-                    trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                set(findobj('Tag','plotGrav_text_data_b'),'UserData',units_data_b); % store data_b units (data and time vector will be save together with other time series at the end of Loading section)
+                set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels_data_b); % store channel names. This data will be loaded when needed (e.g., exporting)
+                if ~isempty(data.data_b)
+                    data_b_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.data_a
                 end
-                elseif strcmp(file_path_trilogi(end-3:end),'.csv')
+                elseif strcmp(file_path_data_b(end-3:end),'.csv')
                     set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi/csv data...');drawnow % send message to status bar
-                    [time.trilogi,data.trilogi,channels_trilogi,units_trilogi,uitable_data] = plotGrav_loadData(file_path_trilogi,4,start_time,end_time,fid,'TRiLOGi');
-                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',... % update the ui-table
+                    [time.data_b,data.data_b,channels_data_b,units_data_b,uitable_data] = plotGrav_loadData(file_path_data_b,4,start_time,end_time,fid,'TRiLOGi');
+                    set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',... % update the ui-table
                         uitable_data,'UserData',uitable_data);
-                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi); % store trilogi units (data and time vector will be save together with other time series at the end of Loading section)
-                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi); % store channel names. This data will be loaded when needed (e.g., exporting)
-                    if ~isempty(data.trilogi)
-                        trilogi_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.igrav
+                    set(findobj('Tag','plotGrav_text_data_b'),'UserData',units_data_b); % store data_b units (data and time vector will be save together with other time series at the end of Loading section)
+                    set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels_data_b); % store channel names. This data will be loaded when needed (e.g., exporting)
+                    if ~isempty(data.data_b)
+                        data_b_loaded = 2;                                     % set the switch to 2 = no further correction will be applied to data.data_a
                     end
-            elseif ~isempty(file_path_trilogi)
+            elseif ~isempty(file_path_data_b)
                 % LOAD TRiLOGi controller files stored in tsf format
-                % file_path_trilogi = file path (not name) to all input data
+                % file_path_data_b = file path (not name) to all input data
                 % In this case, plotGrav will load all files with file names within selected range (starting point - ending point)
                 % These time series will be stacked. 'Loading and stacking'
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading TRiLOGi data...');drawnow % send message to status bar
-                time.trilogi = [];                                          % prepare variable (time.trilogi will store time in matlab format)
-                data.trilogi = [];                                          % prepare variable (data.trilogi will store tsoft channels)
+                time.data_b = [];                                          % prepare variable (time.data_b will store time in matlab format)
+                data.data_b = [];                                          % prepare variable (data.data_b will store tsoft channels)
                 for i = 1:length(time_in(:,7))                              % for loop for each day                            
-                    condit_trilogi = 10;fi = 0;                             % aux. variables, condit_trilogi = minimum number of loaded rows (one TRiLOGi day can be stored in many files, plotGrav will use only that one with has at least condit_trilogi rows)
+                    condit_data_b = 10;fi = 0;                             % aux. variables, condit_data_b = minimum number of loaded rows (one TRiLOGi day can be stored in many files, plotGrav will use only that one with has at least condit_data_b rows)
                     try                                                     % use try/catch (many TRiLOGi files are not stored in proper format)
-                        while condit_trilogi <= 10                          % loop = repeat until the file with at least condit_trilogi rows if found
+                        while condit_data_b <= 10                          % loop = repeat until the file with at least condit_data_b rows if found
                             fi = fi + 1;                                    % fi is the running number in the TRiLOGi file name
-                            file_name = fullfile(file_path_trilogi,...      % create file name = path + date + suffix
-                                sprintf('%04d%02d%02d_%03d%s',time_in(i,1),time_in(i,2),time_in(i,3),fi,trilogi_suffix));
+                            file_name = fullfile(file_path_data_b,...      % create file name = path + date + suffix
+                                sprintf('%04d%02d%02d_%03d%s',time_in(i,1),time_in(i,2),time_in(i,3),fi,data_b_suffix));
                             [ttime,tdata] = plotGrav_loadData(file_name,1,[],[],fid,'TRiLOGi');
                             if isempty(ttime)                               % is impty if error occurs
-                                condit_trilogi = 20;                        % ends the while loop
+                                condit_data_b = 20;                        % ends the while loop
                             elseif length(ttime) < 10                       % check how many rows does the file contain
-                                condit_trilogi = 0;
+                                condit_data_b = 0;
                             else
-                                condit_trilogi = 20;
+                                condit_data_b = 20;
                             end
                         end
                         [tyear,tmonth,~,thour,tmin,tsec] = datevec(ttime);  % convert back to civil time
                         tday = time_in(i,3);                                % make sure the current day is used (TRiLOGi writes sometime wrong day in first few rows). Still, this may result in a wrong data especially at the months transition.
                         ttime = datenum(tyear,tmonth,tday,thour,tmin,tsec); % convert to matlab time
-                        trilogi_loaded = 1;                                 % if ~= 0 => some data loaded. 1 = one file per day (TRiLOGi input)
+                        data_b_loaded = 1;                                 % if ~= 0 => some data loaded. 1 = one file per day (TRiLOGi input)
                     catch error_message
                         ttime = datenum(time_in(i,1:3));                    % current file time (hours = 0)
-                        tdata(1,1:trilogi_channels) = NaN;                  % insert NaN
+                        tdata(1,1:data_b_channels) = NaN;                  % insert NaN
                         if strcmp(error_message.identifier,'plotGrav_loadtsf:FOF')  % switch between error IDs. See plotGrav_loadtsf.m function for error handling
                             [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s NOT found (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm); % Write message to logfile
                         elseif strcmp(error_message.identifier,'plotGrav_loadtsf:FRH')
@@ -1085,114 +1085,114 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi file: %s loaded but NOT processed. Error %s (%04d/%02d/%02d %02d:%02d)\n',file_name,char(error_message.message),ty,tm,td,th,tmm); % Write message to logfile
                         end
                     end
-                    time.trilogi = vertcat(time.trilogi,ttime);             % stack the temporary variable on already loaded ones (time)
-                    data.trilogi = vertcat(data.trilogi,tdata);             % stack the temporary variable on already loaded ones (data)
+                    time.data_b = vertcat(time.data_b,ttime);             % stack the temporary variable on already loaded ones (time)
+                    data.data_b = vertcat(data.data_b,tdata);             % stack the temporary variable on already loaded ones (data)
                     clear ttime tdata file_name                             % remove used variables
                 end
-                if length(find(isnan(data.trilogi))) ~= numel(data.trilogi) % check if loaded data contains numeric values
-                    data.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = []; % remove time epochs out of requested range
-                    time.trilogi(time.trilogi<datenum(start_time) | time.trilogi>datenum(end_time),:) = [];
+                if length(find(isnan(data.data_b))) ~= numel(data.data_b) % check if loaded data contains numeric values
+                    data.data_b(time.data_b<datenum(start_time) | time.data_b>datenum(end_time),:) = []; % remove time epochs out of requested range
+                    time.data_b(time.data_b<datenum(start_time) | time.data_b>datenum(end_time),:) = [];
                     try
-                        r = find(diff(time.trilogi) == 0);                  % find time epochs with wrong/zero increase (some TRiLOGi files contain duplicate/redundant values)
+                        r = find(diff(time.data_b) == 0);                  % find time epochs with wrong/zero increase (some TRiLOGi files contain duplicate/redundant values)
                         if ~isempty(r)
-                           time.trilogi(r+1) = time.trilogi(r) + mode(diff(time.trilogi)); % correct those time epochs (add one minute)
+                           time.data_b(r+1) = time.data_b(r) + mode(diff(time.data_b)); % correct those time epochs (add one minute)
                         end
                         clear r                                             % clear the temporary variable
                     end
                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
                 else
-                    data.trilogi = [];                                      % otherwise empty
-                    time.trilogi = [];
+                    data.data_b = [];                                      % otherwise empty
+                    time.data_b = [];
                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No data TRiLOGi data in selected time interval (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                 end
-                if trilogi_loaded == 0                                      % if no data loaded
-                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                if data_b_loaded == 0                                      % if no data loaded
+                    set(findobj('Tag','plotGrav_uitable_data_b_data'),'data',...
                         {false,false,false,'NotAvailable',false,false,false}); % update table
-                        time.trilogi = [];
-                        data.trilogi = [];
+                        time.data_b = [];
+                        data.data_b = [];
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No TRiLOGi data loaded (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                 end
             else
                 fprintf(fid,'No TRiLOGi data loaded\n');                    % if no or empty TRiLOGi path has been selected
-                time.trilogi = [];
-                data.trilogi = [];
-                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'data',...
+                time.data_b = [];
+                data.data_b = [];
+                set(findobj('Tag','plotGrav_uitable_data_b_data'),'data',...
                     {false,false,false,'NotAvailable',false,false,false});  % update ui-table
             end
 			%% Load Other1 data
             % Unlike for iGrav and TRiLOGi panel, one file contains the
             % whole time series => 'Loading, no stacking'
-			if ~isempty(file_path_other1)                                   % continue only if user selected a file via GUI (by default [])
+			if ~isempty(file_path_data_c)                                   % continue only if user selected a file via GUI (by default [])
                 % Switch between supported file formats
-                switch file_path_other1(end-3:end)                          % switch between supported file formats
+                switch file_path_data_c(end-3:end)                          % switch between supported file formats
                     case '.tsf'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/tsf data...');drawnow % send message to status bar
-                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,1,start_time,end_time,fid,'Other1');
+                        [time.data_c,data.data_c,channels_data_c,units_data_c,uitable_data] = plotGrav_loadData(file_path_data_c,1,start_time,end_time,fid,'Other1');
                     case '.mat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/mat data...');drawnow % send message to status bar
-                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,2,start_time,end_time,fid,'Other1');
+                        [time.data_c,data.data_c,channels_data_c,units_data_c,uitable_data] = plotGrav_loadData(file_path_data_c,2,start_time,end_time,fid,'Other1');
                     case '.dat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/dat data...');drawnow % send message to status bar
-                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,3,start_time,end_time,fid,'Other1');
+                        [time.data_c,data.data_c,channels_data_c,units_data_c,uitable_data] = plotGrav_loadData(file_path_data_c,3,start_time,end_time,fid,'Other1');
                     case '.csv'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other1/csv data...');drawnow % send message to status bar
-                        [time.other1,data.other1,channels_other1,units_other1,uitable_data] = plotGrav_loadData(file_path_other1,4,start_time,end_time,fid,'Other2');
+                        [time.data_c,data.data_c,channels_data_c,units_data_c,uitable_data] = plotGrav_loadData(file_path_data_c,4,start_time,end_time,fid,'Other2');
                     otherwise
-                        time.other1 = [];data.other1 = [];channels_other1 = [];units_other1 = [];
+                        time.data_c = [];data.data_c = [];channels_data_c = [];units_data_c = [];
                         uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
-                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_other1,ty,tm,td,th,tmm);
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_data_c,ty,tm,td,th,tmm);
                 end
                 % Regardless the input format, store the loaded data
-                set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',... % update the ui-table
+                set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',... % update the ui-table
                     uitable_data,'UserData',uitable_data);
-                set(findobj('Tag','plotGrav_text_other1'),'UserData',units_other1); % store channel units
-                set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels_other1); % store channel names
+                set(findobj('Tag','plotGrav_text_data_c'),'UserData',units_data_c); % store channel units
+                set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels_data_c); % store channel names
 			else
 				fprintf(fid,'No Other1 data loaded\n');
-				time.other1 = [];
-				data.other1 = [];
-				set(findobj('Tag','plotGrav_uitable_other1_data'),'data',...
+				time.data_c = [];
+				data.data_c = [];
+				set(findobj('Tag','plotGrav_uitable_data_c_data'),'data',...
 					{false,false,false,'NotAvailable',false,false,false});  % update table = set to empty if  file input not selected
 			end
 			%% Load Other2 data
             % Unlike for iGrav and TRiLOGi panel, one file contains the
             % whole time series => 'Loading, no stacking'
-			if ~isempty(file_path_other2)                                   % continue only if user selected a file via GUI (by default [])
+			if ~isempty(file_path_data_d)                                   % continue only if user selected a file via GUI (by default [])
                 % Switch between supported file formats
-                switch file_path_other2(end-3:end)                          % switch between supported file formats
+                switch file_path_data_d(end-3:end)                          % switch between supported file formats
                     case '.tsf'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/tsf data...');drawnow % send message to status bar
-                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,1,start_time,end_time,fid,'Other2');
+                        [time.data_d,data.data_d,channels_data_d,units_data_d,uitable_data] = plotGrav_loadData(file_path_data_d,1,start_time,end_time,fid,'Other2');
                     case '.mat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/mat data...');drawnow % send message to status bar
-                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,2,start_time,end_time,fid,'Other2');
+                        [time.data_d,data.data_d,channels_data_d,units_data_d,uitable_data] = plotGrav_loadData(file_path_data_d,2,start_time,end_time,fid,'Other2');
                     case '.dat'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/dat data...');drawnow % send message to status bar
-                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,3,start_time,end_time,fid,'Other2');
+                        [time.data_d,data.data_d,channels_data_d,units_data_d,uitable_data] = plotGrav_loadData(file_path_data_d,3,start_time,end_time,fid,'Other2');
                     case '.csv'
                         set(findobj('Tag','plotGrav_text_status'),'String','Loading Other2/csv data...');drawnow % send message to status bar
-                        [time.other2,data.other2,channels_other2,units_other2,uitable_data] = plotGrav_loadData(file_path_other2,4,start_time,end_time,fid,'Other2');
+                        [time.data_d,data.data_d,channels_data_d,units_data_d,uitable_data] = plotGrav_loadData(file_path_data_d,4,start_time,end_time,fid,'Other2');
                     otherwise
-                        time.other2 = [];data.other2 = [];channels_other2 = [];units_other2 = [];
+                        time.data_d = [];data.data_d = [];channels_data_d = [];units_data_d = [];
                         uitable_data = {false,false,false,'NotAvailable',false,false,false}; 
-                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_other2,ty,tm,td,th,tmm);
+                        [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 data in not supported file format: %s (%04d/%02d/%02d %02d:%02d)\n',file_path_data_d,ty,tm,td,th,tmm);
                 end
                 % Regardless the input format, store the loaded data
-                set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',... % update the ui-table
+                set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',... % update the ui-table
                     uitable_data,'UserData',uitable_data);
-                set(findobj('Tag','plotGrav_text_other2'),'UserData',units_other2); % store channel units
-                set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels_other2); % store channel names
+                set(findobj('Tag','plotGrav_text_data_d'),'UserData',units_data_d); % store channel units
+                set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels_data_d); % store channel names
 			else
 				fprintf(fid,'No Other2 data loaded\n');
-				time.other2 = [];
-				data.other2 = [];
-				set(findobj('Tag','plotGrav_uitable_other2_data'),'data',...
+				time.data_d = [];
+				data.data_d = [];
+				set(findobj('Tag','plotGrav_uitable_data_d_data'),'data',...
 					{false,false,false,'NotAvailable',false,false,false});  % update table = set to empty if  file input not selected
 			end
 			%% Load filter
 			% Load filter file. Only loading, data will be filter in the
 			% following section.
-			if igrav_loaded == 1 || igrav_loaded == 3                       % load only if iGrav/SG030 data have been loaded
+			if data_a_loaded == 1 || data_a_loaded == 3                       % load only if iGrav/SG030 data have been loaded
 				try
 					set(findobj('Tag','plotGrav_text_status'),'String','Loading Filter...');drawnow % send message to status bar
 					if ~isempty(filter_file)                                % try to load the filter file/response if some string is given
@@ -1222,25 +1222,25 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			%% Filter data
             % After loading the filter and iGrav/SG030 filter fixed
             % channels, i.e., gravity.
-			if (igrav_loaded == 1 || igrav_loaded == 3) && ~isempty(Num)    % filter only if at least one iGrav/SG030 file has been loaded + the filter file (previous section)
+			if (data_a_loaded == 1 || data_a_loaded == 3) && ~isempty(Num)    % filter only if at least one iGrav/SG030 file has been loaded + the filter file (previous section)
 				set(findobj('Tag','plotGrav_text_status'),'String','Filtering...');drawnow % status
 				data.filt = [];time.filt = [];                              % prepare variables (*.filt = filtered values)
                 try
                     % Check for leap seconds + remove if present
                     for ls = 1:size(leap_second,1)                  
-                        r = find(time.igrav == datenum(leap_second(ls,:)));
+                        r = find(time.data_a == datenum(leap_second(ls,:)));
                         if ~isempty(r)                                      % continue only if loaded data contains given time epoch
-                            if abs(time.igrav(r) - time.igrav(r+1)) < 0.9/86400 || abs(time.igrav(r) - time.igrav(r+1)) > 1.1/86400  % check if leap second indeed present in the data (might be removed manually)
-                                time.igrav(r+1,:) = [];                     
-                                data.igrav(r+1,:) = [];
+                            if abs(time.data_a(r) - time.data_a(r+1)) < 0.9/86400 || abs(time.data_a(r) - time.data_a(r+1)) > 1.1/86400  % check if leap second indeed present in the data (might be removed manually)
+                                time.data_a(r+1,:) = [];                     
+                                data.data_a(r+1,:) = [];
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav data: leap second %04d/%02d/%02d %02d:%02d:%02d removed (%04d/%02d/%02d %02d:%02d)\n',...
                                     leap_second(ls,1),leap_second(ls,2),leap_second(ls,3),leap_second(ls,4),leap_second(ls,5),leap_second(ls,6),ty,tm,td,th,tmm);
                             end
                         end
                     end
                     clear r ls
-                    for j = 1%:size(data.igrav,2)                           % set which channels should be filtered (1 = gravity observed, 1:size(data.igrav,2) = all channels)
-                        [timeout,dataout,id] = plotGrav_findTimeStep(time.igrav,data.igrav(:,j),igrav_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
+                    for j = 1%:size(data.data_a,2)                           % set which channels should be filtered (1 = gravity observed, 1:size(data.data_a,2) = all channels)
+                        [timeout,dataout,id] = plotGrav_findTimeStep(time.data_a,data.data_a(:,j),data_a_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
                         dout = [];                                          % aux. variable
                         for i = 1:size(id,1)                                % use for each time interval (filter between time steps that have been found using plotGrav_findTimeStep function) separately                 
                             if length(dataout(id(i,1):id(i,2))) > length(Num)*2 % filter only if the current time interval is long enough
@@ -1252,7 +1252,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             dout = vertcat(dout,fgrav,NaN);                 % stack the aux. data vertically (current channel) + NaN to mark holes between fillering sequences
                             if j == 1                                       % do only onece, i.e. for first channel
                                 time.filt = vertcat(time.filt,ftime,...     % stack the aux. time only for first channel (same for all)
-                                    ftime(end)+igrav_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
+                                    ftime(end)+data_a_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
                             end
                             clear ftime fgrav
                         end
@@ -1278,7 +1278,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Load Tide effect file. The correction will be applied in the
             % following section. Do only if iGrav or SG030 (stacked) data
             % have been loaded.
-            if igrav_loaded == 1 || igrav_loaded == 3                       % 1 => igrav, 3 => SG030
+            if data_a_loaded == 1 || data_a_loaded == 3                       % 1 => data_a, 3 => SG030
                 set(findobj('Tag','plotGrav_text_status'),'String','Loading Tides...');drawnow % status
                 if ~isempty(tide_file)                                      % load only if a file is given/selected
                     [time.tide,data.tide] = plotGrav_loadData(tide_file,1,[],[],fid,'Tides');
@@ -1299,12 +1299,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % file contains second column with polar motion effect). The
             % correction are computed only if iGrav or SG030 'Loading and
             % stacking' data present. No correction for other inputs.
-            if igrav_loaded == 1 || igrav_loaded == 3                       % iGrav or SG030 data loaded
+            if data_a_loaded == 1 || data_a_loaded == 3                       % iGrav or SG030 data loaded
                 % the procedure of correction computation is identical for
                 % both gravimeters, however, the input data differ with
                 % respect to recorded column. Therefore, store the
                 % corrections in different columns.
-                switch igrav_loaded                                         
+                switch data_a_loaded                                         
                     case 1
                         column_id = 0;                                      % will be added to default column numbering
                         column_g_id = 1;                                    % column with gravity variations
@@ -1315,9 +1315,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         column_g_id = 1;                                    % column with gravity variations (1 = lower sphere, 2 = upper sphere)
                         column_p_id = 3;                                    % column with pressure variations
                         % Adjust order in case single sphere SG loaded
-                        if size(data.igrav,2) == 2
-                            data.igrav(:,3) = data.igrav(:,2);
-                            data.igrav(:,2) = 0;
+                        if size(data.data_a,2) == 2
+                            data.data_a(:,3) = data.data_a(:,2);
+                            data.data_a(:,2) = 0;
                         end
                         gravi_string = 'SG0XX';                             % will be used for logfile
                         plotGrav('reset_tables_sg030');                     % Change the ui-table to SG030 (by default for iGrav)
@@ -1327,71 +1327,71 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     % Calibrating time series: phase shift. Must be
                     % performed prior to correction introduction!
                     if calib_delay~=0                                       % introduce time shift if available
-						data.igrav(:,column_g_id) = interp1(time.igrav+calib_delay/86400,data.igrav(:,column_g_id),time.igrav); % re-interpolate to new time sampling (shifted using calib_delay)
+						data.data_a(:,column_g_id) = interp1(time.data_a+calib_delay/86400,data.data_a(:,column_g_id),time.data_a); % re-interpolate to new time sampling (shifted using calib_delay)
                         fprintf(fid,'%s phase shift introduced = %4.2f s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,calib_delay,ty,tm,td,th,tmm);
 						if ~isempty(data.filt) 
 							data.filt(:,column_g_id) = interp1(time.filt+calib_delay/86400,data.filt(:,column_g_id),time.filt);
 						end
                     end
                     % Computing atmospheric effect. Will be applied later.
-					data.igrav(:,28+column_id) = (data.igrav(:,column_p_id) - mean(data.igrav(~isnan(data.igrav(:,column_p_id)),column_p_id)))*admittance_factor; % atmospheric effect - mean value (channel 28)
+					data.data_a(:,28+column_id) = (data.data_a(:,column_p_id) - mean(data.data_a(~isnan(data.data_a(:,column_p_id)),column_p_id)))*admittance_factor; % atmospheric effect - mean value (channel 28)
 					[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data atmo correction = %4.2f nm/s^2/hPa (%04d/%02d/%02d %02d:%02d)\n',gravi_string,admittance_factor,ty,tm,td,th,tmm);
                     if ~isempty(data.filt)                                  % use filtered values only if filtering was successful
                         % Calibrating time series: amplitude factor
-                        data.igrav(:,22+column_id) = data.igrav(:,column_g_id)*calib_factor;    % Calibrated gravity (stored in a new channel = 22)
-						data.igrav(:,23+column_id) = interp1(time.filt,data.filt(:,column_g_id),time.igrav)*calib_factor; % Gravity: calibrated and filtered (igrav channel 23)
+                        data.data_a(:,22+column_id) = data.data_a(:,column_g_id)*calib_factor;    % Calibrated gravity (stored in a new channel = 22)
+						data.data_a(:,23+column_id) = interp1(time.filt,data.filt(:,column_g_id),time.data_a)*calib_factor; % Gravity: calibrated and filtered (data_a channel 23)
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data calibrated = %4.2f nm/s^2/V (%04d/%02d/%02d %02d:%02d)\n',gravi_string,calib_factor,ty,tm,td,th,tmm);
                         % Tide (optional Pol) correction
                         if ~isempty(data.tide)                              % correct for tide only if effect loaded 
 							if size(data.tide) > 1                          % interpolated polar motion effect, if the tide tsf file contains more than one channel (assumed that this channel contains polar motion acceleration)
-								data.igrav(:,27+column_id) = interp1(time.tide,data.tide(:,2),time.igrav); % polar motion effect (channel 27)
+								data.data_a(:,27+column_id) = interp1(time.tide,data.tide(:,2),time.data_a); % polar motion effect (channel 27)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data corrected for polar motion: %s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,tide_file,ty,tm,td,th,tmm);
 							else
-								data.igrav(:,27+column_id) = 0;             % otherwise, polar motion effect equal 0 
+								data.data_a(:,27+column_id) = 0;             % otherwise, polar motion effect equal 0 
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data not corrected for polar motion (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
 							end
-							data.igrav(:,26+column_id) = interp1(time.tide,data.tide(:,1),time.igrav); % tide effect (channel 26). Tide effect must be in the first tsf channel!
+							data.data_a(:,26+column_id) = interp1(time.tide,data.tide(:,1),time.data_a); % tide effect (channel 26). Tide effect must be in the first tsf channel!
 							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data corrected for tides: %s (%04d/%02d/%02d %02d:%02d)\n',gravi_string,tide_file,ty,tm,td,th,tmm);
 						else
-							data.igrav(:,26+column_id:27+column_id) = 0;    % if not loaded, set to zero 
+							data.data_a(:,26+column_id:27+column_id) = 0;    % if not loaded, set to zero 
 							[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data not corrected for tides/polar motion. (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
                         end
                         % corrected      =  filtered        - tides            - polar motion     - atmosphere
-						data.igrav(:,24+column_id) = data.igrav(:,23+column_id) - data.igrav(:,26+column_id) - data.igrav(:,27+column_id) - data.igrav(:,28+column_id); % corrected (filtered and calibrated) gravity (channel 24)
+						data.data_a(:,24+column_id) = data.data_a(:,23+column_id) - data.data_a(:,26+column_id) - data.data_a(:,27+column_id) - data.data_a(:,28+column_id); % corrected (filtered and calibrated) gravity (channel 24)
                         % Correct for gravimeter drift (trend). Store the
                         % drift approximation in 29th channel. The
                         % corrected gravity (for tides,atmo,pol and drift
                         % in 25th channel)
 						switch drift_fit                                    % select drift approximation
 							case 1
-								data.igrav(:,29+column_id) = 0;             % no drift estimated
+								data.data_a(:,29+column_id) = 0;             % no drift estimated
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: No drift (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm); % write to logfile
 							case 2
-                                out_par = mean(data.igrav(~isnan(data.igrav(:,24+column_id)),24+column_id)); % mean value
-								data.igrav(:,29+column_id) = out_par;       % can use scalar because data.igrav is defined as matrix = will be used for all rows of 29th column.
+                                out_par = mean(data.data_a(~isnan(data.data_a(:,24+column_id)),24+column_id)); % mean value
+								data.data_a(:,29+column_id) = out_par;       % can use scalar because data.data_a is defined as matrix = will be used for all rows of 29th column.
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Constant: %6.2f (%04d/%02d/%02d %02d:%02d)\n',out_par,ty,tm,td,th,tmm);
 							case 3
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly1');
-								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[out_par,~,out_fit] = plotGrav_fit(time.data_a,data.data_a(:,24+column_id),'poly1');
+								data.data_a(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Linear coefficients: %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),ty,tm,td,th,tmm);
 							case 4
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly2');
-								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[out_par,~,out_fit] = plotGrav_fit(time.data_a,data.data_a(:,24+column_id),'poly2');
+								data.data_a(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Quadratic coefficients: %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),ty,tm,td,th,tmm);
 							case 5
-								[out_par,~,out_fit] = plotGrav_fit(time.igrav,data.igrav(:,24+column_id),'poly3');
-								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								[out_par,~,out_fit] = plotGrav_fit(time.data_a,data.data_a(:,24+column_id),'poly3');
+								data.data_a(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: Cubic coefficients: %10.8f, %10.8f, %10.8f, %10.8f (%04d/%02d/%02d %02d:%02d)\n',out_par(1),out_par(2),out_par(3),out_par(4),ty,tm,td,th,tmm);
                             case 6                                          % In this case, user defined coeficients are used.
                                 out_par = get(findobj('Tag','plotGrav_edit_drift_manual'),'String'); % get iser input
                                 out_par = str2double(strsplit(out_par,' ')); % split the sring and covert to double
-								out_fit = polyval(out_par,time.igrav);     % compute the drift curve (will automatically depend on number of coefficients)
-								data.igrav(:,29+column_id) = out_fit;       % drift curve (channel 29)
+								out_fit = polyval(out_par,time.data_a);     % compute the drift curve (will automatically depend on number of coefficients)
+								data.data_a(:,29+column_id) = out_fit;       % drift curve (channel 29)
 								[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Instrumental drift removal: User coefficients: %s (%04d/%02d/%02d %02d:%02d)\n',get(findobj('Tag','plotGrav_edit_drift_manual'),'String'),ty,tm,td,th,tmm);
 						end
-						data.igrav(:,25+column_id) = data.igrav(:,24+column_id) - data.igrav(:,29+column_id); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
+						data.data_a(:,25+column_id) = data.data_a(:,24+column_id) - data.data_a(:,29+column_id); % corrected gravity (filtered, calibrated, corrected, de-trended) (channel 25)
                     else
-						data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;              % set to zero if filtered data not available (except atmospheric effect)
+						data.data_a(:,[23,24,25,26,27,29]+column_id) = 0;              % set to zero if filtered data not available (except atmospheric effect)
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No Gravity data correction due to unseccessful filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                     end
                 catch error_message
@@ -1400,7 +1400,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     else
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Could not correct gravity. Error %s (%04d/%02d/%02d %02d:%02d)\n',char(error_message.message),ty,tm,td,th,tmm); % write to logfile
                     end
-                    data.igrav(:,[23,24,25,26,27,29]+column_id) = 0;        % set to zero if filtered data not available (except atmospheric effect, if computed than do not overwrite)
+                    data.data_a(:,[23,24,25,26,27,29]+column_id) = 0;        % set to zero if filtered data not available (except atmospheric effect, if computed than do not overwrite)
                 end
                 data.tide = [];time.tide = [];                              % remove used variable that are not of interest for plotting (they have been copied do other variables or used in other way)
             end
@@ -1408,19 +1408,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			%% Resample
             % plotGrav allows direct resampling of loaded iGrav/SG030 time
             % series (only for 'Loading and stacking').
-            if igrav_loaded == 1 || igrav_loaded == 3
+            if data_a_loaded == 1 || data_a_loaded == 3
 				try
 					resample = str2double(get(findobj('Tag','plotGrav_edit_resample'),'String')); % get resampling value
-                    if resample >= 2                                        % resample igrav data only if required/userInput sampling > 1 second
+                    if resample >= 2                                        % resample data_a data only if required/userInput sampling > 1 second
 						set(findobj('Tag','plotGrav_text_status'),'String','Resampling iGrav data...');drawnow % send message to status bar
-						ntime = [time.igrav(1):resample/86400:time.igrav(end)]'; % create new time vector with future sampling
-						dnew(1:length(ntime),1:size(data.igrav,2)) = 0;     % prepare new variable for future (resampled) data matrix.
-                        for c = 1:size(data.igrav,2)                        % interpolate for each column
-						   dnew(:,c) = interp1(time.igrav,data.igrav(:,c),ntime);
+						ntime = [time.data_a(1):resample/86400:time.data_a(end)]'; % create new time vector with future sampling
+						dnew(1:length(ntime),1:size(data.data_a,2)) = 0;     % prepare new variable for future (resampled) data matrix.
+                        for c = 1:size(data.data_a,2)                        % interpolate for each column
+						   dnew(:,c) = interp1(time.data_a,data.data_a(:,c),ntime);
                         end
                         clear c
-						time.igrav = ntime;clear ntime                      % update time vector and remove temporary variable
-						data.igrav = dnew; clear dnew                       % update data matrix
+						time.data_a = ntime;clear ntime                      % update time vector and remove temporary variable
+						data.data_a = dnew; clear dnew                       % update data matrix
 						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s data re-sampled to %4.1f sec (%04d/%02d/%02d %02d:%02d)\n',gravi_string,resample,ty,tm,td,th,tmm); % logfile
 					else
 						[ty,tm,td,th,tmm] = datevec(now); fprintf(fid,'No %s data re-sampling (%04d/%02d/%02d %02d:%02d)\n',gravi_string,ty,tm,td,th,tmm);
@@ -1435,7 +1435,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				end
 				data.filt = [];time.filt = [];                              % remove used variable that are not of interest for plotting (they have been copied do other variables or used in other way)
 				set(findobj('Tag','plotGrav_text_status'),'String','The requested files have been loaded.');drawnow % status
-			elseif igrav_loaded == 2
+			elseif data_a_loaded == 2
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected file has been loaded.');drawnow % status
             else
 				set(findobj('Tag','plotGrav_text_status'),'String','The selected files have been loaded.');drawnow % status
@@ -1473,7 +1473,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else                           
 				data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data with all time series. 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors
-				if ~isempty(data.igrav)                                     % continue only if some time series have been loaded. Keep in mind, corrections are applied only on iGrav time series.
+				if ~isempty(data.data_a)                                     % continue only if some time series have been loaded. Keep in mind, corrections are applied only on iGrav time series.
 					set(findobj('Tag','plotGrav_text_status'),'String','Correcting...');drawnow % status
 					try
 						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Open logfile to document all applied corrections.
@@ -1493,10 +1493,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         for i = 1:size(in,1)                                % Run the correction algorithm for all correctors
                             switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
                                 case 1                                      % Step removal. 
-                                    if channel(i) <= size(data.igrav,2)     % continue only if such channel exists
-                                        r = find(time.igrav >= x2(i));      % find points recorded after the step occur.
+                                    if channel(i) <= size(data.data_a,2)     % continue only if such channel exists
+                                        r = find(time.data_a >= x2(i));      % find points recorded after the step occur.
                                         if ~isempty(r)                      % continue only if some points have been found
-                                            data.igrav(r,channel(i)) = data.igrav(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                            data.data_a(r,channel(i)) = data.data_a(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
                                             [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
                                             fprintf(fid,'iGrav step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
                                                 channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
@@ -1505,31 +1505,31 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                         clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
                                     end
                                 case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
-                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval
+                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        data.igrav(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
+                                        data.data_a(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
                                             in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
                                     end
                                 case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
-                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
+                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval. 
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                        xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
-                                        data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                        ytemp = data.data_a(time.data_a<x1(i) | time.data_a>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.data_a(time.data_a<x1(i) | time.data_a>x2(i));             % get selected time interval 
+                                        data.data_a(r,channel(i)) = interp1(xtemp,ytemp,time.data_a(r),'linear'); % Interpolate values for the affected interval only (use r as index)
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
                                             in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
                                     end
                                 case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
-                                    r = find(time.igrav>x1(i) & time.igrav<x2(i)); % find points within the selected interval. 
+                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval. 
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        ytemp = data.igrav(time.igrav<x1(i) | time.igrav>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                        xtemp = time.igrav(time.igrav<x1(i) | time.igrav>x2(i));             % get selected time interval 
-                                        data.igrav(r,channel(i)) = interp1(xtemp,ytemp,time.igrav(r),'spline'); % Interpolate values for the affected interval only (use r as index)
+                                        ytemp = data.data_a(time.data_a<x1(i) | time.data_a>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.data_a(time.data_a<x1(i) | time.data_a>x2(i));             % get selected time interval 
+                                        data.data_a(r,channel(i)) = interp1(xtemp,ytemp,time.data_a(r),'spline'); % Interpolate values for the affected interval only (use r as index)
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
@@ -1561,11 +1561,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First check if some (only one) channel is selected
             % To do so get required input data
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
-            panels = {'igrav','trilogi','other1','other2'};
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');      % get the TRiLOGi table. 
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');      % get the TRiLOGi table. 
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');        % get the Other1 table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');        % get the Other2 table
+            panels = {'data_a','data_b','data_c','data_d'};
             % Run loop checking which channel is selected
             check_sum = 0;
             panel_use = '';
@@ -1688,7 +1688,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				set(findobj('Tag','plotGrav_text_status'),'String','No correction file selected.');drawnow % status
             else
                 data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data with all time series. No time vector needed.
-				if ~isempty(data.igrav)                                     % continue only if exists
+				if ~isempty(data.data_a)                                     % continue only if exists
 					set(findobj('Tag','plotGrav_text_status'),'String','Plotting...');drawnow % status
 					try
                         fileid = fopen(file_name);
@@ -1735,10 +1735,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if ~isempty(data)                                               % continue only if some data exist, i.e., run after loading data
                 % Get ui-tables and plot axes
 				set(findobj('Tag','plotGrav_text_status'),'String','Plotting...');drawnow % status 
-				data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table, not data! All time series are stored in findobj('Tag','plotGrav_push_load'),'UserData').
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table. These tables will be used to plot only 'checked' time series.
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+				data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table, not data! All time series are stored in findobj('Tag','plotGrav_push_load'),'UserData').
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table. These tables will be used to plot only 'checked' time series.
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
 				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');  % get axes of the First plot (left and right axes = L1 and R1)
 				a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData'); % get axes of the Second plot (left and right axes = L2 and R2)
 				a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData'); % get axes of the Third plot (left and right axes = L3 and R3)
@@ -1758,7 +1758,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 
                 % Find checked (selected) time series (columns of data
                 % matrices). Use a loop changing the panel name
-                panel = {'igrav','trilogi','other1','other2'};
+                panel = {'data_a','data_b','data_c','data_d'};
                 for i = 1:length(panel)
                     % Checked: L1 (left first plot)
                     plot_axesL1.(panel{i}) = find(cell2mat(data_table.(panel{i})(:,1))==1); 
@@ -1794,8 +1794,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % First check if some (at least one) time series/channel is
                 % selected for L1. Only if so, continue. Selected means
                 % that plot_axesL1.* is not empty.
-                if (~isempty(plot_axesL1.igrav) || ~isempty(plot_axesL1.trilogi) || ~isempty(plot_axesL1.other1) || ~isempty(plot_axesL1.other2)) &&...
-				   (isempty(plot_axesR1.igrav) && isempty(plot_axesR1.trilogi) && isempty(plot_axesR1.other1) && isempty(plot_axesR1.other2)) 
+                if (~isempty(plot_axesL1.data_a) || ~isempty(plot_axesL1.data_b) || ~isempty(plot_axesL1.data_c) || ~isempty(plot_axesL1.data_d)) &&...
+				   (isempty(plot_axesR1.data_a) && isempty(plot_axesR1.data_b) && isempty(plot_axesR1.data_c) && isempty(plot_axesR1.data_d)) 
 					switch_plot = 1;                                        % 1 = left axes. See plotGrav_plotData.m function for details.
 					plot_mode(1) = 1;                                       % 1 = left axes, first plot
 					plot_axesL = plot_axesL1;                               % see ploGrav_plotData.m function
@@ -1803,8 +1803,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Plot1: R1 only
                 % Same procedure as for Plot1: L1. The only difference is
                 % the plot_mode and switch_plot
-                elseif (~isempty(plot_axesR1.igrav) || ~isempty(plot_axesR1.trilogi) || ~isempty(plot_axesR1.other1) || ~isempty(plot_axesR1.other2)) &&... 
-				   (isempty(plot_axesL1.igrav) && isempty(plot_axesL1.trilogi) && isempty(plot_axesL1.other1) && isempty(plot_axesL1.other2)) 
+                elseif (~isempty(plot_axesR1.data_a) || ~isempty(plot_axesR1.data_b) || ~isempty(plot_axesR1.data_c) || ~isempty(plot_axesR1.data_d)) &&... 
+				   (isempty(plot_axesL1.data_a) && isempty(plot_axesL1.data_b) && isempty(plot_axesL1.data_c) && isempty(plot_axesL1.data_d)) 
 					switch_plot = 2;                                        % 2 = right axes
 					plot_mode(1) = 2;                                       % 1 = right axes, first plot
 					plot_axesR = plot_axesR1;                               % see ploGrav_plotData function
@@ -1812,8 +1812,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				% Plot1: R1 and L1
                 % In this case, both left and right axes are visible and
                 % used for plotting. Similar to plotyy function.
-                elseif (~isempty(plot_axesL1.igrav) || ~isempty(plot_axesL1.trilogi) || ~isempty(plot_axesL1.other1) || ~isempty(plot_axesL1.other2)) &&...
-				   (~isempty(plot_axesR1.igrav) || ~isempty(plot_axesR1.trilogi) || ~isempty(plot_axesR1.other1) || ~isempty(plot_axesR1.other2)) 
+                elseif (~isempty(plot_axesL1.data_a) || ~isempty(plot_axesL1.data_b) || ~isempty(plot_axesL1.data_c) || ~isempty(plot_axesL1.data_d)) &&...
+				   (~isempty(plot_axesR1.data_a) || ~isempty(plot_axesR1.data_b) || ~isempty(plot_axesR1.data_c) || ~isempty(plot_axesR1.data_d)) 
 					switch_plot = 3;                                        % 3 = left + right axes
 					plot_mode(1) = 3;                                       % 1 = left + right axes, first plot                                      
 					plot_axesL = plot_axesL1;
@@ -1839,8 +1839,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     ref_axes = a1(1);
                 end
                 % L2 only
-                if (~isempty(plot_axesL2.igrav) || ~isempty(plot_axesL2.trilogi) || ~isempty(plot_axesL2.other1) || ~isempty(plot_axesL2.other2)) &&... 
-				   (isempty(plot_axesR2.igrav) && isempty(plot_axesR2.trilogi) && isempty(plot_axesR2.other1) && isempty(plot_axesR2.other2)) 
+                if (~isempty(plot_axesL2.data_a) || ~isempty(plot_axesL2.data_b) || ~isempty(plot_axesL2.data_c) || ~isempty(plot_axesL2.data_d)) &&... 
+				   (isempty(plot_axesR2.data_a) && isempty(plot_axesR2.data_b) && isempty(plot_axesR2.data_c) && isempty(plot_axesR2.data_d)) 
 					switch_plot = 1;                                        % left axes only
 					plot_mode(2) = 1;                                       % left axes, second plot only
 					plot_axesL = plot_axesL2;    
@@ -1848,15 +1848,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				% Plot 2: R2 only
                 % WARNING: The following code is not commented because the meaning
                 % of the code can be derived from previous plots
-                elseif (~isempty(plot_axesR2.igrav) || ~isempty(plot_axesR2.trilogi) || ~isempty(plot_axesR2.other1) || ~isempty(plot_axesR2.other2)) &&... 
-				   (isempty(plot_axesL2.igrav) && isempty(plot_axesL2.trilogi) && isempty(plot_axesL2.other1) && isempty(plot_axesL2.other2))  
+                elseif (~isempty(plot_axesR2.data_a) || ~isempty(plot_axesR2.data_b) || ~isempty(plot_axesR2.data_c) || ~isempty(plot_axesR2.data_d)) &&... 
+				   (isempty(plot_axesL2.data_a) && isempty(plot_axesL2.data_b) && isempty(plot_axesL2.data_c) && isempty(plot_axesL2.data_d))  
 					switch_plot = 2;
 					plot_mode(2) = 2;
 					plot_axesR = plot_axesR2;                                  
 					legend_save = plotGrav_plotData(a2,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(4),plot_type(3:4)); % call the plotGrav_plotData function
 				% Plot 2: R2 and L2,see coments above.
-                elseif (~isempty(plot_axesL2.igrav) || ~isempty(plot_axesL2.trilogi) || ~isempty(plot_axesL2.other1) || ~isempty(plot_axesL2.other2)) &&...
-				   (~isempty(plot_axesR2.igrav) || ~isempty(plot_axesR2.trilogi) || ~isempty(plot_axesR2.other1) || ~isempty(plot_axesR2.other2)) 
+                elseif (~isempty(plot_axesL2.data_a) || ~isempty(plot_axesL2.data_b) || ~isempty(plot_axesL2.data_c) || ~isempty(plot_axesL2.data_d)) &&...
+				   (~isempty(plot_axesR2.data_a) || ~isempty(plot_axesR2.data_b) || ~isempty(plot_axesR2.data_c) || ~isempty(plot_axesR2.data_d)) 
 					switch_plot = 3;
 					plot_mode(2) = 3;
 					plot_axesL = plot_axesL2;
@@ -1883,22 +1883,22 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     ref_axes = a2(1);
                 end
                 % L3 only, see coments above (Plot 1).
-                if (~isempty(plot_axesL3.igrav) || ~isempty(plot_axesL3.trilogi) || ~isempty(plot_axesL3.other1) || ~isempty(plot_axesL3.other2)) &&... 
-				   (isempty(plot_axesR3.igrav) && isempty(plot_axesR3.trilogi) && isempty(plot_axesR3.other1) && isempty(plot_axesR3.other2)) 
+                if (~isempty(plot_axesL3.data_a) || ~isempty(plot_axesL3.data_b) || ~isempty(plot_axesL3.data_c) || ~isempty(plot_axesL3.data_d)) &&... 
+				   (isempty(plot_axesR3.data_a) && isempty(plot_axesR3.data_b) && isempty(plot_axesR3.data_c) && isempty(plot_axesR3.data_d)) 
 					switch_plot = 1;
 					plot_mode(3) = 1;
 					plot_axesL = plot_axesL3;      
 					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(5),plot_type(5:6)); % call the function
 				% Plot3: R3 only see coments above.
-                elseif (~isempty(plot_axesR3.igrav) || ~isempty(plot_axesR3.trilogi) || ~isempty(plot_axesR3.other1) || ~isempty(plot_axesR3.other2)) &&... 
-				   (isempty(plot_axesL3.igrav) && isempty(plot_axesL3.trilogi) && isempty(plot_axesL3.other1) && isempty(plot_axesL3.other2))  
+                elseif (~isempty(plot_axesR3.data_a) || ~isempty(plot_axesR3.data_b) || ~isempty(plot_axesR3.data_c) || ~isempty(plot_axesR3.data_d)) &&... 
+				   (isempty(plot_axesL3.data_a) && isempty(plot_axesL3.data_b) && isempty(plot_axesL3.data_c) && isempty(plot_axesL3.data_d))  
 					switch_plot = 2;
 					plot_mode(3) = 2;
 					plot_axesR = plot_axesR3;                              
 					legend_save = plotGrav_plotData(a3,ref_axes,switch_plot,data,plot_axesL,plot_axesR,line_width(6),plot_type(5:6)); % call the plotGrav_plotData function
 				% Plot3: R3 and L3, see coments above.
-                elseif (~isempty(plot_axesL3.igrav) || ~isempty(plot_axesL3.trilogi) || ~isempty(plot_axesL3.other1) || ~isempty(plot_axesL3.other2)) &&...
-				   (~isempty(plot_axesR3.igrav) || ~isempty(plot_axesR3.trilogi) || ~isempty(plot_axesR3.other1) || ~isempty(plot_axesR3.other2)) 
+                elseif (~isempty(plot_axesL3.data_a) || ~isempty(plot_axesL3.data_b) || ~isempty(plot_axesL3.data_c) || ~isempty(plot_axesL3.data_d)) &&...
+				   (~isempty(plot_axesR3.data_a) || ~isempty(plot_axesR3.data_b) || ~isempty(plot_axesR3.data_c) || ~isempty(plot_axesR3.data_d)) 
 					switch_plot = 3;
 					plot_mode(3) = 3;
 					plot_axesL = plot_axesL3;
@@ -2228,10 +2228,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Unchecking will also reset all plot settings, inclusing
             % zooming level or inserted objects (lines, text...).
             % First get necesary data
-			data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-			data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-			data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+			data_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+			data_data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+			data_data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+			data_data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
 			a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % get plot 1 handles
 			a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');    % get plot 2 handles
 			a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');    % get plot 3 handles
@@ -2246,14 +2246,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			cla(a3(2));legend(a3(2),'off');ylabel(a3(2),[]);                % clear axes and remove legends and labels
 			axis(a3(1),'auto');axis(a3(2),'auto');
             % Reset ui-tables
-			data_igrav(:,[1,2,3,5,6,7]) = {false};                          % uncheck all fields
-			set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_igrav); % update the table
-			data_trilogi(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_trilogi);
-			data_other1(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_other1);
-			data_other2(:,[1,2,3,5,6,7]) = {false};
-			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_other2);
+			data_data_a(:,[1,2,3,5,6,7]) = {false};                          % uncheck all fields
+			set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_data_a); % update the table
+			data_data_b(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_data_b);
+			data_data_c(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_data_c);
+			data_data_d(:,[1,2,3,5,6,7]) = {false};
+			set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_data_d);
             
 		case 'push_zoom_in'
 			%% ZOOM = set Axis range
@@ -3168,108 +3168,108 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
         % Export allows user to save the data stored in iGrav, TRiLOGi,
         % Other1 and Other2 to tsf and mat file format. It works like 'save
         % as' function.
-		case 'export_igrav_all'
+		case 'export_data_a_all'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data (this variable store iGrav together with other time series)
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time (includes iGrav time vector)
-			units = get(findobj('Tag','plotGrav_text_igrav'),'UserData');   % get iGrav units. Will be included in the output.
-			channels = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
+			units = get(findobj('Tag','plotGrav_text_data_a'),'UserData');   % get iGrav units. Will be included in the output.
+			channels = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names)
             if nargin == 1
-                plotGrav_exportData(time.igrav,data.igrav,channels,units,[],[],'iGrav',[]); % call general function for data export
+                plotGrav_exportData(time.data_a,data.data_a,channels,units,[],[],'iGrav',[]); % call general function for data export
             else
-                plotGrav_exportData(time.igrav,data.igrav,channels,units,[],[],'iGrav',char(varargin{1})); % call general function for data export with output file name
+                plotGrav_exportData(time.data_a,data.data_a,channels,units,[],[],'iGrav',char(varargin{1})); % call general function for data export with output file name
             end
-		case 'export_igrav_sel'
+		case 'export_data_a_sel'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_igrav'),'UserData');   % get iGrav units
-			channels = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
-			data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-			select = find(cell2mat(data_igrav(:,1))==1);                    % get selected iGrav channels for L1
+			units = get(findobj('Tag','plotGrav_text_data_a'),'UserData');   % get iGrav units
+			channels = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names)
+			data_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav table
+			select = find(cell2mat(data_data_a(:,1))==1);                    % get selected iGrav channels for L1
             if isempty(select)
                 set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
             else
                 if nargin == 1
-                    plotGrav_exportData(time.igrav,data.igrav,channels,units,select,[],'iGrav',[]);
+                    plotGrav_exportData(time.data_a,data.data_a,channels,units,select,[],'iGrav',[]);
                 else
-                    plotGrav_exportData(time.igrav,data.igrav,channels,units,select,[],'iGrav',char(varargin{1})); % call general function for data export with output file name
+                    plotGrav_exportData(time.data_a,data.data_a,channels,units,select,[],'iGrav',char(varargin{1})); % call general function for data export with output file name
                 end
             end
-		case 'export_trilogi_all'
+		case 'export_data_b_all'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
-			channels = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
+			units = get(findobj('Tag','plotGrav_text_data_b'),'UserData'); % get data_b units
+			channels = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get data_b channels (names)
             if nargin == 1
-                plotGrav_exportData(time.trilogi,data.trilogi,channels,units,[],[],'TRiLOGi',[]);
+                plotGrav_exportData(time.data_b,data.data_b,channels,units,[],[],'TRiLOGi',[]);
             else
-                plotGrav_exportData(time.trilogi,data.trilogi,channels,units,[],[],'TRiLOGi',char(varargin{1}));
+                plotGrav_exportData(time.data_b,data.data_b,channels,units,[],[],'TRiLOGi',char(varargin{1}));
             end
-		case 'export_trilogi_sel'
+		case 'export_data_b_sel'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get trilogi units
-			channels = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get trilogi channels (names)
-			data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the trilogi table
-			select = find(cell2mat(data_trilogi(:,1))==1);                  % get selected trilogi channels for L1            
+			units = get(findobj('Tag','plotGrav_text_data_b'),'UserData'); % get data_b units
+			channels = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get data_b channels (names)
+			data_data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the data_b table
+			select = find(cell2mat(data_data_b(:,1))==1);                  % get selected data_b channels for L1            
             if isempty(select)
                 set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
             else
                 if nargin == 1
-                    plotGrav_exportData(time.trilogi,data.trilogi,channels,units,select,[],'TRiLOGi',[]);
+                    plotGrav_exportData(time.data_b,data.data_b,channels,units,select,[],'TRiLOGi',[]);
                 else
-                    plotGrav_exportData(time.trilogi,data.trilogi,channels,units,select,[],'TRiLOGi',char(varargin{1}));
+                    plotGrav_exportData(time.data_b,data.data_b,channels,units,select,[],'TRiLOGi',char(varargin{1}));
                 end
             end
-		case 'export_other1_all'
+		case 'export_data_c_all'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_other1'),'UserData');  % get other1 units
-			channels = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get other1 channels (names)
+			units = get(findobj('Tag','plotGrav_text_data_c'),'UserData');  % get data_c units
+			channels = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get data_c channels (names)
             if nargin == 1
-                plotGrav_exportData(time.other1,data.other1,channels,units,[],[],'Other1',[]);
+                plotGrav_exportData(time.data_c,data.data_c,channels,units,[],[],'Other1',[]);
             else
-                plotGrav_exportData(time.other1,data.other1,channels,units,[],[],'Other1',char(varargin{1}));
+                plotGrav_exportData(time.data_c,data.data_c,channels,units,[],[],'Other1',char(varargin{1}));
             end
-		case 'export_other1_sel'
+		case 'export_data_c_sel'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_other1'),'UserData');  % get other1 units
-			channels = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get other1 channels (names)
-			data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the other1 table
-			select = find(cell2mat(data_other1(:,1))==1);                   % get selected other1 channels for L1
+			units = get(findobj('Tag','plotGrav_text_data_c'),'UserData');  % get data_c units
+			channels = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get data_c channels (names)
+			data_data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the data_c table
+			select = find(cell2mat(data_data_c(:,1))==1);                   % get selected data_c channels for L1
             if isempty(select)
                 set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
             else
                 if nargin == 1
-                    plotGrav_exportData(time.other1,data.other1,channels,units,select,[],'Other1',[]);
+                    plotGrav_exportData(time.data_c,data.data_c,channels,units,select,[],'Other1',[]);
                 else
-                    plotGrav_exportData(time.other1,data.other1,channels,units,select,[],'Other1',char(varargin{1}));
+                    plotGrav_exportData(time.data_c,data.data_c,channels,units,select,[],'Other1',char(varargin{1}));
                 end
             end
-		case 'export_other2_all'
+		case 'export_data_d_all'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_other2'),'UserData');  % get other2 units
-			channels = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get other2 channels (names)
+			units = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  % get data_d units
+			channels = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get data_d channels (names)
             if nargin == 1
-                plotGrav_exportData(time.other2,data.other2,channels,units,[],[],'Other2',[]);
+                plotGrav_exportData(time.data_d,data.data_d,channels,units,[],[],'Other2',[]);
             else
-                plotGrav_exportData(time.other2,data.other2,channels,units,[],[],'Other2',char(varargin{1}));
+                plotGrav_exportData(time.data_d,data.data_d,channels,units,[],[],'Other2',char(varargin{1}));
             end
-		case 'export_other2_sel'
+		case 'export_data_d_sel'
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_other2'),'UserData');  % get other2 units
-			channels = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get other2 channels (names)
-			data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the other2 table
-			select = find(cell2mat(data_other2(:,1))==1);                   % get selected other2 channels for L1
+			units = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  % get data_d units
+			channels = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get data_d channels (names)
+			data_data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the data_d table
+			select = find(cell2mat(data_data_d(:,1))==1);                   % get selected data_d channels for L1
             if isempty(select)
                 set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
             else
                 if nargin == 1
-                    plotGrav_exportData(time.other2,data.other2,channels,units,select,[],'Other2',[]);
+                    plotGrav_exportData(time.data_d,data.data_d,channels,units,select,[],'Other2',[]);
                 else
-                    plotGrav_exportData(time.other2,data.other2,channels,units,select,[],'Other2',char(varargin{1}));
+                    plotGrav_exportData(time.data_d,data.data_d,channels,units,select,[],'Other2',char(varargin{1}));
                 end
             end
             
@@ -3351,27 +3351,27 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
                 % Get channel units. Will be used for output
-                units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
-                units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
-                units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
-                units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');  
+                units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');         % get iGrav units
+                units.data_b = get(findobj('Tag','plotGrav_text_data_b'),'UserData');         
+                units.data_c = get(findobj('Tag','plotGrav_text_data_c'),'UserData');         
+                units.data_d = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  
                 % Get channel names. Will be used for output. 'diff' will
                 % be appended to the end.
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names).
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names).
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');   % get Other1 channels (names)
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');   % get Other2 channels (names)
                 % Get UI tables (selected channels)
-                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+                data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');      % get the TRiLOGi table. 
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');      % get the TRiLOGi table. 
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');        % get the Other1 table
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');        % get the Other2 table
                 try
                     % Find selected channles
                     % Set panel 'official' names. To reduce the code length, use a for loop for
                     % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                     % filling the structure arrays.
-                    panels = {'igrav','trilogi','other1','other2'};  
+                    panels = {'data_a','data_b','data_c','data_d'};  
                     % Run loop for all panels
                     for i = 1:length(panels)
                         plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
@@ -3396,18 +3396,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     end
                     % Store the results
                     set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
-                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
-                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
-                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
-                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
-                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
-                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
-                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
-                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
-                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a);
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a);
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a);
+                    set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.data_b);
+                    set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.data_b);
+                    set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.data_b);
+                    set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.data_c);
+                    set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.data_c);
+                    set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.data_c);
+                    set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.data_d);
+                    set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.data_d);
+                    set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.data_d);
 
                     set(findobj('Tag','plotGrav_text_status'),'String','Derivative/difference computed.');drawnow % status
                     fclose(fid);
@@ -3440,27 +3440,27 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 end
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
                 % Get channel units. Will be used for output
-                units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
-                units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
-                units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
-                units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');  
+                units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');         % get iGrav units
+                units.data_b = get(findobj('Tag','plotGrav_text_data_b'),'UserData');         
+                units.data_c = get(findobj('Tag','plotGrav_text_data_c'),'UserData');         
+                units.data_d = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  
                 % Get channel names. Will be used for output. 'diff' will
                 % be appended to the end.
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names).
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names).
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');   % get Other1 channels (names)
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');   % get Other2 channels (names)
                 % Get UI tables (selected channels)
-                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
+                data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');      % get the TRiLOGi table. 
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');      % get the TRiLOGi table. 
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');        % get the Other1 table
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');        % get the Other2 table
                 try
                     % Find selected channles
                     % Set panel 'official' names. To reduce the code length, use a for loop for
                     % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                     % filling the structure arrays.
-                    panels = {'igrav','trilogi','other1','other2'};  
+                    panels = {'data_a','data_b','data_c','data_d'};  
                     % Run loop for all panels
                     for i = 1:length(panels)
                         plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
@@ -3490,18 +3490,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     end
                     % Store the results
                     set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
-                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
-                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
-                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
-                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
-                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
-                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
-                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
-                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
-                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a);
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a);
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a);
+                    set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.data_b);
+                    set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.data_b);
+                    set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.data_b);
+                    set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.data_c);
+                    set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.data_c);
+                    set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.data_c);
+                    set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.data_d);
+                    set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.data_d);
+                    set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.data_d);
 
                     set(findobj('Tag','plotGrav_text_status'),'String','Cumulative sum computed.');drawnow % status
                     fclose(fid);
@@ -3525,18 +3525,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data (all time series). No time vector is required for further computation
             if ~isempty(data)                                               % Check if some data have been loaded.
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
-				data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table. Will be used to find selected/checked channels
-				units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData'); % get iGrav units. Will be used for output/plot
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names). Will be used for output/plot
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi table
-				units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData'); % get TRiLOGi units
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 table
-				units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData'); % get Other1 units
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get Other1 channels
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 table
-				units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData'); % get Other2 units
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get Other2 channels
+				data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table. Will be used to find selected/checked channels
+				units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData'); % get iGrav units. Will be used for output/plot
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names). Will be used for output/plot
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi table
+				units.data_b = get(findobj('Tag','plotGrav_text_data_b'),'UserData'); % get TRiLOGi units
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 table
+				units.data_c = get(findobj('Tag','plotGrav_text_data_c'),'UserData'); % get Other1 units
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get Other1 channels
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 table
+				units.data_d = get(findobj('Tag','plotGrav_text_data_d'),'UserData'); % get Other2 units
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get Other2 channels
 				
                 % try if some logfile is selected/exists
                 try                                                         
@@ -3547,7 +3547,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 
                 % Set panel names (fixed). Will be used for loop to reduce
                 % the code length
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for p = 1:length(panels)
                     plot_axesL1.(panels{p}) = find(cell2mat(data_table.(panels{p})(:,1))==1);     % find selected/checked channels for L1. Only L1 selection is important. The 'find' operation does not work with cell area => covert to matrix
                     % First check if at least one channel is selected/checked
@@ -3594,19 +3594,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if ~isempty(data)
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vector. Will be used to derive sampling frequency
-				data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the iGrav table. Will be used to find selected/checked time series
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');% get the TRiLOGi table. 
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');  % get the Other1 table
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');  % get the Other2 table
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+				data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav table. Will be used to find selected/checked time series
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');% get the TRiLOGi table. 
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');  % get the Other1 table
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');   % get Other1 channels (names)
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');  % get the Other2 table
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');   % get Other2 channels (names)
 				color_scale = get(findobj('Tag','plotGrav_text_nms2'),'UserData');              % get defined colors (used for output plot)
 
                 % Set panel names (fixed). Will be used for loop to reduce
                 % the code length
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 % open new figure for plotting. Otherwise, the result would be plotted in main plotGrav GUI figure.
                 figure('Name','plotGrav: spectral analysis','Toolbar','figure'); 
                 a0_spectral = axes('FontSize',font_size);                   % create new axes using defined font size
@@ -3651,19 +3651,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             if ~isempty(data)                                               % continue only if some data have been loaded
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time: will be used to determine the sampling frequency and for interpolation
-                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the iGrav table. Will be used to find selected/checked time series
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');% get the TRiLOGi table. 
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');  % get the Other1 table
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');  % get the Other2 table
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+                data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav table. Will be used to find selected/checked time series
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');% get the TRiLOGi table. 
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');  % get the Other1 table
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');   % get Other1 channels (names)
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');  % get the Other2 table
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');   % get Other2 channels (names)
 				color_scale = get(findobj('Tag','plotGrav_text_nms2'),'UserData');              % get defined colors (used for output plot)
 
 				% Set panel names (fixed). Will be used for loop to reduce
                 % the code length
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 % open new figure for plotting. Otherwise, the result would be plotted in main plotGrav GUI figure.
                 figure('Name','plotGrav: spectral analysis','Toolbar','figure'); 
                 a0_spectral = axes('FontSize',font_size);                   % create new axes using defined font size
@@ -3718,25 +3718,25 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             if ~isempty(data)                                               % continue only if some data have been loaded
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing...');drawnow % status 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time: will be used to determine the sampling frequency and for interpolation
-                data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the TRiLOGi table. 
-				channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
-				data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');      % get the TRiLOGi table. 
-				channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');        % get the Other1 table
-				channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');   % get Other1 channels (names)
-				data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');        % get the Other2 table
-				channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');   % get Other2 channels (names)
+                data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');      % get the TRiLOGi table. 
+				channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names). Will be used for output plots. No units required.
+				data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');      % get the TRiLOGi table. 
+				channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');        % get the Other1 table
+				channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');   % get Other1 channels (names)
+				data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');        % get the Other2 table
+				channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');   % get Other2 channels (names)
                 try
                     % Find selected channles
                     % Set panel 'official' names. To reduce the code length, use a for loop for
                     % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                     % filling the structure arrays.
-                    panels = {'igrav','trilogi','other1','other2'};  
+                    panels = {'data_a','data_b','data_c','data_d'};  
                     % First find all selected channels
                     for i = 1:length(panels)
                         plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                     end
-                    if length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) == 1
+                    if length([plot_axesL1.data_a,plot_axesL1.data_b,plot_axesL1.data_c,plot_axesL1.data_d]) == 1
                         % Get user input
                         if nargin == 1 
                             set(findobj('Tag','plotGrav_text_status'),'String','Set moving window length in hours');drawnow % send instructions to command promtp
@@ -3853,7 +3853,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Set panel 'official' names. To reduce the code length, use a for loop for
                 % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                 % filling the structure arrays.
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 % First get all channel names, units and data tables + find selected channels
                 for i = 1:length(panels)
                      % Get units. Will be used for output/plot
@@ -3939,7 +3939,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Set panel 'official' names. To reduce the code length, use a for loop for
                 % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                 % filling the structure arrays.
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 % First get all channel names, units and data tables + find selected channels
                 for i = 1:length(panels)
                      % Get units. Will be used for output/plot
@@ -3969,7 +3969,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         % Create new ui-table without selected/removed
                         % channels. Run this loop especially to update the
-                        % channel numers. Removal of a channel data_igrav(plot_axesL1.igrav,:) = [];
+                        % channel numers. Removal of a channel data_data_a(plot_axesL1.data_a,:) = [];
                         % does not invoke numbering update!!
                         for i = 1:length(channels.(panels{p}))              % Loop for all remaining channels
                             data_table.(panels{p})(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels{p})(i)),char(units.(panels{p})(i)))};
@@ -4004,7 +4004,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 % Set panel 'official' names. To reduce the code length, use a for loop for
                 % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
                 % filling the structure arrays.
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 % First get all channel names, units and data tables + find selected channels
                 for i = 1:length(panels)
                      % Get units. Will be used for output/plot
@@ -4097,77 +4097,77 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			eof.chan_list = [];
 			eof.unit_list = [];
 			eof.mean_value = [];
-			if ~isempty(data.igrav)                                         % proceed only if igrav data loaded
+			if ~isempty(data.data_a)                                         % proceed only if data_a data loaded
                 % Get all required data
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData');               % load time vectors
-				data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');      % get the iGrav ui-table. Will be used to find selected/checked channels.
-				units_igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units. 
-				channels_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names). 
-				data_trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');  % get the TRiLOGi table
-				units_trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');     % get TRiLOGi units
-				channels_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); % get TRiLOGi channels
-				data_other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');    % get the Other1 table
-				units_other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');       % get Other1 units
-				channels_other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); % get Other1 channels
-				data_other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');    % get the Other2 table
-				units_other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');       % get Other2 units
-				channels_other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); % get Other2 channels
-				plot_axesL1.igrav = find(cell2mat(data_igrav(:,1))==1);     % get selected iGrav channels for L1
-				plot_axesL1.trilogi = find(cell2mat(data_trilogi(:,1))==1); % get selected TRiLOGi channels for L1
-				plot_axesL1.other1 = find(cell2mat(data_other1(:,1))==1);   % get selected Other1 channels for L1
-				plot_axesL1.other2 = find(cell2mat(data_other2(:,1))==1);   % get selected other2 channels for L1
+				data_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');      % get the iGrav ui-table. Will be used to find selected/checked channels.
+				units_data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');         % get iGrav units. 
+				channels_data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names). 
+				data_data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');  % get the TRiLOGi table
+				units_data_b = get(findobj('Tag','plotGrav_text_data_b'),'UserData');     % get TRiLOGi units
+				channels_data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get TRiLOGi channels
+				data_data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');    % get the Other1 table
+				units_data_c = get(findobj('Tag','plotGrav_text_data_c'),'UserData');       % get Other1 units
+				channels_data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get Other1 channels
+				data_data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');    % get the Other2 table
+				units_data_d = get(findobj('Tag','plotGrav_text_data_d'),'UserData');       % get Other2 units
+				channels_data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get Other2 channels
+				plot_axesL1.data_a = find(cell2mat(data_data_a(:,1))==1);     % get selected iGrav channels for L1
+				plot_axesL1.data_b = find(cell2mat(data_data_b(:,1))==1); % get selected TRiLOGi channels for L1
+				plot_axesL1.data_c = find(cell2mat(data_data_c(:,1))==1);   % get selected Other1 channels for L1
+				plot_axesL1.data_d = find(cell2mat(data_data_d(:,1))==1);   % get selected data_d channels for L1
 				
 				set(findobj('Tag','plotGrav_text_status'),'String','Computing EOF...');drawnow % status
 				plot_mode = get(findobj('Tag','plotGrav_push_reset_view'),'UserData');  % plot mode will be updated as EOF results will be plotted to GUI
 				
                 try
-                    eof.ref_time = [time.igrav(1):mode(diff(time.igrav)):time.igrav(end)]';  % new reference time vector. All time series will be re-interpolated to this time vector. mode(diff(time.igrav)) is used to ensure constant sampling
+                    eof.ref_time = [time.data_a(1):mode(diff(time.data_a)):time.data_a(end)]';  % new reference time vector. All time series will be re-interpolated to this time vector. mode(diff(time.data_a)) is used to ensure constant sampling
 
                     % Prepare the F matrix, starting with iGrav
-                    if ~isempty(plot_axesL1.igrav)                              % proceed only if selected. ~isempty(data.igrav) condition already used above
-                        for i = 1:length(plot_axesL1.igrav)                     % compute for all selected channels
-                            temp = interp1(time.igrav,data.igrav(:,plot_axesL1.igrav(i)),eof.ref_time); % interpolate current channel to ref_time
+                    if ~isempty(plot_axesL1.data_a)                              % proceed only if selected. ~isempty(data.data_a) condition already used above
+                        for i = 1:length(plot_axesL1.data_a)                     % compute for all selected channels
+                            temp = interp1(time.data_a,data.data_a(:,plot_axesL1.data_a(i)),eof.ref_time); % interpolate current channel to ref_time
                             eof.mean_value = [eof.mean_value,mean(temp(~isnan(temp)))]; % Start stacking mean values. Mean will stored for further processing. Remove NaNs only for mean computation. Pairwise covariance will be then computed to avoid NaN issues.
                             temp = temp - eof.mean_value(end);                  % remove mean value (EOP requirement)
-                            eof.unit_list = [eof.unit_list,units_igrav(plot_axesL1.igrav(i))]; % Stack units (for output)
-                            eof.chan_list = [eof.chan_list,channels_igrav(plot_axesL1.igrav(i))]; % Stack channel names (for output)
+                            eof.unit_list = [eof.unit_list,units_data_a(plot_axesL1.data_a(i))]; % Stack units (for output)
+                            eof.chan_list = [eof.chan_list,channels_data_a(plot_axesL1.data_a(i))]; % Stack channel names (for output)
                             eof.F = horzcat(eof.F,temp);                        % Stack columns = data for further EOF analysis (F matrix contains all/selected input time series)
                             clear temp
                         end
                     end
                     % Do the same for TRiLOGi. See comments above.
-                    if ~isempty(plot_axesL1.trilogi) && ~isempty(data.trilogi)
-                        for i = 1:length(plot_axesL1.trilogi)                 
-                            temp = interp1(time.trilogi,data.trilogi(:,plot_axesL1.trilogi(i)),eof.ref_time); 
+                    if ~isempty(plot_axesL1.data_b) && ~isempty(data.data_b)
+                        for i = 1:length(plot_axesL1.data_b)                 
+                            temp = interp1(time.data_b,data.data_b(:,plot_axesL1.data_b(i)),eof.ref_time); 
                             eof.mean_value = [eof.mean_value,mean(temp(~isnan(temp)))];
                             temp = temp - eof.mean_value(end);       
-                            eof.unit_list = [eof.unit_list,units_trilogi(plot_axesL1.trilogi(i))];
-                            eof.chan_list = [eof.chan_list,channels_trilogi(plot_axesL1.trilogi(i))];
+                            eof.unit_list = [eof.unit_list,units_data_b(plot_axesL1.data_b(i))];
+                            eof.chan_list = [eof.chan_list,channels_data_b(plot_axesL1.data_b(i))];
                             eof.F = horzcat(eof.F,temp);                            
                             clear temp
                         end
                     end
                     % Do the same for Other1. See comments above.
-                    if ~isempty(plot_axesL1.other1) && ~isempty(data.other1)
-                        for i = 1:length(plot_axesL1.other1)                 
-                            temp = interp1(time.other1,data.other1(:,plot_axesL1.other1(i)),eof.ref_time); 
+                    if ~isempty(plot_axesL1.data_c) && ~isempty(data.data_c)
+                        for i = 1:length(plot_axesL1.data_c)                 
+                            temp = interp1(time.data_c,data.data_c(:,plot_axesL1.data_c(i)),eof.ref_time); 
                             eof.mean_value = [eof.mean_value,mean(temp(~isnan(temp)))];
                             temp = temp - eof.mean_value(end);         
-                            eof.unit_list = [eof.unit_list,units_other1(plot_axesL1.other1(i))]; 
-                            eof.chan_list = [eof.chan_list,channels_other1(plot_axesL1.other1(i))]; 
+                            eof.unit_list = [eof.unit_list,units_data_c(plot_axesL1.data_c(i))]; 
+                            eof.chan_list = [eof.chan_list,channels_data_c(plot_axesL1.data_c(i))]; 
                             eof.F = horzcat(eof.F,temp);                            
                             clear temp
                         end
                     end
 
                     % Do the same for Other2. See comments above.
-                    if ~isempty(plot_axesL1.other2) && ~isempty(data.other2)
-                        for i = 1:length(plot_axesL1.other2)                 
-                            temp = interp1(time.other2,data.other2(:,plot_axesL1.other2(i)),eof.ref_time); 
+                    if ~isempty(plot_axesL1.data_d) && ~isempty(data.data_d)
+                        for i = 1:length(plot_axesL1.data_d)                 
+                            temp = interp1(time.data_d,data.data_d(:,plot_axesL1.data_d(i)),eof.ref_time); 
                             eof.mean_value = [eof.mean_value,mean(temp(~isnan(temp)))];
                             temp = temp - eof.mean_value(end);        
-                            eof.unit_list = [eof.unit_list,units_other2(plot_axesL1.other2(i))]; 
-                            eof.chan_list = [eof.chan_list,channels_other2(plot_axesL1.other2(i))]; 
+                            eof.unit_list = [eof.unit_list,units_data_d(plot_axesL1.data_d(i))]; 
+                            eof.chan_list = [eof.chan_list,channels_data_d(plot_axesL1.data_d(i))]; 
                             eof.F = horzcat(eof.F,temp');                           
                             clear temp
                         end
@@ -4398,7 +4398,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			% SUBTRACE polynomial X.degree = coefficient set by user
             % In this case, user input is required:
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % just to check if some data has been loaded
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2)
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d)
                 set(findobj('Tag','plotGrav_text_status'),'String','Fitting...');drawnow % status
                 if nargin == 1 
                     set(findobj('Tag','plotGrav_text_status'),'String','Set coefficients of a polynomial (PN PN-1... P0)');drawnow % send instructions to command promtp
@@ -4432,15 +4432,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % This feature works only for iGrav panel! The plots are not
             % permanent, and not stored anywhere!
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
-			if ~isempty(data.igrav)                                         % continue only if iGrav data loaded
+			if ~isempty(data.data_a)                                         % continue only if iGrav data loaded
                 % First, get required data
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
-				data_igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');  % get the iGrav ui-table to find selected channel
-				plot_axesL1.igrav = find(cell2mat(data_igrav(:,1))==1);     % get selected iGrav channels for L1
+				data_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');  % get the iGrav ui-table to find selected channel
+				plot_axesL1.data_a = find(cell2mat(data_data_a(:,1))==1);     % get selected iGrav channels for L1
 				a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % get first axes (L1) for future plotting
-				if isempty(plot_axesL1.igrav)
+				if isempty(plot_axesL1.data_a)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one iGrav channel!');drawnow % status
-				elseif length(plot_axesL1.igrav) > 1
+				elseif length(plot_axesL1.data_a) > 1
 					set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel for L1!');drawnow % status
                 else   
                     % First get user input = polynomial degree
@@ -4463,16 +4463,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					set(findobj('Tag','plotGrav_text_status'),'String','Select extrapolation point...');drawnow % status
 					[selected_x3,~] = ginput(1);
 					selected_x = sort([selected_x1,selected_x2]);           % sort = ascending
-                    r = find(time.igrav>selected_x(1) & time.igrav<selected_x(2)); % find points within the selected interval
-                    r2 = find(time.igrav>min([selected_x1,selected_x2,selected_x3]) & time.igrav<max([selected_x1,selected_x2,selected_x3]));  % find points within the selected interval (extrapolation)
+                    r = find(time.data_a>selected_x(1) & time.data_a<selected_x(2)); % find points within the selected interval
+                    r2 = find(time.data_a>min([selected_x1,selected_x2,selected_x3]) & time.data_a<max([selected_x1,selected_x2,selected_x3]));  % find points within the selected interval (extrapolation)
                     if ~isempty(r)                                          % continue only if some points have been found
                         try
-                            ytemp = data.igrav(r,plot_axesL1.igrav);        % get selected channel within found interval
-                            xtemp = time.igrav(r);                          % get selected time interval 
+                            ytemp = data.data_a(r,plot_axesL1.data_a);        % get selected channel within found interval
+                            xtemp = time.data_a(r);                          % get selected time interval 
                             p = polyfit(xtemp(~isnan(ytemp)),ytemp(~isnan(ytemp)),deg); % Fit data
                             if ~isempty(r2)                                 % extrapolate only if some points have been found
-                                otemp = polyval(p,time.igrav(r2));
-                                plot(time.igrav(r2),otemp,'k');
+                                otemp = polyval(p,time.data_a(r2));
+                                plot(time.data_a(r2),otemp,'k');
                             end
                         catch
                             set(findobj('Tag','plotGrav_text_status'),'String','Could not fit the data.');drawnow % status
@@ -4497,7 +4497,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');       % get font size (for plotting)
 
             % Find selected channels
-            panels = {'igrav','trilogi','other1','other2'};                 % will be used to simplify the code: run a for loop for all panels  
+            panels = {'data_a','data_b','data_c','data_d'};                 % will be used to simplify the code: run a for loop for all panels  
             for i = 1:length(panels)
                 % Get ui-table and channel names
                 data_table.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data'); 
@@ -4509,17 +4509,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Set reference time. All time series will be interpolated to
             % this time vector.
             eof.ref_time = [];                                              % declare variable
-            if ~isempty(time.igrav)                                         % First, try to set igrav time as reference 
-                eof.ref_time = time.igrav;                                  % new time (hourly resolution)
+            if ~isempty(time.data_a)                                         % First, try to set data_a time as reference 
+                eof.ref_time = time.data_a;                                  % new time (hourly resolution)
             end
-            if isempty(eof.ref_time) && ~isempty(time.trilogi)              % if iGrav data not loaded, continue finding reference time vector
-                eof.ref_time = time.trilogi;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_b)              % if iGrav data not loaded, continue finding reference time vector
+                eof.ref_time = time.data_b;                                
             end
-            if isempty(eof.ref_time) && ~isempty(time.other1)              
-                eof.ref_time = time.other1;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_c)              
+                eof.ref_time = time.data_c;                                
             end
-            if isempty(eof.ref_time) && ~isempty(time.other2)              
-                eof.ref_time = time.other2;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_d)              
+                eof.ref_time = time.data_d;                                
             end
 			eof.F = [];                                                     % will store all interpolated time series used to compute correlation matrix
 			eof.chan_list = [];                                             % declare variable that will store channel names. Will be used for plotting. Units not important.
@@ -4648,7 +4648,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');       % get font size (for plotting)
             
             % Find selected channels
-            panels = {'igrav','trilogi','other1','other2'};                 % will be used to simplify the code: run a for loop for all panels  
+            panels = {'data_a','data_b','data_c','data_d'};                 % will be used to simplify the code: run a for loop for all panels  
             for i = 1:length(panels)
                 % Get ui-table and channel names
                 data_table.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data'); 
@@ -4660,17 +4660,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Set reference time. All time series will be interpolated to
             % this time vector.
             eof.ref_time = [];                                              % declare variable
-            if ~isempty(time.igrav)                                         % First, try to set igrav time as reference 
-                eof.ref_time = time.igrav;                                  % new time (hourly resolution)
+            if ~isempty(time.data_a)                                         % First, try to set data_a time as reference 
+                eof.ref_time = time.data_a;                                  % new time (hourly resolution)
             end
-            if isempty(eof.ref_time) && ~isempty(time.trilogi)              % if iGrav data not loaded, continue finding reference time vector
-                eof.ref_time = time.trilogi;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_b)              % if iGrav data not loaded, continue finding reference time vector
+                eof.ref_time = time.data_b;                                
             end
-            if isempty(eof.ref_time) && ~isempty(time.other1)              
-                eof.ref_time = time.other1;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_c)              
+                eof.ref_time = time.data_c;                                
             end
-            if isempty(eof.ref_time) && ~isempty(time.other2)              
-                eof.ref_time = time.other2;                                
+            if isempty(eof.ref_time) && ~isempty(time.data_d)              
+                eof.ref_time = time.data_d;                                
             end
             set(findobj('Tag','plotGrav_text_status'),'String','Select two points (like for zooming)...');drawnow % send instruction to status bar
 			[selected_x,~] = ginput(2);                                     % Get user input
@@ -4812,7 +4812,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
             
             % Find selected channels
-            panels = {'igrav','trilogi','other1','other2'};                 % will be used to simplify the code: run a for loop for all panels  
+            panels = {'data_a','data_b','data_c','data_d'};                 % will be used to simplify the code: run a for loop for all panels  
             for i = 1:length(panels)
                 data_table.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data'); 
                 plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
@@ -4820,7 +4820,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             if ~isempty(data)                                               % continue only if data loaded
                 try
-					check = [plot_axesL1.igrav plot_axesL1.trilogi plot_axesL1.other1 plot_axesL1.other2]; % get number of all selected channels (e.g., [2 [] 3] = [2 3] = only two selected)
+					check = [plot_axesL1.data_a plot_axesL1.data_b plot_axesL1.data_c plot_axesL1.data_d]; % get number of all selected channels (e.g., [2 [] 3] = [2 3] = only two selected)
 					if numel(check) ~= 2                    
 						set(findobj('Tag','plotGrav_text_status'),'String','You can select only two channels (L1)...');drawnow % status
                     else
@@ -4934,7 +4934,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First load all required inputs
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
-            panels = {'igrav','trilogi','other1','other2'};  
+            panels = {'data_a','data_b','data_c','data_d'};  
             % Get all channel names, units and data tables + find selected channels
             for i = 1:length(panels)
                  % Get units. Will be used for output/plot
@@ -4945,7 +4945,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 data_table.(panels{i}) = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{i})),'Data'); 
             end
             % continue only if data loaded
-            if ~isempty(data.igrav)                                         
+            if ~isempty(data.data_a)                                         
                 % Open logfile
                 try
                     fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -4974,26 +4974,26 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if strcmp(char(st{2}),'=') 
                         % Use the left-hand side to get the vector and reference time, 
                         % i.e. used for interpolation (in case statement contains 
-                        % different time series, e.g., iGrav + trilogi)
+                        % different time series, e.g., iGrav + data_b)
                         switch char(st{1}(1))
                             case 'A'
                                 % ref_time stores the reference time vector
-                                ref_time = time.igrav; 
+                                ref_time = time.data_a; 
                                 % Response vector. 
-                                y = data.igrav(:,str2double(st{1}(2:end)));
-                                panel = 'igrav';
+                                y = data.data_a(:,str2double(st{1}(2:end)));
+                                panel = 'data_a';
                             case 'B'
-                                ref_time = time.trilogi;
-                                y = data.trilogi(:,str2double(st{1}(2:end)));
-                                panel = 'trilogi';
+                                ref_time = time.data_b;
+                                y = data.data_b(:,str2double(st{1}(2:end)));
+                                panel = 'data_b';
                             case 'C'
-                                ref_time = time.other1;
-                                y = data.other1(:,str2double(st{1}(2:end)));
-                                panel = 'other1';
+                                ref_time = time.data_c;
+                                y = data.data_c(:,str2double(st{1}(2:end)));
+                                panel = 'data_c';
                             case 'D'
-                                ref_time = time.other2;
-                                y = data.other2(:,str2double(st{1}(2:end)));
-                                panel = 'other2';
+                                ref_time = time.data_d;
+                                y = data.data_d(:,str2double(st{1}(2:end)));
+                                panel = 'data_d';
                         end
 
                         % Declare variable for the next loop. The temp_matrix is the 
@@ -5011,16 +5011,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 case 'A' % = iGrav
                                     % Use interp1 to ensure all input vectors have the
                                     % same length.
-                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.igrav,data.igrav(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.data_a,data.data_a(:,str2double(st{i}(2:end))),ref_time));
                                     i = i + 1;
                                 case 'B' % = TRiLOGi
-                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.trilogi,data.trilogi(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.data_b,data.data_b(:,str2double(st{i}(2:end))),ref_time));
                                     i = i + 1;
                                 case 'C' % = Other1
-                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.other1,data.other1(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.data_c,data.data_c(:,str2double(st{i}(2:end))),ref_time));
                                     i = i + 1;
                                 case 'D' % = Other2
-                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.other2,data.other2(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,mult*interp1(time.data_d,data.data_d(:,str2double(st{i}(2:end))),ref_time));
                                     i = i + 1;
                                 case 't' % = time vector, e.g., for drift estimation
                                     % For 't', subtract mean to improve
@@ -5045,13 +5045,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 case '*' % = this will automatically read the next string (i+1) and use it for multiplication
                                     switch char(st{i+1}(1))
                                         case 'A' % Again switch between Panels or Time vector and multiplie with the previos vector (now as column end)
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.igrav,data.igrav(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.data_a,data.data_a(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'B'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.trilogi,data.trilogi(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.data_b,data.data_b(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'C'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.other1,data.other1(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.data_c,data.data_c(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'D'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.other2,data.other2(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end).*interp1(time.data_d,data.data_d(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 't'
                                             temp_matrix(:,end) = mult*temp_matrix(:,end).*(ref_time - mean(ref_time));
                                         case 'T'
@@ -5065,13 +5065,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 case '/'
                                     switch char(st{i+1}(1))
                                         case 'A'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.igrav,data.igrav(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.data_a,data.data_a(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'B'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.trilogi,data.trilogi(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.data_b,data.data_b(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'C'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.other1,data.other1(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.data_c,data.data_c(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 'D'
-                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.other2,data.other2(:,str2double(st{i+1}(2:end))),ref_time);
+                                            temp_matrix(:,end) = mult*temp_matrix(:,end)./interp1(time.data_d,data.data_d(:,str2double(st{i+1}(2:end))),ref_time);
                                         case 't'
                                             temp_matrix(:,end) = mult*temp_matrix(:,end)./(ref_time - mean(ref_time));
                                         case 'T'
@@ -5144,18 +5144,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 
                         % Store the results
                         set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
-                        set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
-                        set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
-                        set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
-                        set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
-                        set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
-                        set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
-                        set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a);
+                        set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a);
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a);
+                        set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.data_b);
+                        set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.data_b);
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.data_b);
+                        set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.data_c);
+                        set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.data_c);
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.data_c);
+                        set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.data_d);
+                        set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.data_d);
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.data_d);
                         % Close the log-file
                         fclose(fid);
                         % Send message to command line
@@ -5183,25 +5183,25 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             %   channel, followed by ' = '. The operators have always even indices,
             %   [2:2:end]. Channels and numbers have odd indices. To use
             %   negative values of a certain channel, use *-1, e.g., A1
-            %   = A2 * -1. The A symbols stands for iGrav, B for trilogi, C
+            %   = A2 * -1. The A symbols stands for iGrav, B for data_b, C
             %   for Other1 and D for Other2.
             
             % First load all required inputs
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); 
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); 
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); 
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); 
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); 
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time
-            units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');         % get iGrav units
-            channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData'); % get iGrav channels (names)
-            units.trilogi = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');         
-            channels.trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData'); 
-            units.other1 = get(findobj('Tag','plotGrav_text_other1'),'UserData');         
-            channels.other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData'); 
-            units.other2 = get(findobj('Tag','plotGrav_text_other2'),'UserData');         
-            channels.other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData'); 
-            if ~isempty(data.igrav)                                         % continue only if data loaded
+            units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');         % get iGrav units
+            channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names)
+            units.data_b = get(findobj('Tag','plotGrav_text_data_b'),'UserData');         
+            channels.data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); 
+            units.data_c = get(findobj('Tag','plotGrav_text_data_c'),'UserData');         
+            channels.data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); 
+            units.data_d = get(findobj('Tag','plotGrav_text_data_d'),'UserData');         
+            channels.data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); 
+            if ~isempty(data.data_a)                                         % continue only if data loaded
                 % Open logfile
                 try
                     fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5230,17 +5230,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     if strcmp(char(st{2}),'=') 
                         % Use the left-hand side to get reference time, i.e. used for
                         % interpolation (in case statement contains different time series,
-                        % e.g., iGrav + trilogi)
+                        % e.g., iGrav + data_b)
                         switch char(st{1}(1))
                             case 'A'
                                 % ref_time stores the reference time vector
-                                ref_time = time.igrav;
+                                ref_time = time.data_a;
                             case 'B'
-                                ref_time = time.trilogi;
+                                ref_time = time.data_b;
                             case 'C'
-                                ref_time = time.other1;
+                                ref_time = time.data_c;
                             case 'D'
-                                ref_time = time.other2;
+                                ref_time = time.data_d;
                         end
                         % Continue with the statement on the right-hand side. The left side, i.e.
                         % output channel will be used later. The temp_matrix will (temporarily)
@@ -5251,13 +5251,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             % Append loaded channels
                             switch char(st{i}(1))
                                 case 'A'
-                                    temp_matrix = horzcat(temp_matrix,interp1(time.igrav,data.igrav(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.data_a,data.data_a(:,str2double(st{i}(2:end))),ref_time));
                                 case 'B'
-                                    temp_matrix = horzcat(temp_matrix,interp1(time.trilogi,data.trilogi(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.data_b,data.data_b(:,str2double(st{i}(2:end))),ref_time));
                                 case 'C'
-                                    temp_matrix = horzcat(temp_matrix,interp1(time.other1,data.other1(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.data_c,data.data_c(:,str2double(st{i}(2:end))),ref_time));
                                 case 'D'
-                                    temp_matrix = horzcat(temp_matrix,interp1(time.other2,data.other2(:,str2double(st{i}(2:end))),ref_time));
+                                    temp_matrix = horzcat(temp_matrix,interp1(time.data_d,data.data_d(:,str2double(st{i}(2:end))),ref_time));
                             end
                             % Append numberic values if given
                             if ~isnan(str2double(st{i}(:)))
@@ -5289,56 +5289,56 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         % Update the required column depending on the left-hand side expression
                         switch char(st{1}(1))
                             case 'A'
-                                data.igrav(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.igrav(str2double(st{1}(2:end))) = {'?'}; % change/add units. By defauld, no unit
-                                channels.igrav(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
-                                data_table.igrav(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+                                data.data_a(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.data_a(str2double(st{1}(2:end))) = {'?'}; % change/add units. By defauld, no unit
+                                channels.data_a(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
+                                data_table.data_a(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                                set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav);
-                                set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav);
-                                set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav);
+                                set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a);
+                                set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a);
+                                set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a);
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'B'
-                                data.trilogi(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.trilogi(str2double(st{1}(2:end))) = {'?'};
-                                channels.trilogi(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
-                                data_table.trilogi(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+                                data.data_b(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.data_b(str2double(st{1}(2:end))) = {'?'};
+                                channels.data_b(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
+                                data_table.data_b(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                                set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);
-                                set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi);
-                                set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi);
+                                set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.data_b);
+                                set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.data_b);
+                                set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.data_b);
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Trilogi channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'C'
-                                data.other1(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.other1(str2double(st{1}(2:end))) = {'?'};
-                                channels.other1(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
-                                data_table.other1(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+                                data.data_c(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.data_c(str2double(st{1}(2:end))) = {'?'};
+                                channels.data_c(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
+                                data_table.data_c(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                                set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);
-                                set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1);
-                                set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1);
+                                set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.data_c);
+                                set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.data_c);
+                                set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.data_c);
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other1 channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                             case 'D'
-                                data.other2(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
-                                units.other2(str2double(st{1}(2:end))) = {'?'};
-                                channels.other2(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
-                                data_table.other2(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
+                                data.data_d(:,str2double(st{1}(2:end))) = eval(command); % Evaluate the command/expression
+                                units.data_d(str2double(st{1}(2:end))) = {'?'};
+                                channels.data_d(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
+                                data_table.data_d(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
 															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-                                set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);
-                                set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2);
-                                set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2);
+                                set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.data_d);
+                                set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.data_d);
+                                set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.data_d);
                                 [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Other2 channel %2d: %s (%04d/%02d/%02d %02d:%02d)\n',str2double(st{1}(2:end)),st0,ty,tm,td,th,tmm);
                         end
                         fclose(fid);
@@ -5368,12 +5368,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
                 
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % remove only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % remove only if loaded
                 % Open logfile (to document removed time interval)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5381,14 +5381,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(panels{i}) = find(cell2mat(data_table.(panels{i})(:,1))==1); % get selected channels (L1) for each panel
                 end
 				
-				if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
+				if isempty([plot_axesL1.data_a,plot_axesL1.data_b,plot_axesL1.data_c,plot_axesL1.data_d]) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
-				elseif length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
+				elseif length([plot_axesL1.data_a,plot_axesL1.data_b,plot_axesL1.data_c,plot_axesL1.data_d]) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel for L1.');drawnow % status
                 else
                     % Get input from user
@@ -5443,12 +5443,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
                 
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
                 % Open logfile (to document interpolated time intervals)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5456,15 +5456,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
 				
-				if isempty([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) % continue only if at least one channel selected
+				if isempty([plot_axesL1.data_a,plot_axesL1.data_b,plot_axesL1.data_c,plot_axesL1.data_d]) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
                     fclose(fid);                                            % close logfile
-				elseif length([plot_axesL1.igrav,plot_axesL1.trilogi,plot_axesL1.other1,plot_axesL1.other2]) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
+				elseif length([plot_axesL1.data_a,plot_axesL1.data_b,plot_axesL1.data_c,plot_axesL1.data_d]) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel for L1.');drawnow % status
                     fclose(fid);                                            % close logfile
                 else
@@ -5523,12 +5523,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
                 
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
                 % Open logfile (to document interpolated time intervals)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5536,7 +5536,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
@@ -5557,7 +5557,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 threshold = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get string
                 threshold = str2double(threshold)/86400;                    % Convert to time in days
                 
-                if isempty([plot_axesL1.igrav;plot_axesL1.trilogi;plot_axesL1.other1;plot_axesL1.other2]) % continue only if at least one channel selected
+                if isempty([plot_axesL1.data_a;plot_axesL1.data_b;plot_axesL1.data_c;plot_axesL1.data_d]) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
                     fclose(fid);                                            % close logfile
                 else
@@ -5620,12 +5620,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
             time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
             
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % remove only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % remove only if loaded
 				% Open logfile (to document removed time interval)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5633,14 +5633,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
 				
-                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)']) % continue only if at least one channel selected
+                if isempty([plot_axesL1.data_a(:)',plot_axesL1.data_b(:)',plot_axesL1.data_c(:)',plot_axesL1.data_d(:)']) % continue only if at least one channel selected
 					set(findobj('Tag','plotGrav_text_status'),'String','Select one channel (L1).');drawnow % status
-				elseif length([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)']) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
+				elseif length([plot_axesL1.data_a(:)',plot_axesL1.data_b(:)',plot_axesL1.data_c(:)',plot_axesL1.data_d(:)']) > 1 % continue if exactly one channel selected (otherwise not clear which channel should be affected)
 					set(findobj('Tag','plotGrav_text_status'),'String','Select only one channel for L1.');drawnow % status
                 else
                     % Get input from user
@@ -5689,12 +5689,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
             
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
 				% Open logfile (to document removed time interval)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5702,12 +5702,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
                 % Check how many channels are selected (minimum one)
-                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
+                if isempty([plot_axesL1.data_a(:)',plot_axesL1.data_b(:)',plot_axesL1.data_c(:)',plot_axesL1.data_d(:)'])
 					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
                 else
                     try
@@ -5771,12 +5771,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
             
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
 				% Open logfile (to document removed time interval)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5784,12 +5784,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
                 % Check how many channels are selected (minimum one)
-                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
+                if isempty([plot_axesL1.data_a(:)',plot_axesL1.data_b(:)',plot_axesL1.data_c(:)',plot_axesL1.data_d(:)'])
 					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
                 else
                     try
@@ -5850,12 +5850,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data'); % get the iGrav ui-table
-            data_table.trilogi = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data'); % get the TRiLOGi ui-table
-            data_table.other1 = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data'); % get the Other1 ui-table
-            data_table.other2 = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data'); % get the Other2 ui-table
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav ui-table
+            data_table.data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the TRiLOGi ui-table
+            data_table.data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the Other1 ui-table
+            data_table.data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the Other2 ui-table
             
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
 				% Open logfile (to document removed time interval)
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5863,12 +5863,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					fid = fopen('plotGrav_LOG_FILE.log','a');
                 end
                 % Find all selected channels
-                panels = {'igrav','trilogi','other1','other2'};  
+                panels = {'data_a','data_b','data_c','data_d'};  
                 for i = 1:length(panels)
                     plot_axesL1.(char(panels(i))) = find(cell2mat(data_table.(char(panels(i)))(:,1))==1); % get selected channels (L1) for each panel
                 end
                 % Check how many channels are selected (minimum one)
-                if isempty([plot_axesL1.igrav(:)',plot_axesL1.trilogi(:)',plot_axesL1.other1(:)',plot_axesL1.other2(:)'])
+                if isempty([plot_axesL1.data_a(:)',plot_axesL1.data_b(:)',plot_axesL1.data_c(:)',plot_axesL1.data_d(:)'])
 					set(findobj('Tag','plotGrav_text_status'),'String','Select at least one channel');drawnow % status
                 else
                     try
@@ -5950,7 +5950,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
             
-            if ~isempty(data.igrav) || ~isempty(data.trilogi) || ~isempty(data.other1) || ~isempty(data.other2) % proceed only if loaded
+            if ~isempty(data.data_a) || ~isempty(data.data_b) || ~isempty(data.data_c) || ~isempty(data.data_d) % proceed only if loaded
                 % Open logfile
                 try
 					fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
@@ -5975,7 +5975,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 				try
                     set(findobj('Tag','plotGrav_text_status'),'String','Starting interpolation...');drawnow % status
                     % Run for all panels
-                    panels = {'igrav','trilogi','other1','other2'};  
+                    panels = {'data_a','data_b','data_c','data_d'};  
                     for p = 1:length(panels)    
                         if ~isempty(data.(char(panels(p))))                 % procees if current panel contains some data
                            ctime_resolution = mode(diff(time.(char(panels(p)))))*86400; % get current time resolution in seconds (only for logfile)
@@ -6129,7 +6129,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
             
             % Prepare variable for loop = all panels in one loop
-            panels = {'igrav','trilogi','other1','other2'};
+            panels = {'data_a','data_b','data_c','data_d'};
             % Get all channel names, units and data tables + find selected channels
             for i = 1:length(panels)
                  % Get units. Will be used for output/plot
@@ -6147,7 +6147,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 fid = fopen('plotGrav_LOG_FILE.log','a');
             end
             
-            if ~isempty(data.igrav)
+            if ~isempty(data.data_a)
                 if nargin == 1
                     % Get user input = time shift in seconds.
                     set(findobj('Tag','plotGrav_text_status'),'String','Time shift in seconds');drawnow % send instructions to status bar
@@ -6198,18 +6198,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     end
                     % Store all updated variables
                     set(findobj('Tag','plotGrav_push_load'),'UserData',data); % store shifted data
-                    set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav); % store iGrav units
-                    set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); % store iGrav channels (names)
-                    set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.trilogi);         
-                    set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.trilogi); 
-                    set(findobj('Tag','plotGrav_text_other1'),'UserData',units.other1);         
-                    set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.other1); 
-                    set(findobj('Tag','plotGrav_text_other2'),'UserData',units.other2);         
-                    set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.other2); 
-                    set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % store the iGrav ui-table
-                    set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.trilogi); % store the TRiLOGi ui-table
-                    set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.other1); % store the Other1 ui-table
-                    set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.other2); % store the Other2 ui-table
+                    set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a); % store iGrav units
+                    set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a); % store iGrav channels (names)
+                    set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.data_b);         
+                    set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.data_b); 
+                    set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.data_c);         
+                    set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.data_c); 
+                    set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.data_d);         
+                    set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.data_d); 
+                    set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a); % store the iGrav ui-table
+                    set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.data_b); % store the TRiLOGi ui-table
+                    set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.data_c); % store the Other1 ui-table
+                    set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.data_d); % store the Other2 ui-table
                     fclose(fid); % close log file
                 catch error_message
                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'An error occurred during time shift: %s (%04d/%02d/%02d %02d:%02d)\n',...
@@ -6238,11 +6238,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
-            units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');             % get iGrav units (two new channels will be appended)
-            channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
+            units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get iGrav units (two new channels will be appended)
+            channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
             
-            if ~isempty(data.igrav)                                         % proceed only if igrav time series loaded
+            if ~isempty(data.data_a)                                         % proceed only if data_a time series loaded
                 if nargin == 1
                     % Get user input = station coordinates. Fixed URL is used
                     % to get Polar motion and LOD parameters
@@ -6272,33 +6272,33 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					Lon = str2double(user_in(2));
 					atmacs_url_link_loc = '';                               % Required input, see 'plotGrav_Atmacs_and_EOP.m' (used to computed atmacs effect)
 					atmacs_url_link_glo = '';  
-					[pol_corr,lod_corr,~,~,corr_check] = plotGrav_Atmacs_and_EOP(time.igrav,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); % call polar motion/LOD function
-					c = length(channels.igrav);                             % get current number of channel. Two new channels (polar effect and LOD effect will be appended)
+					[pol_corr,lod_corr,~,~,corr_check] = plotGrav_Atmacs_and_EOP(time.data_a,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); % call polar motion/LOD function
+					c = length(channels.data_a);                             % get current number of channel. Two new channels (polar effect and LOD effect will be appended)
                     if corr_check(1)+corr_check(2) == 2                     % 'plotGrav_Atmacs_and_EOP.m' check-sum output
 						[ty,tm,td,th,tmm] = datevec(now);                   % logfile time
 						% Polar motion
-						units.igrav(c+1) = {'nm/s^2'};                      % add units
-						channels.igrav(c+1) = {'polar motion effect'};      % add channel name
-						data_table.igrav(c+1,1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (%s)',c+1,char(channels.igrav(c+1)),char(units.igrav(c+1))),...
+						units.data_a(c+1) = {'nm/s^2'};                      % add units
+						channels.data_a(c+1) = {'polar motion effect'};      % add channel name
+						data_table.data_a(c+1,1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%2d] %s (%s)',c+1,char(channels.data_a(c+1)),char(units.data_a(c+1))),...
 																false,false,false};
-						data.igrav(:,c+1) = -pol_corr;                      % add/append data (convert correction to effect)
+						data.data_a(:,c+1) = -pol_corr;                      % add/append data (convert correction to effect)
 						fprintf(fid,'iGrav channel %d == polar motion effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
                             c+1,Lat,Lon,ty,tm,td,th,tmm);
 						% LOD
-						units.igrav(c+2) = {'nm/s^2'};                      % add units
-						channels.igrav(c+2) = {'LOD effect'};               % add channel name
-						data_table.igrav(c+2,1:7) = {false,false,false,...  % add to ui-table
-															sprintf('[%2d] %s (%s)',c+2,char(channels.igrav(c+2)),char(units.igrav(c+2))),...
+						units.data_a(c+2) = {'nm/s^2'};                      % add units
+						channels.data_a(c+2) = {'LOD effect'};               % add channel name
+						data_table.data_a(c+2,1:7) = {false,false,false,...  % add to ui-table
+															sprintf('[%2d] %s (%s)',c+2,char(channels.data_a(c+2)),char(units.data_a(c+2))),...
 																false,false,false};
-						data.igrav(:,c+2) = -lod_corr;                      % add data (convert correction to effect)
+						data.data_a(:,c+2) = -lod_corr;                      % add data (convert correction to effect)
 						fprintf(fid,'iGrav channel %d == length of day effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
                             c+2,Lat,Lon,ty,tm,td,th,tmm);
 						% Store updated data/ui-table/channels/units
-						set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % update table
+						set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a); % update table
 						set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-						set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav); % update iGrav units
-						set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); % update iGrav channels (names)
+						set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a); % update iGrav units
+						set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a); % update iGrav channels (names)
 						fclose(fid);
 						set(findobj('Tag','plotGrav_text_status'),'String','Polar motion and LOD effect computed.');drawnow % message
 					else
@@ -6326,11 +6326,11 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % First get all required inputs
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.igrav = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
-            units.igrav = get(findobj('Tag','plotGrav_text_igrav'),'UserData');             % get iGrav units (two new channels will be appended)
-            channels.igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
+            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
+            units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get iGrav units (two new channels will be appended)
+            channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
 
-            if ~isempty(time.igrav)                                         % proceed only if iGrav data loaded
+            if ~isempty(time.data_a)                                         % proceed only if iGrav data loaded
                 % Get user input = 2x URL with local and global part +
                 % channel number with in-situ pressure variations (will be
                 % used to compute the residual effect). Main single admittance
@@ -6379,7 +6379,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 Lat = [];Lon = [];                                          % No coordinates are required for Atmospheric effect
                 % Call Atmcas function. The output does not include
                 % residual effect!! This will be computed afterwards.
-                [~,~,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and_EOP(time.igrav,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); 
+                [~,~,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and_EOP(time.data_a,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); 
                 admittance_factor = str2double(get(findobj('Tag','plotGrav_edit_admit_factor'),'String'));  % get admittance factor stored in main GUI 'Admittance' editable field.
                 if corr_check(3) == 1                                       % 'plotGrav_Atmacs_and_EOP' check sum (used to identify what and if computed)
                     % Open logfile
@@ -6391,16 +6391,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     [ty,tm,td,th,tmm] = datevec(now);                       % Time for logfile
                     try
                         % Append new time series: Atmacs effect
-                        units.igrav(length(channels.igrav)+1) = {'nm/s^2'};     % append units
-                        channels.igrav(length(channels.igrav)+1) = {'Atmacs effect'}; % append channel name
-                        data_table.igrav(length(channels.igrav),1:7) = {false,false,false,... % append to table. Waring use length(channels.igrav) not length(channels.igrav)+1 as channels.igrav already updated!
-                                                                sprintf('[%2d] %s (%s)',length(channels.igrav),char(channels.igrav(length(channels.igrav))),char(units.igrav(length(channels.igrav)))),...
+                        units.data_a(length(channels.data_a)+1) = {'nm/s^2'};     % append units
+                        channels.data_a(length(channels.data_a)+1) = {'Atmacs effect'}; % append channel name
+                        data_table.data_a(length(channels.data_a),1:7) = {false,false,false,... % append to table. Waring use length(channels.data_a) not length(channels.data_a)+1 as channels.data_a already updated!
+                                                                sprintf('[%2d] %s (%s)',length(channels.data_a),char(channels.data_a(length(channels.data_a))),char(units.data_a(length(channels.data_a)))),...
                                                                     false,false,false};
                         if ~isempty(press_channel)                              % add residual effect if local pressure available
-                            dp = data.igrav(:,str2double(press_channel)) - pressure/100; % pressure difference = local - model. /100 => convert Pa to hPa
-                            data.igrav(:,length(channels.igrav)) = -atmo_corr + admittance_factor*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
+                            dp = data.data_a(:,str2double(press_channel)) - pressure/100; % pressure difference = local - model. /100 => convert Pa to hPa
+                            data.data_a(:,length(channels.data_a)) = -atmo_corr + admittance_factor*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
                             % Write to logfile
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',length(channels.igrav),admittance_factor);
+                            fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',length(channels.data_a),admittance_factor);
                             for j = 1:length(atmacs_url_link_loc)
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
@@ -6410,9 +6410,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                             fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                         else
-                            data.igrav(:,length(channels.igrav)) = -atmo_corr;  % add data (convert correction to effect)
+                            data.data_a(:,length(channels.data_a)) = -atmo_corr;  % add data (convert correction to effect)
                             % Write to logfile
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect without residaul effect. Local url=',length(channels.igrav));
+                            fprintf(fid,'iGrav channel %d == Atmacs total effect without residaul effect. Local url=',length(channels.data_a));
                             for j = 1:length(atmacs_url_link_loc);
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
@@ -6424,20 +6424,20 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         % Append new time series: Atmacs pressure (to be able
                         % to reconstruct the residual effect)
-                        units.igrav(length(channels.igrav)+1) = {'mBar'};       % append units
-                        channels.igrav(length(channels.igrav)+1) = {'Atmacs pressure'}; % append channel name
-                        data_table.igrav(length(channels.igrav),1:7) = {false,false,false,... % append to ui-table
-                                            sprintf('[%2d] %s (%s)',length(channels.igrav),char(channels.igrav(length(channels.igrav))),char(units.igrav(length(channels.igrav)))),...
+                        units.data_a(length(channels.data_a)+1) = {'mBar'};       % append units
+                        channels.data_a(length(channels.data_a)+1) = {'Atmacs pressure'}; % append channel name
+                        data_table.data_a(length(channels.data_a),1:7) = {false,false,false,... % append to ui-table
+                                            sprintf('[%2d] %s (%s)',length(channels.data_a),char(channels.data_a(length(channels.data_a))),char(units.data_a(length(channels.data_a)))),...
                                                 false,false,false};
 
-                        data.igrav(:,length(channels.igrav)) = pressure/100;    % append pressure. /100 => convert Pa to hPa 
+                        data.data_a(:,length(channels.data_a)) = pressure/100;    % append pressure. /100 => convert Pa to hPa 
                         fprintf(fid,'iGrav channel %d == Atmacs pressure (%04d/%02d/%02d %02d:%02d)\n',...
-                                length(channels.igrav),ty,tm,td,th,tmm);
+                                length(channels.data_a),ty,tm,td,th,tmm);
                         % Store the results
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.igrav); % update table
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a); % update table
                         set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store time
-                        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.igrav); % update iGrav units
-                        set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.igrav); % update iGrav channels (names)
+                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a); % update iGrav units
+                        set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a); % update iGrav channels (names)
                         fclose(fid);                                            % close logfile
                         set(findobj('Tag','plotGrav_text_status'),'String','Atmacs effect computed.');drawnow % message
                     catch
@@ -6449,7 +6449,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             end
 
 %%%%%%%%%%%%%%%%%%%  O T H E R   F U N C T I O N S %%%%%%%%%%%%%%%%%%%%%%%%  
-        case 'edit_channel_names_igrav'
+        case 'edit_channel_names_data_a'
             %% Edit channel names
             % The changes like 'set_legend_L1' or 'set_label_L1'  modify
             % the legends and labels only temporarily (unit calling
@@ -6457,13 +6457,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % names in the ui-table = permanently (until calling
             % 'load_all_data').
             
-            % First get current igrav ui-table/names/units (will be
+            % First get current data_a ui-table/names/units (will be
             % updated)
-            panels = 'igrav';                                              % 
+            panels = 'data_a';                                              % 
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in iGrav. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_igrav'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 % Get new channel names either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
@@ -6506,9 +6506,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                         end
                         % Store new channel names
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.(panels));             % set updated units 
-                        set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels.(panels));     % set updated channels (names) 
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.(panels));             % set updated units 
+                        set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.(panels));     % set updated channels (names) 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
@@ -6520,13 +6520,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_names_trilogi'
-            % For comments see 'edit_channel_names_igrav'
-            panels = 'trilogi';                                              % 
+        case 'edit_channel_names_data_b'
+            % For comments see 'edit_channel_names_data_a'
+            panels = 'data_b';                                              % 
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in TRiLOGi. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_b'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6562,8 +6562,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.(panels));    % set the updated ui-tabl
-                        set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels.(panels));     % set updated channels (names) 
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.(panels));    % set the updated ui-tabl
+                        set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.(panels));     % set updated channels (names) 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
@@ -6575,13 +6575,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_names_other1'
-            % For comments see 'edit_channel_names_igrav'
-            panels = 'other1';                                              % 
+        case 'edit_channel_names_data_c'
+            % For comments see 'edit_channel_names_data_a'
+            panels = 'data_c';                                              % 
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in Other1. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_other1'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_c'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6617,8 +6617,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_edit_other1_path'),'UserData',channels.(panels));     % set updated channels (names) 
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.(panels));     % set updated channels (names) 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
@@ -6630,13 +6630,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_names_other2'
-            % For comments see 'edit_channel_names_igrav'
-            panels = 'other2';                                              % 
+        case 'edit_channel_names_data_d'
+            % For comments see 'edit_channel_names_data_a'
+            panels = 'data_d';                                              % 
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in Other2. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_other2'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_d'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6672,8 +6672,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_edit_other2_path'),'UserData',channels.(panels));     % set updated channels (names) 
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.(panels));     % set updated channels (names) 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
@@ -6686,7 +6686,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
             
-        case 'edit_channel_units_igrav'
+        case 'edit_channel_units_data_a'
             %% Edit channel units.
             % The changes like 'set_legend_L1' or 'set_label_L1'  modify
             % the legends and labels only temporarily (unit calling
@@ -6694,13 +6694,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % units in the ui-table = permanently (until calling
             % 'load_all_data').
             
-            % First get current igrav ui-table/names/units (will be
+            % First get current data_a ui-table/names/units (will be
             % updated)
-            panels = 'igrav';                                              % 
+            panels = 'data_a';                                              % 
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in iGrav. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_igrav_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_igrav'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_igrav_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 % Get new channel units either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
@@ -6743,8 +6743,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                         end
                         % Store new channel names
-                        set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_igrav'),'UserData',units.(panels));             % set updated units  
+                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.(panels));             % set updated units  
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
@@ -6756,13 +6756,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_units_trilogi'
-            % Edit trilogi units. For comments, see 'edit_channel_units_igrav'
-            panels = 'trilogi';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in trilogi. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_trilogi'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData');     % get channels (names)
+        case 'edit_channel_units_data_b'
+            % Edit data_b units. For comments, see 'edit_channel_units_data_a'
+            panels = 'data_b';                                              % 
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_b. Will not be modified!
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_b'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6799,8 +6799,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units.(panels));             % set updated units  
+                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.(panels));             % set updated units  
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
@@ -6812,13 +6812,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_units_other1'
-            % Edit other1 units. For comments, see 'edit_channel_units_igrav'
-            panels = 'other1';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in other1. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_other1_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_other1'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_other1_path'),'UserData');     % get channels (names)
+        case 'edit_channel_units_data_c'
+            % Edit data_c units. For comments, see 'edit_channel_units_data_a'
+            panels = 'data_c';                                              % 
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_c. Will not be modified!
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_c'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6855,8 +6855,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_other1'),'UserData',units.(panels));             % set updated units  
+                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.(panels));             % set updated units  
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
@@ -6868,13 +6868,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_units_other2'
-            % Edit other2 units. For comments, see 'edit_channel_units_igrav'
-            panels = 'other2';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in other2. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_other2_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_other2'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_other2_path'),'UserData');     % get channels (names)
+        case 'edit_channel_units_data_d'
+            % Edit data_d units. For comments, see 'edit_channel_units_data_a'
+            panels = 'data_d';                                              % 
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_d. Will not be modified!
+            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');    % get the ui-table 
+            units.(panels) = get(findobj('Tag','plotGrav_text_data_d'),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');     % get channels (names)
             if ~isempty(data.(panels))
                 if nargin == 1                                      
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
@@ -6911,8 +6911,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
-                        set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_other2'),'UserData',units.(panels));             % set updated units  
+                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.(panels));             % set updated units  
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
@@ -7135,61 +7135,61 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % ui-tables. Other 1 and 2 are empty. Loading of ot
             
             % Set iGrav channel names and units
-			channels_igrav = {'Grav','Baro-Press','Grav-Bal','TiltX-Bal','TiltY-Bal',...
+			channels_data_a = {'Grav','Baro-Press','Grav-Bal','TiltX-Bal','TiltY-Bal',...
 								'Temp-Bal','Grav-Ctrl','TiltX-Ctrl','TiltY-Ctrl','Temp-Ctrl',...
 								'Neck-T1','Neck-T2','Body-T','Belly-T','PCB-T','Aux-T','Dewar-Pwr',...
 								'Dewar-Press','He-Level','GPS-Signal','TimeStamp','Grav_calib',...
 								'Grav_filt','Grav_filt-tide/pol-atmo',...
 								'Grav_filt-tide/pol-atmo-drift','tides','pol','atmo','drift'};
-			units_igrav = {'V','mBar','V','V','V','V','V','W','W','V','K','K','K',...
+			units_data_a = {'V','mBar','V','V','V','V','V','W','W','V','K','K','K',...
 						   'K','C','C','mW','PSI','Percent','bool','s','nm/s^2','nm/s^2','nm/s^2',...
 						   'nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2'};
             % Set TRiLOGi channel names and untis
-			channels_trilogi = {'TempExt','TempIn','TempCompIn','TempCompOut','TempRegIn',...
+			channels_data_b = {'TempExt','TempIn','TempCompIn','TempCompOut','TempRegIn',...
 								'TempRegOut','HeGasPres','Vin','Mains','LowBat','UPSAlarm','FanTach',...
 								'CompFault','IN6','IN7','IN8','OUT1','FanOn','HeGasValv','RefrigComp','Out5',...
 								'DCPwrCntrl','EnclosHeater','FanSpdCntrl','T09-iG-Top','T10-iG-Upper',...
 								'T11-iG-Mid','T12-iG-Bot','T13-iG-Head','T14-iG-Ambient','T15-iG-H2oSupply',...
 								'T16-iG-H2oReturn','OUT1S','OUT2S','OUT3S','OUT4S','OUT5S','OUT6S','PIDValue','OUT8S'};
-			units_trilogi = {'DegC','DegC','DegC','DegC','DegC','DegC','KPa','DCV','Bool','Bool','Bool',...
+			units_data_b = {'DegC','DegC','DegC','DegC','DegC','DegC','KPa','DCV','Bool','Bool','Bool',...
 							'RPM','Bool','Bool','Bool','Bool','Bool','Bool','Bool','Bool','Bool','Bool',...
 							'Bool','PCNT','DegC','DegC','DegC','DegC','DegC','DegC','DegC','DegC',...
 							'Bool','Bool','Bool','Bool','Bool','Bool','PCNT','Bool'};
 			% Store units/names
-			set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav);
-			set(findobj('Tag','plotGrav_text_trilogi'),'UserData',units_trilogi);
-			set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav);
-			set(findobj('Tag','plotGrav_edit_trilogi_path'),'UserData',channels_trilogi);
+			set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a);
+			set(findobj('Tag','plotGrav_text_data_b'),'UserData',units_data_b);
+			set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a);
+			set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels_data_b);
             % Create data for ui-table including default checked/unchecked
             % fields (false, true): iGrav
-			for i = 1:length(channels_igrav)
+			for i = 1:length(channels_data_a)
 				if i >= 22 && i <= 23                                           % by default on in L1
-					data_table_igrav(i,1:7) = {true,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {true,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				elseif i == 25                                                  % by default on in L2
-					data_table_igrav(i,1:7) = {false,true,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {false,true,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				else
-					data_table_igrav(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				end
 			end
             % Create data for ui-table including default checked/unchecked
             % fields (false, true): TRiLOGi
-			set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table_igrav,'UserData',data_table_igrav);clear data_table_igrav
-            for i = 1:length(channels_trilogi)
+			set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table_data_a,'UserData',data_table_data_a);clear data_table_data_a
+            for i = 1:length(channels_data_b)
 				if i >= 25 && i <= 29                                           % by default on in L3
-					data_table_trilogi(i,1:7) = {false,false,true,sprintf('[%2d] %s (%s)',i,char(channels_trilogi(i)),char(units_trilogi(i))),false,false,false};
+					data_table_data_b(i,1:7) = {false,false,true,sprintf('[%2d] %s (%s)',i,char(channels_data_b(i)),char(units_data_b(i))),false,false,false};
 				elseif i == 39                                                   % by default on in R3
-					data_table_trilogi(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_trilogi(i)),char(units_trilogi(i))),false,false,true};
+					data_table_data_b(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_b(i)),char(units_data_b(i))),false,false,true};
 				else
-					data_table_trilogi(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_trilogi(i)),char(units_trilogi(i))),false,false,false};
+					data_table_data_b(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_b(i)),char(units_data_b(i))),false,false,false};
 				end
             end
             % Store/update the ui-tables
-			set(findobj('Tag','plotGrav_uitable_trilogi_data'),'Data',data_table_trilogi,'UserData',data_table_trilogi);clear data_table_trilogi
-			set(findobj('Tag','plotGrav_uitable_other1_data'),'Data',{false,false,false,'NotAvailable',false,false,false});     % Other 1 table
-			set(findobj('Tag','plotGrav_uitable_other2_data'),'Data',{false,false,false,'NotAvailable',false,false,false});    % Other 2 table
+			set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table_data_b,'UserData',data_table_data_b);clear data_table_data_b
+			set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',{false,false,false,'NotAvailable',false,false,false});     % Other 1 table
+			set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',{false,false,false,'NotAvailable',false,false,false});    % Other 2 table
             % Re-set data containers + store them
-			time.igrav = [];time.trilogi = [];time.other1 = [];time.other2 = [];
-			data.igrav = [];data.trilogi = [];data.other1 = [];data.other2 = [];
+			time.data_a = [];time.data_b = [];time.data_c = [];time.data_d = [];
+			data.data_a = [];data.data_b = [];data.data_c = [];data.data_d = [];
 			set(findobj('Tag','plotGrav_text_status'),'UserData',time); 
 			set(findobj('Tag','plotGrav_push_load'),'UserData',data);   
 %             % Re-set plots
@@ -7216,25 +7216,25 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'reset_tables_sg030'
             % Similarly to 'reset_table', this section sets the correct
             % channel and units in case SG030 data is loaded
-			channels_igrav = {'Grav-1','Grav-2','Baro-1','Grav-1_calib',...
+			channels_data_a = {'Grav-1','Grav-2','Baro-1','Grav-1_calib',...
 								'Grav-1_filt','Grav-1_filt-tide/pol-atmo',...
 								'Grav-1_filt-tide/pol-atmo-drift','tides','pol','atmo','drift'};
-			units_igrav = {'V','V','mBar','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2'};
+			units_data_a = {'V','V','mBar','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2','nm/s^2'};
 			% Store units/channels
-			set(findobj('Tag','plotGrav_text_igrav'),'UserData',units_igrav);
-			set(findobj('Tag','plotGrav_edit_igrav_path'),'UserData',channels_igrav);
+			set(findobj('Tag','plotGrav_text_data_a'),'UserData',units_data_a);
+			set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels_data_a);
             % Create ui-table
-            for i = 1:length(channels_igrav)
+            for i = 1:length(channels_data_a)
 				if i >= 22-18 && i <= 23-18                                           % by default on in L1
-					data_table_igrav(i,1:7) = {true,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {true,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				elseif i == 25-18                                                  % by default on in L2
-					data_table_igrav(i,1:7) = {false,true,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {false,true,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				else
-					data_table_igrav(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_igrav(i)),char(units_igrav(i))),false,false,false};
+					data_table_data_a(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels_data_a(i)),char(units_data_a(i))),false,false,false};
 				end
             end
             % Store/update ui-table
-			set(findobj('Tag','plotGrav_uitable_igrav_data'),'Data',data_table_igrav,'UserData',data_table_igrav);clear data_table_igrav
+			set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table_data_a,'UserData',data_table_data_a);clear data_table_data_a
             
         case 'script_run'
             %% Run script
@@ -7269,15 +7269,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Therefore, no extensive comments are required. Codes for 
             % selection of correction file as well as printing and export 
             % outputs are not here, but in corresponding sections.
-		case 'select_igrav'                                                 % Selce igrav input PATH.
+		case 'select_data_a'                                                 % Selce data_a input PATH.
 			path = uigetdir('Select iGrav Data Path');                      % get the path.
 			if path == 0                                                    % Send message the user                 
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the iGrav path.');drawnow 
             else                                                            % Otherwise, store the selected file path for future.
-				set(findobj('Tag','plotGrav_edit_igrav_path'),'String',path);drawnow 
+				set(findobj('Tag','plotGrav_edit_data_a_path'),'String',path);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav paht selected.');drawnow 
 			end
-		case 'select_igrav_file'                                            % Select iGrav input file
+		case 'select_data_a_file'                                            % Select iGrav input file
 			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.038;*.csv',...
                 'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029;*.038,*.csv)';...
                 '*.*','All files'},...
@@ -7285,18 +7285,18 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if path == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the iGrav file.');drawnow % status
 			else
-				set(findobj('Tag','plotGrav_edit_igrav_path'),'String',[path,name]);drawnow % Store the full file name for future loading.
+				set(findobj('Tag','plotGrav_edit_data_a_path'),'String',[path,name]);drawnow % Store the full file name for future loading.
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav file selected.');drawnow % status
 			end
-		case 'select_trilogi'                                               % Select TRiLOGi input path
+		case 'select_data_b'                                               % Select TRiLOGi input path
 			path = uigetdir('Select TRiLOGi Data Path');
 			if path == 0                                                
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the TRiLOGi path.');drawnow 
 			else
-				set(findobj('Tag','plotGrav_edit_trilogi_path'),'String',path);drawnow
+				set(findobj('Tag','plotGrav_edit_data_b_path'),'String',path);drawnow
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi paht selected.');drawnow 
 			end
-		case 'select_trilogi_file'                                          % Select TRiLOGi input file                                         
+		case 'select_data_b_file'                                          % Select TRiLOGi input file                                         
 			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.030;*.029;*.csv',...
                 'plotGrav supported (*.mat,*.tsf,*.dat,*.030,*.029,*.csv)';...
                 '*.*','All files'},...
@@ -7304,10 +7304,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if path == 0                                                
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select a TRiLOGi file.');drawnow
 			else
-				set(findobj('Tag','plotGrav_edit_trilogi_path'),'String',[path,name]);drawnow 
+				set(findobj('Tag','plotGrav_edit_data_b_path'),'String',[path,name]);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','TRiLOGi file selected.');drawnow 
 			end
-		case 'select_other1'                                                % Select Other1 input file                                                
+		case 'select_data_c'                                                % Select Other1 input file                                                
 			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.csv',...
                 'plotGrav supported (*.mat,*.tsf,*.dat,*.csv)';...
                 '*.*','All files'},...
@@ -7315,10 +7315,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if name == 0                                                    
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected.');drawnow 
 			else
-				set(findobj('Tag','plotGrav_edit_other1_path'),'String',[path,name]);drawnow 
+				set(findobj('Tag','plotGrav_edit_data_c_path'),'String',[path,name]);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','Other1 file selected.');drawnow 
 			end
-		case 'select_other2'                                                % Select Other2 input file      
+		case 'select_data_d'                                                % Select Other2 input file      
 			[name,path] = uigetfile({'*.mat;*.tsf;*.dat;*.csv',...
                 'plotGrav supported (*.mat,*.tsf,*.dat,*.csv)';...
                 '*.*','All files'},...
@@ -7326,7 +7326,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if name == 0                                            
 				set(findobj('Tag','plotGrav_text_status'),'String','No file selected');drawnow 
 			else
-				set(findobj('Tag','plotGrav_edit_other2_path'),'String',[path,name]);drawnow 
+				set(findobj('Tag','plotGrav_edit_data_d_path'),'String',[path,name]);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','Other2 file selected.');drawnow 
 			end
 		case 'select_tides'                                                 % Select file with tide effect
@@ -7480,13 +7480,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % figure with an overview about all selected paths and files.
             
             % Get all selected files/paths
-			path_igrav = get(findobj('Tag','plotGrav_edit_igrav_path'),'String');
-			path_trilogi = get(findobj('Tag','plotGrav_edit_trilogi_path'),'String');
+			path_data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'String');
+			path_data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'String');
 			file_tides = get(findobj('Tag','plotGrav_edit_tide_file'),'String');
 			file_filter = get(findobj('Tag','plotGrav_edit_filter_file'),'String');
 			path_webcam = get(findobj('Tag','plotGrav_edit_webcam_path'),'String');
-			file_other1 = get(findobj('Tag','plotGrav_edit_other1_path'),'String');
-			file_other2 = get(findobj('Tag','plotGrav_edit_other2_path'),'String');
+			file_data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'String');
+			file_data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'String');
 			unzip_exe = get(findobj('Tag','plotGrav_menu_ftp'),'UserData');
 			file_logfile = get(findobj('Tag','plotGrav_edit_logfile_file'),'String');
             % Open new figure (do not plot to GUI)
@@ -7496,21 +7496,21 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % Create uicontrols with file names and paths
 			uicontrol(p3,'Style','Text','String','iGrav paht:','units','normalized',...
 					'Position',[0.02,0.89,0.13,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',path_igrav,'units','normalized','HorizontalAlignment','left',...
+			uicontrol(p3,'Style','Edit','String',path_data_a,'units','normalized','HorizontalAlignment','left',...
 					  'Position',[0.17,0.90,0.8,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
 			uicontrol(p3,'Style','Text','String','TRiLOGi:','units','normalized',...
 					  'Position',[0.02,0.82,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',path_trilogi,'units','normalized',...
+			uicontrol(p3,'Style','Edit','String',path_data_b,'units','normalized',...
 					  'Position',[0.17,0.83,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
 					  'HorizontalAlignment','left','Enable','off');
 			uicontrol(p3,'Style','Text','String','Other1 file:','units','normalized',...
 					  'Position',[0.02,0.75,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_other1,'units','normalized',...
+			uicontrol(p3,'Style','Edit','String',file_data_c,'units','normalized',...
 					  'Position',[0.17,0.76,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
 					  'HorizontalAlignment','left','Enable','off');
 			uicontrol(p3,'Style','Text','String','Other2 file:','units','normalized',...
 					  'Position',[0.02,0.68,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_other2,'units','normalized',...
+			uicontrol(p3,'Style','Edit','String',file_data_d,'units','normalized',...
 					  'Position',[0.17,0.69,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
 					  'HorizontalAlignment','left','Enable','off');
 			uicontrol(p3,'Style','Text','String','Tide/Pol file:','units','normalized',...

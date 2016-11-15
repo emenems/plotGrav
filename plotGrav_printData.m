@@ -78,7 +78,7 @@ else
     F2c = figure('Position',figure_position,...                             % create new invisible window for printing. Use position/size with respect to number of plots
         'Resize','on','Menubar',menubar,'ToolBar',toolbar,...                % 
         'NumberTitle','off','Color',[0.941 0.941 0.941],...
-        'Name','plotGrav: plot iGrav data','visible',visible);
+        'Name','plotGrav: gravity time series','visible',visible);
     try
         %% Copy plots to new figure
         % This function only copies the existing plots (visible via plotGrav
