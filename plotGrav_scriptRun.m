@@ -671,27 +671,27 @@ try                                                                         % ca
                     in = strsplit(row,';');
                     % L1
                     if ~strcmp(char(in(1)),'[]')
-                        plotGrav('set_label_L1',char(in(1)));
+                        plotGrav('set_label','L1',char(in(1)));
                     end
                     % R1
                     if ~strcmp(char(in(2)),'[]')
-                        plotGrav('set_label_R1',char(in(2)));
+                        plotGrav('set_label','R1',char(in(2)));
                     end
                     % L2
                     if ~strcmp(char(in(3)),'[]')
-                        plotGrav('set_label_L2',char(in(3)));
+                        plotGrav('set_label','L2',char(in(3)));
                     end
                     % R2
                     if ~strcmp(char(in(4)),'[]')
-                        plotGrav('set_label_R2',char(in(4)));
+                        plotGrav('set_label','R2',char(in(4)));
                     end
                     % L3
                     if ~strcmp(char(in(5)),'[]')
-                        plotGrav('set_label_L3',char(in(5)));
+                        plotGrav('set_label','L3',char(in(5)));
                     end
                     % R3
                     if ~strcmp(char(in(6)),'[]')
-                        plotGrav('set_label_R3',char(in(6)));
+                        plotGrav('set_label','R3',char(in(6)));
                     end
                 %% Set legends
                 case 'SET_LEGEND'                                               % set temporary legend
@@ -739,46 +739,46 @@ try                                                                         % ca
                         plotGrav('set_plot_type',char(row));
                     end 
                 %% Set new channel names
-                case 'SET_CHANNELS_DATA_A'                                       % sets new channel names and update the ui-table of iGrav
+                case 'SET_CHANNELS_DATA_A'                                       % sets new channel names and update the ui-table of DATA A
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_data_a',char(row));
+                        plotGrav('edit_channel_names','data_a',char(row));
                     end 
-                case 'SET_CHANNELS_DATA_B'                                       % sets new channel names and update the ui-table of TRiLOGi
+                case 'SET_CHANNELS_DATA_B'                                       % sets new channel names and update the ui-table of DATA B
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_data_b',char(row));
+                        plotGrav('edit_channel_names','data_b',char(row));
                     end 
-                case 'SET_CHANNELS_DATA_C'                                       % sets new channel names and update the ui-table of Other1
+                case 'SET_CHANNELS_DATA_C'                                       % sets new channel names and update the ui-table of DATA C
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_data_c',char(row));
+                        plotGrav('edit_channel_names','data_c',char(row));
                     end 
-                case 'SET_CHANNELS_DATA_D'                                       % sets new channel names and update the ui-table of Other2
+                case 'SET_CHANNELS_DATA_D'                                       % sets new channel names and update the ui-table of DATA D
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_names_data_d',char(row));
+                        plotGrav('edit_channel_names','data_d',char(row));
                     end 
                 %% Set new channel units
-                case 'SET_UNITS_DATA_A'                                          % sets new channel units and update the ui-table of iGrav
+                case 'SET_UNITS_DATA_A'                                          % sets new channel units and update the ui-table of DATA A
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_names_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_data_a',char(row));
+                        plotGrav('edit_channel_units','data_a',char(row));
                     end 
-                case 'SET_UNITS_DATA_B'                                        % sets new channel units and update the ui-table of TRiLOGi
+                case 'SET_UNITS_DATA_B'                                        % sets new channel units and update the ui-table of DATA B
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_data_b',char(row));
+                        plotGrav('edit_channel_units','data_b',char(row));
                     end 
-                case 'SET_UNITS_DATA_C'                                         % sets new channel units and update the ui-table of Other1
+                case 'SET_UNITS_DATA_C'                                         % sets new channel units and update the ui-table of DATA C
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_data_c',char(row));
+                        plotGrav('edit_channel_units','data_c',char(row));
                     end 
-                case 'SET_UNITS_DATA_D'                                         % sets new channel units and update the ui-table of Other2
+                case 'SET_UNITS_DATA_D'                                         % sets new channel units and update the ui-table of DATA D
                     row = fgetl(fid);count = count + 1;                         % one inputs expected. The string splitting will be performed within plotGrav/'edit_channel_units_data_a'
                     if ~strcmp(char(row),'[]')
-                        plotGrav('edit_channel_units_data_d',char(row));
+                        plotGrav('edit_channel_units','data_d',char(row));
                     end 
 
                 %% Load data

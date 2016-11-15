@@ -8,10 +8,10 @@
 %
 % GUI_OFF				GUI not visible. No input.
 % GUI_ON 				GUI visible. No input.
-% FILE_IN_IGRAV			set input file/path name for iGrav. Input: string, e.g., \\dms\hygra\iGrav\iGrav006 Data\
-% FILE_IN_TRILOGI		just like FILE_IN_IGRAV, but for TRiLOGi (second panel). Input: string, [] means no input.
-% FILE_IN_OTHER1 		just like FILE_IN_IGRAV, but for Other1 (third panel). Input: string, [] means no input.
-% FILE_IN_OTHER1 		just like FILE_IN_IGRAV, but for Other2 (fourth panel). Input: string, [] means no input.
+% FILE_IN_DATA_A		set input file/path name for iGrav. Input: string, e.g., \\dms\hygra\iGrav\iGrav006 Data\
+% FILE_IN_DATA_B		just like FILE_IN_DATA_A, but for TRiLOGi (second panel). Input: string, [] means no input.
+% FILE_IN_DATA_C 		just like FILE_IN_DATA_A, but for Other1 (third panel). Input: string, [] means no input.
+% FILE_IN_DATA_C 		just like FILE_IN_DATA_A, but for Other2 (fourth panel). Input: string, [] means no input.
 % FILE_IN_FILTER		set input filter file name. Input: string, e.g., \\dms\hygra\iGrav\Software\plotGrav\N01S1M01.NLF
 % FILE_IN_TIDES			set input tides file name. Input: string, e.g., \\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
 % FILE_IN_WEBCAM		set path with webcam snapshots. Input: string, e.g., \\dep5z32\hygra\Wettzell\iGrav_Webcam\FI9903P_00626E580815\snap
@@ -19,7 +19,7 @@
 % FILE_IN_LOGFILE		set log file. Input: string, e.g., plotGrav_LOG_FILE.log
 % TIME_START 			set minimum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;5;20;12 (no minutes or seconds!).  Alternatively, use one string with minus sign to load past X days, e.g., Input: -10 => will set the date to current date (0 hours) -10 days.
 % TIME_STOP 			set maximum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;6;20;12 (no minutes or seconds!). Alternatively, use one string with minus sign to set stop time to current date -X days, e.g., Input: -1 => will set the date to current date (0 hours) -1 day.
-% RESAMPLE_IGRAV		main re-sampling feature for iGrav/SG030. Not re-sampling of all time series = RESAMPLE_ALL. Input: new sampling in seconds, e.g., 60
+% RESAMPLE_DATA_A		main re-sampling feature for iGrav/SG030. Not re-sampling of all time series = RESAMPLE_ALL. Input: new sampling in seconds, e.g., 60
 % DRIFT_SWITCH			main iGrav/SG030 drift removal switch. Input: 1 = none, 2 = constant, 3 = linear, 4 = quadratic, 5 = cubic, 6 = set. If 6, than next input = polynomial coefficients, e.g. 6;0.41 0 = manual set, slope 0.41, constant 0. Do not delimit the polynomial coefficients!
 % CALIBRATION_FACTOR	sets the iGrav/SG030 calibration factor. Input: calibration factor in nm/s^2/V. Example: -914.78
 % CALIBRATION_DELAY		sets the iGrav/SG030 phase delay. Input: phase delay in seconds (with minus sign). Example: -14.2
@@ -27,14 +27,14 @@
 % LOAD_DATA 			this will load all selected inputs. No input.
 % REMOVE_DATA			this will remove all data an reset the ui-tables to default value. Settings such as input files or calibration coefficients will not be affected! No input
 % REMOVE_CHANNEL 		Remove selected channels. Input panel+channel number delimited using ; character. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2. Second (to last) character is the channel number. Example: A5;B4 => this will remove fifth iGrav channel and fourth TRiLOGi channel. First character is the panel ID, i.e., A = iGrav, B = TRiLOGi, C = Other1, D = Other2. Second (to last) character is the channel number.
-% UITABLE_IGRAV_L		set which channels should be checked/plotted. All other will be unchecked! Set this option after LOAD_DATA!! Input: First number refers to the Plot; other numbers to channels, e.g., 2;2;10;3 => second plot (left axes=L2), second, tenth and third channels selected. All other off.
-% UITABLE_TRILOGI_L		see UITABLE_IGRAV_L
-% UITABLE_OTHER1_L 		see UITABLE_IGRAV_L
-% UITABLE_OTHER2_L		see UITABLE_IGRAV_L
-% UITABLE_IGRAV_R		like UITABLE_IGRAV_L but right plot (R1,R2 and R3).
-% UITABLE_TRILOGI_R		like UITABLE_TRILOGI_L but right plot (R1,R2 and R3).
-% UITABLE_OTHER1_R		like UITABLE_OTHER1_L but right plot (R1,R2 and R3).
-% UITABLE_OTHER2_R		like UITABLE_OTHER2_L but right plot (R1,R2 and R3).
+% UITABLE_DATA_A_L		set which channels should be checked/plotted. All other will be unchecked! Set this option after LOAD_DATA!! Input: First number refers to the Plot; other numbers to channels, e.g., 2;2;10;3 => second plot (left axes=L2), second, tenth and third channels selected. All other off.
+% UITABLE_DATA_B_L		see UITABLE_DATA_A_L
+% UITABLE_DATA_C_L 		see UITABLE_DATA_A_L
+% UITABLE_DATA_D_L		see UITABLE_DATA_A_L
+% UITABLE_DATA_A_R		like UITABLE_DATA_A_L but right plot (R1,R2 and R3).
+% UITABLE_DATA_B_R		like UITABLE_DATA_B_L but right plot (R1,R2 and R3).
+% UITABLE_DATA_C_R		like UITABLE_DATA_C_L but right plot (R1,R2 and R3).
+% UITABLE_DATA_D_R		like UITABLE_DATA_D_L but right plot (R1,R2 and R3).
 % PRINT_FIGURE			print current plot. Input: first value/input = print switch: 1 = First plot, 2 = first and second, 3 = all plots, 4 open new editable figure; second input = output file name; third input = print resolution/DPI (e.g., 300). fourth input = figure resolution/size (e.g., 1 1 1920 1080). Do not set the last two inputs if default values required
 % UNCHECK_ALL	 		un-checks all selected time series (all panels). No input expected! 
 % RESET_VIEW 			re-sets the plots, i.e., zooms out to whole time series (e.g., after using SET_PLOT_DATE). No input.
@@ -53,18 +53,18 @@
 % SET_LINE_WIDTH 		set line width for all plots. Input: six numbers for L1 R1 L2 R2 L3 R3 axis, e.g., 2 2 1 1 0.5 0.5. Do not separate with ;. This command re-plots time series => setting such  legends, labels, insertion of rectangles etc. will be affected/removed!
 % SET_LABEL_Y 			set y labels for all plots. Input: six strings for L1 R1 L2 R2 L3 R3 y labels. User [] for [] do not set. Example: gravity (nm/s^2);pressure (hPa);[];[]; ;precipitation (mm/15 min) => L1 (first plot left) = gravity (nm/s^2); R1 (first plot right) = pressure (hPa);Do not modify L2;Do not modify R2; L3 set to empty ( ); R3 = precipitation (mm/15 min). This is a temporary change, will be removed after re-plotting.
 % SET_LEGEND 			set legend for all plots. Input: strings for L1 R1 L2 R2 L3 R3 legends. User [] for do not set and | to separate strings for individual legends. Example: gravity|gravity corrected;[];pressure in-situ|pressure atmacs;[];[];precipitation => L1 (first plot left), first line = gravity, second line = gravity corrected; R1 (first plot right) = Do not modify; L2 = first line = pressure in situ, second line = pressure atmacs; R2 do not modify; L3 do not modify; R3 = precipitation (only on line plotted!). This is a temporary change, will be removed after re-plotting.
-% SET_CHANNELS_IGRAV 	set channel names. SET_LEGEND command sets the legend only temporarily. This command changes the channel names stored in plotGrav. This will affect iGrav legend until new insertion/data loading. Input: strings separated with ; for each channel. Example: gravity;pressure;tiltX;tiltY => new channel names for 1 - 4 channels
-% SET_CHANNELS_TRILOGI	same procedure as SET_CHANNELS_IGRAV but for TRiLOGi panel
-% SET_CHANNELS_OTHER1 	same procedure as SET_CHANNELS_IGRAV but for Other1 panel
-% SET_CHANNELS_OTHER2	same procedure as SET_CHANNELS_IGRAV but for Other2 panel
-% SET_UNITS_IGRAV 		set channel names. SET_LABEL_Y command sets the labels only temporarily. This command changes the channel units stored in plotGrav. This will affect iGrav labels until new insertion/data loading. Input: strings separated with ; for each channel. Example: nm/s^2;mbar;V;[] => new channel names for 1 - 4 channels. [] => do not change the fourth channel units.
-% SET_UNITS_TRILOGI 	same procedure as SET_UNITS_IGRAV.
-% SET_UNITS_OTHER1		same procedure as SET_UNITS_IGRAV.
-% SET_UNITS_OTHER2		same procedure as SET_UNITS_IGRAV.
+% SET_CHANNELS_DATA_A 	set channel names. SET_LEGEND command sets the legend only temporarily. This command changes the channel names stored in plotGrav. This will affect DATA_A channel names until new insertion/data loading. Input: strings separated with ; for each channel. Example: gravity;pressure;tiltX;tiltY => new channel names for 1 - 4 channels
+% SET_CHANNELS_DATA_B	same procedure as SET_CHANNELS_DATA_A but for TRiLOGi panel
+% SET_CHANNELS_DATA_C 	same procedure as SET_CHANNELS_DATA_A but for Other1 panel
+% SET_CHANNELS_DATA_D	same procedure as SET_CHANNELS_DATA_A but for Other2 panel
+% SET_UNITS_DATA_A 		set channel names. SET_LABEL_Y command sets the labels only temporarily. This command changes the channel units stored in plotGrav. This will affect iGrav labels until new insertion/data loading. Input: strings separated with ; for each channel. Example: nm/s^2;mbar;V;[] => new channel names for 1 - 4 channels. [] => do not change the fourth channel units.
+% SET_UNITS_DATA_B 		same procedure as SET_UNITS_DATA_A.
+% SET_UNITS_DATA_C		same procedure as SET_UNITS_DATA_A.
+% SET_UNITS_DATA_D		same procedure as SET_UNITS_DATA_A.
 % SET_DATE_FORMAT		set x ticks date format. Input: string, e.g. dd/mm/yyyy. This will re-set the plot.
 % SET_PLOT_TYPE 		set plot type = line or bar plot. 1 = line, 2 = bar, 3 = area, 4 = stem, 5 = stairs. Input for each axes = 6 in total. Example: 1;1;1;1;1;2
 % EXPORT_DATA	 		save loaded time series as. Input = switch between Panels DATA_A | DATA_B | DATA_C | DATA_D ;switch number for all/selected only, 1 = all channels,2 = selected channels (in L1); String with output file name. Example: DATA_A;1;F:\mikolaj\Desktop\Test_Script_Export.tsf => all iGrav time series will be exported to *.tsf file.
-% PAUSE					pauses the computation for required time. Input = number of seconds, e.g, 5. This option is advisable when plotting long time series as the visualisation takes some time and consecutive plotting commands (e.g., UITABLE_IGRAV_L) may not be otherwise perform sufficiently.
+% PAUSE					pauses the computation for required time. Input = number of seconds, e.g, 5. This option is advisable when plotting long time series as the visualisation takes some time and consecutive plotting commands (e.g., UITABLE_DATA_A_L) may not be otherwise perform sufficiently.
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3
 % REMOVE_RANGE			remove spikes using a [min max] condition. Input: min, max vector used to remove all values outside this Y range. Example: -50 50
@@ -93,13 +93,13 @@
 % Start example:
 %
 GUI_ON
-FILE_IN_IGRAV
+FILE_IN_DATA_A
 \\dms\hygra\iGrav\iGrav006 Data\
-FILE_IN_TRILOGI
+FILE_IN_DATA_B
 U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
-FILE_IN_OTHER1
+FILE_IN_DATA_C
 U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
-FILE_IN_OTHER2
+FILE_IN_DATA_D
 U:\hygra\Wettzell\Mast\TDR100_Cluster\Hygra_Mast_M_Mux11.dat
 FILE_IN_TIDES
 \\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
@@ -121,7 +121,7 @@ CALIBRATION_DELAY
 -14.2
 ADMITTANCE_FACTOR
 -2.9
-RESAMPLE_IGRAV
+RESAMPLE_DATA_A
 60
 DRIFT_SWITCH
 6;0 0
@@ -136,11 +136,11 @@ dd/mm/yyyy
 LOAD_DATA
 CORRECTION_FILE
 F:\mikolaj\Documents\plotGrav\iGrav_correction_file.txt;1
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 2;3;5
-UITABLE_IGRAV_R
+UITABLE_DATA_A_R
 1;1;2
-UITABLE_OTHER1_R
+UITABLE_DATA_C_R
 1;1;2
 PRINT_FIGURE
 3;F:\mikolaj\Desktop\Test_Script_Print.jpg;400;1 1 1920 1080
@@ -151,19 +151,19 @@ PRINT_FIGURE
 UNCHECK_ALL
 SET_FONT_SIZE
 9
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 1;1;2
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 2;10;11
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 3;2
-UITABLE_IGRAV_R
+UITABLE_DATA_A_R
 1;4
-UITABLE_IGRAV_R
+UITABLE_DATA_A_R
 2;5
-UITABLE_TRILOGI_R
+UITABLE_DATA_B_R
 3;7
-UITABLE_TRILOGI_L
+UITABLE_DATA_B_L
 1;24;25
 SET_PLOT_DATE
 -5;-2
@@ -181,9 +181,9 @@ SET_LEGEND
 gravity|gravity corrected;[];pressure in-situ|pressure atmacs;[];[];precipitation
 PRINT_FIGURE
 3;F:\mikolaj\Desktop\Test_Script_Print2.tif
-SET_CHANNELS_IGRAV
+SET_CHANNELS_DATA_A
 gravity;pressure;tiltX;tiltY
-SET_UNITS_TRILOGI
+SET_UNITS_DATA_B
 nm/s^2;mbar;V;[]
 PAUSE
 1
@@ -196,7 +196,7 @@ EXPORT_DATA
 SHOW_EARTHQUAKES
 6
 UNCHECK_ALL
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 1;1
 RESAMPLE_ALL
 1
@@ -207,19 +207,19 @@ CHANNELS_ALGEBRA
 A1 = A2 * 2 + 2 + B3
 REMOVE_CHANNEL
 A5;B4
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 1;1
 TIME_SHIFT
 12
 REMOVE_MISSING
 10
-UITABLE_IGRAV_L
+UITABLE_DATA_A_L
 1;1;32
 CORRELATION_SIMPLE
 CORRELATION_CROSS
 20
 UNCHECK_ALL
-UITABLE_TRILOGI_L
+UITABLE_DATA_B_L
 1;2
 FIT_POLYNOMIAL
 1

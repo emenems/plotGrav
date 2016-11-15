@@ -328,12 +328,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 			m22 = uimenu(m2,'Label','Label');
 				uimenu(m22,'Label','On/Off','Callback','plotGrav show_label');
 				m221 = uimenu(m22,'Label','Set');
-                    uimenu(m221,'Label','L1','Callback','plotGrav set_label_L1');
-                    uimenu(m221,'Label','R1','Callback','plotGrav set_label_R1');
-                    uimenu(m221,'Label','L2','Callback','plotGrav set_label_L2');
-                    uimenu(m221,'Label','R2','Callback','plotGrav set_label_R2');
-                    uimenu(m221,'Label','L3','Callback','plotGrav set_label_L3');
-                    uimenu(m221,'Label','R3','Callback','plotGrav set_label_R3');
+                    uimenu(m221,'Label','L1','Callback','plotGrav set_label L1');
+                    uimenu(m221,'Label','R1','Callback','plotGrav set_label R1');
+                    uimenu(m221,'Label','L2','Callback','plotGrav set_label L2');
+                    uimenu(m221,'Label','R2','Callback','plotGrav set_label R2');
+                    uimenu(m221,'Label','L3','Callback','plotGrav set_label L3');
+                    uimenu(m221,'Label','R3','Callback','plotGrav set_label R3');
             m23 = uimenu(m2,'Label','Legend');
 				uimenu(m23,'Label','On/Off','Callback','plotGrav show_legend');
 				m231 = uimenu(m23,'Label','Set');
@@ -447,15 +447,15 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				% Sub-Sub-EDIT menu
                 uimenu(m52,'Label','Copy channel','CallBack','plotGrav compute_copy_channel');
                 m521 = uimenu(m52,'Label','Channel names');
-                    uimenu(m521,'Label','DATA A','CallBack','plotGrav edit_channel_names_data_a');
-                    uimenu(m521,'Label','DATA B','CallBack','plotGrav edit_channel_names_data_b');
-                    uimenu(m521,'Label','DATA C','CallBack','plotGrav edit_channel_names_data_c');
-                    uimenu(m521,'Label','DATA D','CallBack','plotGrav edit_channel_names_data_d');
+                    uimenu(m521,'Label','DATA A','CallBack','plotGrav edit_channel_names data_a');
+                    uimenu(m521,'Label','DATA B','CallBack','plotGrav edit_channel_names data_b');
+                    uimenu(m521,'Label','DATA C','CallBack','plotGrav edit_channel_names data_c');
+                    uimenu(m521,'Label','DATA D','CallBack','plotGrav edit_channel_names data_d');
                 m523 = uimenu(m52,'Label','Channel units');
-                    uimenu(m523,'Label','DATA A','CallBack','plotGrav edit_channel_units_data_a');
-                    uimenu(m523,'Label','DATA B','CallBack','plotGrav edit_channel_units_data_b');
-                    uimenu(m523,'Label','DATA C','CallBack','plotGrav edit_channel_units_data_c');
-                    uimenu(m523,'Label','DATA D','CallBack','plotGrav edit_channel_units_data_d');
+                    uimenu(m523,'Label','DATA A','CallBack','plotGrav edit_channel_units data_a');
+                    uimenu(m523,'Label','DATA B','CallBack','plotGrav edit_channel_units data_b');
+                    uimenu(m523,'Label','DATA C','CallBack','plotGrav edit_channel_units data_c');
+                    uimenu(m523,'Label','DATA D','CallBack','plotGrav edit_channel_units data_d');
                 m522 = uimenu(m52,'Label','Object');
                     uimenu(m522,'Label','Ellipse','CallBack','plotGrav insert_circle',...
                         'Tag','plotGrav_insert_circle','UserData',[]); 			% UserData will be used to store references to inserted circles (to have the option to delete them)
@@ -2717,144 +2717,53 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			end
             plotGrav('uitable_push');
             
-        case 'set_label_L1'
+        case 'set_label'
             %% Set labels manually
             % By default, plotGrav set the 'units' as labels for all axes
             % automatically. Nevertheless, user can set the label manually
             % using this function. The following code contains setting of
             % labels for all Y axes individually.
-            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a1(1),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','L1 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
-        case 'set_label_R1'
-            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar       
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                 % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a1(2),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','R1 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
-        case 'set_label_L2'
-            a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a2(1),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','L2 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
-        case 'set_label_R2'
-            a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar       
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a2(2),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','R2 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
-        case 'set_label_L3'
-            a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                    % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a3(1),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','L3 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
-        case 'set_label_R3'
-            a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar    
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            try
-                ylabel(a3(2),user_label,'FontSize',font_size);
-                set(findobj('Tag','plotGrav_text_status'),'String','R2 Y label set.');drawnow % Sent instructions to status bar
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
-            end
             
+            % get font size (for labels)
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');  
+            % Switch between axes (three plots)
+            ax = char(varargin{1});
+            switch ax(2) % use second character as first (Left/Right is not important right now)
+                case '1'
+                    a = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % first get the axis handle that corresponds to selected Y axis
+                case '2'
+                    a = get(findobj('Tag','plotGrav_check_legend'),'UserData');    
+                case '3'
+                    a = get(findobj('Tag','plotGrav_check_labels'),'UserData');   
+            end
+            % Switch beween left and right
+            switch ax(1)
+                case 'L'
+                    ind = 1; % set the index of the legend (left == 1, right == 2)
+                case 'R'
+                    ind = 2;
+            end
+            % Switch between GUI and script value settings
+            if nargin == 2
+                set(findobj('Tag','plotGrav_text_status'),'String','Set string with new label');drawnow % Sent instructions to status bar
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
+            else
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{2}));
+            end
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_label = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            try
+                ylabel(a(ind),user_label,'FontSize',font_size);
+                set(findobj('Tag','plotGrav_text_status'),'String',[ax,' label set.']);drawnow % Sent instructions to status bar
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String',['Could not set ',ax,' label.']);drawnow % Sent instructions to status bar
+            end
+        
         case 'set_legend'
             %% Set legend manually
             % By default, plotGrav set the 'channels' as legend for all axes
@@ -6268,9 +6177,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             end
 
 %%%%%%%%%%%%%%%%%%%  O T H E R   F U N C T I O N S %%%%%%%%%%%%%%%%%%%%%%%%  
-        case 'edit_channel_names_data_a'
+        case 'edit_channel_names'
             %% Edit channel names
-            % The changes like 'set_legend_L1' or 'set_label_L1'  modify
+            % The changes like 'set_legend' or 'set_label'  modify
             % the legends and labels only temporarily (unit calling
             % 'uitable_push'). This option allows changing the channel
             % names in the ui-table = permanently (until calling
@@ -6278,15 +6187,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First get current data_a ui-table/names/units (will be
             % updated)
-            panels = 'data_a';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in iGrav. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get channels (names)
+            panels = char(varargin{1});
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in DATA_X. Will not be modified!
+            data_table.(panels) = get(findobj('Tag',['plotGrav_uitable_',panels,'_data']),'Data'); % get the ui-table 
+            units.(panels) = get(findobj('Tag',['plotGrav_text_',panels]),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag',['plotGrav_edit_',panels,'_path']),'UserData');  % get channels (names)
             if ~isempty(data.(panels))
                 % Get new channel names either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
-                if nargin == 1                                      
+                if nargin == 2                                     
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
@@ -6294,7 +6203,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{2}));
                 end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
@@ -6325,9 +6234,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                         end
                         % Store new channel names
-                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.(panels));             % set updated units 
-                        set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.(panels));     % set updated channels (names) 
+                        set(findobj('Tag',['plotGrav_uitable_',panels,'_data']),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag',['plotGrav_text_',panels]),'UserData',units.(panels));             % set updated units 
+                        set(findobj('Tag',['plotGrav_edit_',panels,'_path']),'UserData',channels.(panels));     % set updated channels (names) 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
@@ -6339,175 +6248,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_names_data_b'
-            % For comments see 'edit_channel_names_data_a'
-            panels = 'data_b';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in TRiLOGi. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_b'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d name changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                channels.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.(panels));    % set the updated ui-tabl
-                        set(findobj('Tag','plotGrav_edit_data_b_path'),'UserData',channels.(panels));     % set updated channels (names) 
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-        case 'edit_channel_names_data_c'
-            % For comments see 'edit_channel_names_data_a'
-            panels = 'data_c';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in Other1. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_c'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d name changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                channels.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_edit_data_c_path'),'UserData',channels.(panels));     % set updated channels (names) 
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-        case 'edit_channel_names_data_d'
-            % For comments see 'edit_channel_names_data_a'
-            panels = 'data_d';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in Other2. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_d'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new names (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d name changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                channels.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_edit_data_d_path'),'UserData',channels.(panels));     % set updated channels (names) 
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel names have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-            
-        case 'edit_channel_units_data_a'
+        case 'edit_channel_units'
             %% Edit channel units.
-            % The changes like 'set_legend_L1' or 'set_label_L1'  modify
+            % The changes like 'set_legend' or 'set_label'  modify
             % the legends and labels only temporarily (unit calling
             % 'uitable_push'). This option allows changing the channel
             % units in the ui-table = permanently (until calling
@@ -6515,15 +6258,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
             % First get current data_a ui-table/names/units (will be
             % updated)
-            panels = 'data_a';                                              % 
+            panels = char(varargin{1});
             data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in iGrav. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get channels (names)
+            data_table.(panels) = get(findobj('Tag',['plotGrav_uitable_',panels,'_data']),'Data'); % get the ui-table 
+            units.(panels) = get(findobj('Tag',['plotGrav_text_',panels]),'UserData');             % get units 
+            channels.(panels) = get(findobj('Tag',['plotGrav_edit_',panels,'_path']),'UserData');  % get channels (names)
             if ~isempty(data.(panels))
                 % Get new channel units either fro user (GUI) or from plotGrav
                 % function input (plotGrav_scriptRun.m function does that)
-                if nargin == 1                                      
+                if nargin == 2                                     
                     set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on');
@@ -6531,7 +6274,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{2}));
                 end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
@@ -6562,8 +6305,8 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                         end
                         % Store new channel names
-                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.(panels));             % set updated units  
+                        set(findobj('Tag',['plotGrav_uitable_',panels,'_data']),'Data',data_table.(panels));    % set the updated ui-table 
+                        set(findobj('Tag',['plotGrav_text_',panels]),'UserData',units.(panels));             % set updated units 
                         fclose(fid);
                         plotGrav('uitable_push');                           % re-plot to see the changes.
                         set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
@@ -6575,175 +6318,6 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else
                 set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
             end
-        case 'edit_channel_units_data_b'
-            % Edit data_b units. For comments, see 'edit_channel_units_data_a'
-            panels = 'data_b';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_b. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_b'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        % Open logfile
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d units changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                units.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_b_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_data_b'),'UserData',units.(panels));             % set updated units  
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-        case 'edit_channel_units_data_c'
-            % Edit data_c units. For comments, see 'edit_channel_units_data_a'
-            panels = 'data_c';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_c. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_c'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        % Open logfile
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d units changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                units.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_c_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_data_c'),'UserData',units.(panels));             % set updated units  
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-        case 'edit_channel_units_data_d'
-            % Edit data_d units. For comments, see 'edit_channel_units_data_a'
-            panels = 'data_d';                                              % 
-            data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % Just to check if some data loaded in data_d. Will not be modified!
-            data_table.(panels) = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data');    % get the ui-table 
-            units.(panels) = get(findobj('Tag','plotGrav_text_data_d'),'UserData');             % get units 
-            channels.(panels) = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData');     % get channels (names)
-            if ~isempty(data.(panels))
-                if nargin == 1                                      
-                    set(findobj('Tag','plotGrav_text_status'),'String','Set new units (delimiter= ; )');drawnow % send message to status bar with instructions
-                    set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % Make user input dialog visible + set default value  = empty
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','on');
-                    set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                    waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                    set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
-                else                                                            % if plotGrav function called with more inputs
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
-                end
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off user input dialog and editable field
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');
-                user_in = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
-                user_in = strsplit(user_in,';');                            % split string using ; symbol
-                if ~isempty(user_in)                                        % proceed only if something inserted
-                    try
-                        % Open logfile
-                        try
-                            fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a');
-                        catch
-                            fid = fopen('plotGrav_LOG_FILE.log','a');
-                        end
-                        [ty,tm,td,th,tmm] = datevec(now);                   
-                        if length(user_in) > length(channels.(panels))
-                            max_channel = length(channels.(panels));
-                        else
-                            max_channel = length(user_in);
-                        end
-                        for i = 1:max_channel                               % run for all inserted channel names (max = X)
-                            if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
-                                fprintf(fid,'%s channel %2d units changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
-                                units.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
-                            end
-                        end
-                        set(findobj('Tag','plotGrav_uitable_data_d_data'),'Data',data_table.(panels));    % set the updated ui-table 
-                        set(findobj('Tag','plotGrav_text_data_d'),'UserData',units.(panels));             % set updated units  
-                        fclose(fid);
-                        plotGrav('uitable_push');                           % re-plot to see the changes.
-                        set(findobj('Tag','plotGrav_text_status'),'String','New channel units have been set.');drawnow 
-                    catch
-                        fclose(fid);
-                        set(findobj('Tag','plotGrav_text_status'),'String','Upps, some error occurred.');drawnow
-                    end
-                end
-            else
-                set(findobj('Tag','plotGrav_text_status'),'String','Load data first');drawnow
-            end
-            
 		case 'insert_rectangle'
 			%% INSERT objects
             % Iser can interactively insert text, rectangles, lines and
