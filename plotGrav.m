@@ -86,6 +86,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         set_resample_a = '60';                                              % resampling intraval in second (for iGrav only)
         set_start = datevec(now-7);                                         % starting time
         set_stop = datevec(now-1);                                          % end time
+        igrav_prefix = 'iGrav006'                                           % Instrument name for igrav panel data reading
         % Read initial setting file
         try
             count = 0; % count lines to point to possible error
@@ -194,6 +195,15 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                             else
                                 file_logfile = row;
                             end
+                        %% File naming
+                        case 'DATA_A_PREFIX_NAME'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                igrav_prefix = 'iGrav006';
+                            else
+                                igrav_prefix = row;
+                            end
+                        
                         %% Set admittance & calibration & Drift (iGrav panel)
                         case 'ADMITTANCE_FACTOR'
                             row = fgetl(fid);count = count + 1; 
@@ -260,7 +270,8 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				% Sub-Sub-FILE menu
 				m101 = 	uimenu(m10,'Label','iGrav');
 					uimenu(m101,'Label','Path','CallBack','plotGrav select_igrav');
-					uimenu(m101,'Label','File','CallBack','plotGrav select_igrav_file');
+					uimenu(m101,'Label','File','CallBack','plotGrav select_igrav_file',...
+                        'Tag','plotGrav_menu_igrav_file','UserData',igrav_prefix);
 				m102 = 	uimenu(m10,'Label','TRiLOGi');
 					uimenu(m102,'Label','Path','CallBack','plotGrav select_trilogi');
 					uimenu(m102,'Label','File','CallBack','plotGrav select_trilogi_file');
@@ -753,7 +764,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			admittance_factor = str2double(get(findobj('Tag','plotGrav_edit_admit_factor'),'String')); % get admittance factor (same as for 'calibration factor', In addition, will be used when calling plotGrav_Atmacs_and_EOP.m function)
 			drift_fit = get(findobj('Tag','plotGrav_pupup_drift'),'Value');  				% get drift switch,1 = none, 2 = linear,... (same as for 'calibration factor')
 			% Additional variables
-			igrav_prefix = 'Data_iGrav006_';                                % iGrav file prefix (used during data loading). No prefix for SG030, the selected input file (file_path_igrav) will be used also for file prefix.
+			igrav_prefix = get(findobj('Tag','plotGrav_menu_igrav_file'),'UserData'); % iGrav file prefix (used during data loading). No prefix for SG030, the selected input file (file_path_igrav) will be used also for file prefix.
 			trilogi_suffix = '_ENC12345.tsf';                               % trilogi file suffix (except 001, 002,...)
 			trilogi_channels = 40;                                          % number of trilogi channels
 			igrav_channels = 21;                                            % number of igrav channels (original file)
@@ -902,14 +913,14 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             % First find out if sub-folder with daily iGrav data exists, i.e. 
                             % if the data sent by iGrav has been unzipped. 
                             if exist(fullfile(file_path_igrav,...           % if folder /iGrav006_YYYY/DDMM/ does not exists, it is assumed the data is still unzipped
-                                sprintf('iGrav006_%04d',time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),'dir') ~= 7 % exist function return 7 if such folder exists
+                                sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),'dir') ~= 7 % exist function return 7 if such folder exists
                                 file_in = fullfile(file_path_igrav,...      % create input file name = file path + file prefix + date + .zip
-                                    sprintf('iGrav006_%04d',time_in(i,1)),sprintf('iGrav006_%04d%02d%02d.zip',time_in(i,1),time_in(i,2),time_in(i,3)));
+                                    sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%s_%04d%02d%02d.zip',igrav_prefix,time_in(i,1),time_in(i,2),time_in(i,3)));
                                 file_out = fullfile(file_path_igrav,...     % create output PATH = file path + folder with year (iGrav are zipped in folders: /DDMM/
-                                    sprintf('iGrav006_%04d',time_in(i,1))); 
+                                    sprintf('%s_%04d',igrav_prefix,time_in(i,1))); 
                                 if exist(file_in,'file') == 2               % 2 = file exist
                                     set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
-                                        sprintf('Unzipping iGrav data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow 
+                                        sprintf('Unzipping %s data...%04d/%02d/%02d',time_in(i,1),igrav_prefix,time_in(i,2),time_in(i,3)));drawnow 
                                     unzip(file_in,file_out);                % unzip using built in matlab function
 %                                 else
 %                                     [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'iGrav file unzipping: %s does NOT exist (%04d/%02d/%02d %02d:%02d)\n',file_in,ty,tm,td,th,tmm); % write to logfile
@@ -919,7 +930,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 							set(findobj('Tag','plotGrav_text_status'),'String',... % send message to status bar
 								sprintf('Loading iGrav data...%04d/%02d/%02d',time_in(i,1),time_in(i,2),time_in(i,3)));drawnow 
 							file_name = fullfile(file_path_igrav,...        % create input (not zip) file name = file path + file prefix + date + .tsf
-								sprintf('iGrav006_%04d',time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3)),sprintf('%s%02d%02d.tsf',igrav_prefix,time_in(i,2),time_in(i,3)));
+								sprintf('%s_%04d',igrav_prefix,time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3)),sprintf('Data_%s_%02d%02d.tsf',igrav_prefix,time_in(i,2),time_in(i,3)));
 							[ttime,tdata] = plotGrav_loadData(file_name,1,[],[],fid,'iGrav'); % load file and store to temporary variables (do not read channels and units as these are known and constant)
                             % Check if the loaded time series contains non-constant sampling, i.e., missing data (same as for SG030).
                             % If so, try to interpolate the missing intervals but only if the missing interval does not exceed 10 seconds!
