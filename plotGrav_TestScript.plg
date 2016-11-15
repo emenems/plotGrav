@@ -17,8 +17,8 @@
 % FILE_IN_WEBCAM		set path with webcam snapshots. Input: string, e.g., \\dep5z32\hygra\Wettzell\iGrav_Webcam\FI9903P_00626E580815\snap
 % FILE_IN_UNZIP			set file for unzipping (only if downloading from GWR server!). Input: string, e.g., E:\Program Files\7-Zip\7z.exe
 % FILE_IN_LOGFILE		set log file. Input: string, e.g., plotGrav_LOG_FILE.log
-% TIME_START 			set minimum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;5;20;12. Alternatively, use one string with minus sign to load past X days, e.g., Input: -10 => will set the date to current date (0 hours) -10 days.
-% TIME_STOP 			set maximum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;6;20;12. Alternatively, use one string with minus sign to set stop time to current date -X days, e.g., Input: -1 => will set the date to current date (0 hours) -1 day.
+% TIME_START 			set minimum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;5;20;12 (no minutes or seconds!).  Alternatively, use one string with minus sign to load past X days, e.g., Input: -10 => will set the date to current date (0 hours) -10 days.
+% TIME_STOP 			set maximum time for data loading. Input: four strings separated with ; = year;month;day;hour ,e.g., 2015;6;20;12 (no minutes or seconds!). Alternatively, use one string with minus sign to set stop time to current date -X days, e.g., Input: -1 => will set the date to current date (0 hours) -1 day.
 % RESAMPLE_IGRAV		main re-sampling feature for iGrav/SG030. Not re-sampling of all time series = RESAMPLE_ALL. Input: new sampling in seconds, e.g., 60
 % DRIFT_SWITCH			main iGrav/SG030 drift removal switch. Input: 1 = none, 2 = constant, 3 = linear, 4 = quadratic, 5 = cubic, 6 = set. If 6, than next input = polynomial coefficients, e.g. 6;0.41 0 = manual set, slope 0.41, constant 0. Do not delimit the polynomial coefficients!
 % CALIBRATION_FACTOR	sets the iGrav/SG030 calibration factor. Input: calibration factor in nm/s^2/V. Example: -914.78

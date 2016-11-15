@@ -69,24 +69,183 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
     else																	% Otherwise, continue with GUI generating
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% G U I %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Generate GUI
-        % SET PATHS!!														% Default paths to input time series. These parameters can be (after start) manually via GUI
-        path_igrav = '';%'\\dms\hygra\iGrav\iGrav006 Data\';					% ROOT file path to iGrav data, i.e., without year, month and day information. 
-																			% This folder contains sub-folder with year (iGrav006_2015) which contains folder with each day (0305) 
-																			% To load SG030 time series, set this parameter to arbitrary SG030 file, e.g. \\dms\hygra\DataWettzell\Gravity\RawData\SG030_BKG\G1150306.030
-																			% Another option is to select directly file (will not be corrected as iGrav and SG030) in supported file format (*.tsf,*.mat);
-        path_trilogi = '';%'\\dms\hygra\iGrav\iGrav006 Data\Controller Data\';	% Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
-																			% Another option is to select directly file in supported file format (*.tsf,*.mat);
-        file_tides = '\\dms\hygra\iGrav\Corrections\Tides\WE_wet2009_TideEffect_CurrentFile_60sec.tsf'; % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
-        file_filter = '\\dms\hygra\\iGrav\Corrections\Filters\N01S1M01.NLF';	% File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
-        file_unzip = 'E:\Program Files\7-Zip\7z.exe';						% Unzipping program (exe) used only if plotGrav_FTP.m function is called (to download iGrav data from GWR server)
-        path_webcam = '\\dep5z32\AG_Hydrologie\hygra\Wettzell\iGrav_Webcam\FI9903P_00626E580815\snap';					% Path with Webcam Snapshots
-        file_other1 = '';													% Full file name for Other1 time series. If empty ('', or []) not loaded.
-        file_other2 = '';													% Full file name for Other2 time series. If empty ('', or []) not loaded.
+        % Set default values before reading init file
+        path_igrav = '';                                                    % ROOT file path to iGrav data, i.e., without year, month and day information. 
+        path_trilogi = '';                                                  % Folder with TRiLOGi data (this folder should contain all TRiLOGi files in *.tsf format).
+		file_other1 = '';                                                   % Full file name for Other1 time series. If empty ('', or []) not loaded.
+        file_other2 = '';                                                   % Full file name for Other2 time series. If empty ('', or []) not loaded.
+        file_tides = '';                                                    % File in *.tsf format with Tidal effect (first channel). This file will be used only if iGrav or SG030 data are loaded.
+        file_filter = '';                                                   % File with filter coefficients in modified ETERNA format (just comment the header). This file will be used only if iGrav or SG030 data are loaded.
         file_logfile = 'plotGrav_LOG_FILE.log';								% Full file name for Log-file with all important information
+        path_webcam = '';                                                   % Path to Webcam Snapshots
         earthquake_web = 'http://geofon.gfz-potsdam.de/eqinfo/list.php';	% URL to webpage with earthquake information. This parameter CANNOT be changed within GUI
         earthquake_data = 'http://geofon.gfz-potsdam.de/eqinfo/list.php?latmin=&latmax=&lonmin=&lonmax=&magmin='; % SQL data with list of last earthquakes. This parameter CANNOT be changed within GUI
-		scrs = get(0,'screensize');											% Get screen-resolution for future GUI window, i.e., the window is ALWAYS fitted to current monitor resolution.
+		set_admittance = '-3.0';                                            % admittance factor
+        set_calib_factor = '1';                                             % calibration factor = multiplicator (for iGrav only)
+        set_calib_phase = '0';                                              % phase delay in seconds (for iGrav only)
+        set_resample_a = '60';                                              % resampling intraval in second (for iGrav only)
+        set_start = datevec(now-7);                                         % starting time
+        set_stop = datevec(now-1);                                          % end time
+        % Read initial setting file
+        try
+            count = 0; % count lines to point to possible error
+            % Open file for reading (one row after another)
+            fid = fopen('plotGrav.ini','r'); 
+            row = fgetl(fid);                                                   % Get first row (usualy comment).
+            while ischar(row)                                                   % continue reading whole file
+                if ~strcmp(row(1),'%')                                          % run code only if not comment
+                    switch row                                                  % switch between commands depending on the Script switch.
+                        %% Set time interval
+                        case 'TIME_START'                                           % Starting time
+                            row = fgetl(fid);count = count + 1;                     % read the date
+                            if ~strcmp(row,'[]')                                    % proceed/set only if required
+                                date = strsplit(row,';');                           % By default multiple inputs are delimited by ;. If one input (with minus sign), then set to current time - input
+                                if length(date) == 1
+                                    date = char(date);
+                                    if strcmp(date(1),'-');
+                                        temp = now;
+                                        set_start = datevec(temp+str2double(date)); % use + as input starts with minus sign!
+                                        set_start(4) = 00;
+                                    end
+                                else
+                                    for i = 1:4
+                                        set_start(i) = str2double(date{i});
+                                    end
+                                end
+                            end
+                        case 'TIME_STOP'                                            % Stop time
+                            row = fgetl(fid);count = count + 1;                     % read the date
+                            if ~strcmp(row,'[]')                                    % proceed/set only if required
+                                date = strsplit(row,';');                            % By default multiple inputs are delimited by ; If one input (with minus sign), then set to current time - input
+                                if length(date) == 1
+                                    date = char(date);
+                                    if strcmp(date(1),'-');
+                                        temp = now;
+                                        set_stop = datevec(temp+str2double(date)); % use + as input starts with minus sign!
+                                        set_stop(4) = 24;
+                                    end
+                                else
+                                    for i = 1:4
+                                        set_stop(i) = str2double(date{i});
+                                    end
+                                end
+                            end
+                        case 'RESAMPLE_A' % affect only iGrav panel and only if iGrav original data is loaded!
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                set_resample_a = 1; % no resampling for resolution < 2 seconds
+                            else
+                                set_resample_a = row;
+                            end
+                        %% Setting file paths
+                        case 'FILE_IN_IGRAV'
+                            row = fgetl(fid);count = count + 1;                 % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
+                            if strcmp(row,'[]')                                 % [] symbol means no input                           
+                                path_igrav = '';
+                            else
+                                path_igrav = row;                               % otherwise set the input file
+                            end
+                        case 'FILE_IN_TRILOGI'
+                            row = fgetl(fid);count = count + 1;                 % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
+                            if strcmp(row,'[]')                                 % [] symbol means no input                           
+                                path_trilogi = '';
+                            else
+                                path_trilogi = row;                             % otherwise set the input file
+                            end
+                        case 'FILE_IN_OTHER1'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                file_other1 = '';
+                            else
+                                file_other1 = row;
+                            end
+                        case 'FILE_IN_OTHER2'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                file_other2 = '';
+                            else
+                                file_other2 = row;
+                            end
+                        case 'FILE_IN_TIDES'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                file_tides = '';
+                            else
+                                file_tides = row;
+                            end
+                        case 'FILE_IN_FILTER'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                file_filter = '';
+                            else
+                                file_filter = row;
+                            end
+                        case 'FILE_IN_WEBCAM'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                path_webcam = ''; 
+                            else
+                                path_webcam = row;
+                            end
+                        case 'FILE_IN_LOGFILE'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                file_logfile = '';
+                            else
+                                file_logfile = row;
+                            end
+                        %% Set admittance & calibration & Drift (iGrav panel)
+                        case 'ADMITTANCE_FACTOR'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                set_admittance = '0';
+                            else
+                                set_admittance = row;
+                            end
+                        case 'CALIBRATION_FACTOR'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                set_calib_factor = '1';
+                            else
+                                set_calib_factor = row;
+                            end
+                        case 'CALIBRATION_DELAY'
+                            row = fgetl(fid);count = count + 1; 
+                            if strcmp(row,'[]')
+                                set_calib_phase = '1';
+                            else
+                                set_calib_phase = row;
+                            end
+                        case 'DRIFT_SWITCH'
+                            row = fgetl(fid);count = count + 1;
+                            coef = strsplit(row,';');                       % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
+                            if ~strcmp(char(coef),'[]')                     % proceed/set only if required
+                                set_drift_switch = str2double(coef(1));
+                                if strcmp(char(coef(1)),'6')                % 6 = user defined polynomial ceoffients
+                                    set_drift_val = char(coef(2:end));
+                                else
+                                    set_drift_val = [];
+                                end
+                            end
+                    otherwise
+                        row = fgetl(fid);count = count + 1; 
+                    end
+                else
+                    row = fgetl(fid);count = count + 1; 
+                end
+            end
+            fclose(fid);
+        catch err_mess
+            if count == 0
+                errordlg('Could not read plotGrav.ini file');
+            else
+                errordlg(sprintf('Error at %d line: \n%s',count,err_mess.message));
+                fclose(fid);
+            end
+        end
         
+        % Get screen-resolution for future GUI window, i.e., the window is ALWAYS fitted to current monitor resolution.
+        scrs = get(0,'screensize');			
 		% Start creating GUI
 		F1 = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],...       % create main window
                     'Tag','plotGrav_main_menu','Resize','on','Menubar','none','ToolBar','none',...
@@ -139,8 +298,6 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 					'Tag','plotGrav_menu_print_two','UserData',[]);			% this uimenu will be used to store file name for printing output (first and second plot)
 				uimenu(m13,'Label','Editable figure','CallBack','plotGrav print_three',...
 					'Tag','plotGrav_menu_print_three','UserData',[]);		% this uimenu will be used to store file name for printing output (Plot 1 + 2 + 3)
-			uimenu(m1,'Label','Connect to FTP','CallBack','plotGrav_FTP','Tag',...
-					'plotGrav_menu_ftp','UserData',file_unzip);				% this uimenu will be used to store exe for unzipping
             m14 = uimenu(m1,'Label','Correction file');
 			uimenu(m14,'Label','Apply (read channel)','CallBack','plotGrav correction_file','Tag',...
 					'plotGrav_menu_correction_file','UserData',[]);			% this uimenu will be used to store file name with correction file name
@@ -370,40 +527,38 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   'Position',[0.345,0.61+0.30,0.10,0.09],'FontSize',8);
         uicontrol(p3,'Style','Text','String','hour','units','normalized',...
                   'Position',[0.44,0.61+0.30,0.10,0.09],'FontSize',8);
-        temp = now;temp = datevec(temp-8);                                  % get current time and covert it to calendar/time - 8 days. Use this date for default time setting
-        uicontrol(p3,'Style','Edit','String',sprintf('%04d',temp(1)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%04d',set_start(1)),'units','normalized',...
                   'Position',[0.17,0.565+0.27,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_year');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(2)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_start(2)),'units','normalized',...
                   'Position',[0.27,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_month');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(3)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_start(3)),'units','normalized',...
                   'Position',[0.36,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_day');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',00),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_start(4)),'units','normalized',...
                   'Position',[0.45,0.565+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_start_hour');
-        temp = now;temp = datevec(temp-1);                                  % get current time and covert it to calendar/time - 1 days. Use this date for default time setting
-        uicontrol(p3,'Style','Edit','String',sprintf('%04d',temp(1)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%04d',set_stop(1)),'units','normalized',...
                   'Position',[0.17,0.445+0.27,0.09,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_year');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(2)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_stop(2)),'units','normalized',...
                   'Position',[0.27,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_month');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',temp(3)),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_stop(3)),'units','normalized',...
                   'Position',[0.36,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_day');
-        uicontrol(p3,'Style','Edit','String',sprintf('%02d',23),'units','normalized',...
+        uicontrol(p3,'Style','Edit','String',sprintf('%02d',set_stop(4)),'units','normalized',...
                   'Position',[0.45,0.445+0.27,0.08,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_time_stop_hour');
 				  
 		% Settings panel: calibration and admittance
         uicontrol(p3,'Style','Text','String','Calibration:','units','normalized',...
                   'Position',[0.54,0.565+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','-914.416','units','normalized',...	% default calibration factor (iGrav)
+        uicontrol(p3,'Style','Edit','String',set_calib_factor,'units','normalized',...	% default calibration factor (iGrav)
                   'Position',[0.70,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_factor');
-        uicontrol(p3,'Style','Edit','String','-11.7','units','normalized',...	% default phase delay (iGrav)	
+        uicontrol(p3,'Style','Edit','String',set_calib_phase,'units','normalized',...	% default phase delay (iGrav)	
                   'Position',[0.83,0.565+0.27,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_calb_delay');
         uicontrol(p3,'Style','Text','String','nm/s^2 / V','units','normalized',...
@@ -413,7 +568,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   'Position',[0.845,0.630+0.30,0.12,0.07],'FontSize',8,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Text','String','Admittance:','units','normalized',...
                   'Position',[0.54,0.44+0.27,0.15,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','-3.0','units','normalized',...	% default single admittance factor			
+        uicontrol(p3,'Style','Edit','String',set_admittance,'units','normalized',...	% default single admittance factor			
                   'Position',[0.70,0.445+0.28,0.12,0.09],'FontSize',9,'BackgroundColor','w',...
                   'tag','plotGrav_edit_admit_factor');
         uicontrol(p3,'Style','Text','String','nm/s^2 / hPa','units','normalized',...
@@ -424,13 +579,16 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                   'Position',[0.02,0.59,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
         uicontrol(p3,'Style','Popupmenu','String','none|constant value|linear|quadratic|cubic|set','units','normalized',...
                   'Position',[0.17,0.65,0.18,0.05],'FontSize',9,'Tag','plotGrav_pupup_drift','backgroundcolor','w',...
-                  'Value',1,'Callback','plotGrav set_manual_drift');		% default drift = none (zero)
-        uicontrol(p3,'Style','Edit','String','0.41 0','units','normalized',...	% default user drift setting			
+                  'Value',set_drift_switch,'Callback','plotGrav set_manual_drift');		% default drift = none (zero)
+        temp = uicontrol(p3,'Style','Edit','String','0.41 0','units','normalized',...	% default user drift setting			
                   'Position',[0.36,0.59,0.17,0.10],'FontSize',9,'BackgroundColor','w',...
-                  'Tag','plotGrav_edit_drift_manual','Visible','off');
+                  'Tag','plotGrav_edit_drift_manual','visible','off');
+        if ~isempty(set_drift_val)
+            set(temp,'visible','on');
+        end
         uicontrol(p3,'Style','Text','String','Re-sample:','units','normalized',...
                   'Position',[0.54,0.59,0.13,0.09],'FontSize',9,'HorizontalAlignment','left');
-        uicontrol(p3,'Style','Edit','String','60','units','normalized',...		% default re-sampling interval (of iGrav/SG030). Will not be used for TRiLOGi, Other1 and Other2 time series
+        uicontrol(p3,'Style','Edit','String',set_resample_a,'units','normalized',...		% default re-sampling interval (of iGrav/SG030). Will not be used for TRiLOGi, Other1 and Other2 time series
                   'Position',[0.7,0.595,0.12,0.09],'FontSize',9,'Tag','plotGrav_edit_resample','backgroundcolor','w');
         uicontrol(p3,'Style','Text','String','seconds','units','normalized',...
                   'Position',[0.83,0.59,0.16,0.09],'FontSize',9,'HorizontalAlignment','left');
