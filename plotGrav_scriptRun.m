@@ -140,7 +140,7 @@ try                                                                         % ca
                             set(findobj('Tag','plotGrav_edit_time_stop_hour'),'String',char(date(4))); % first value must be hour (no minutes and seconds on plotGrav input)
                         end
                     end
-                %% iGrav/SG030 processing settings
+                %% Gravimeter processing settings
                 case 'CALIBRATION_FACTOR'
                     row = fgetl(fid);count = count + 1;
                     if ~strcmp(row,'[]')                                        % proceed/set only if required
@@ -360,30 +360,39 @@ try                                                                         % ca
                     in = strsplit(row,';');                                     % split: 3 inputs expected = panel switch; all/selected channels switch; and output file name
                     if ~strcmp(char(in(1)),'[]')                                % proceed/set only if required
                         if length(in) == 3
-                            switch char(in(1))                                  % switch between panels
+                            temp = char(in(1));
+                            switch temp(1)                                  % switch between panels
+                                % Old version with numbers insted of DATA_X
+                                % switch
                                 case '1'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_data_a_all',char(in(3)));
+                                        plotGrav('export_all','data_a',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_data_a_sel',char(in(3)));
+                                        plotGrav('export_sel','data_a',char(in(3)));
                                     end
                                 case '2'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_data_b_all',char(in(3)));
+                                        plotGrav('export_all','data_b',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_data_b_sel',char(in(3)));
+                                        plotGrav('export_sel','data_b',char(in(3)));
                                     end
                                 case '3'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_data_c_all',char(in(3)));
+                                        plotGrav('export_all','data_c',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
-                                        plotGrav('export_data_c_sel',char(in(3)));
+                                        plotGrav('export_sel','data_c',char(in(3)));
                                     end
                                 case '4'
                                     if strcmp(char(in(2)),'1')                  % switch between all/selected channels
-                                        plotGrav('export_data_d_all',char(in(3)));
+                                        plotGrav('export_all',char(in(3)));
                                     elseif strcmp(char(in(2)),'2')
                                         plotGrav('export_data_d_sel',char(in(3)));
+                                    end
+                                case 'D'
+                                    if strcmp(char(in(2)),'1')                  % switch between all/selected channels
+                                        plotGrav('export_all',lower(char(in(1))),char(in(3)));
+                                    elseif strcmp(char(in(2)),'2')
+                                        plotGrav('export_sel',lower(char(in(1))),char(in(3)));
                                     end
                             end
                         end

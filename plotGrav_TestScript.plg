@@ -63,7 +63,7 @@
 % SET_UNITS_OTHER2		same procedure as SET_UNITS_IGRAV.
 % SET_DATE_FORMAT		set x ticks date format. Input: string, e.g. dd/mm/yyyy. This will re-set the plot.
 % SET_PLOT_TYPE 		set plot type = line or bar plot. 1 = line, 2 = bar, 3 = area, 4 = stem, 5 = stairs. Input for each axes = 6 in total. Example: 1;1;1;1;1;2
-% EXPORT_DATA	 		save loaded time series as. Input = switch number for panels, 1 = iGrav,2 = TRiLOGi,3 = Other1,4 = Other2;switch number for all/selected only, 1 = all channels,2 = selected channels (in L1); String with output file name. Example: 1;1;F:\mikolaj\Desktop\Test_Script_Export.tsf => all iGrav time series will be exported to *.tsf file.
+% EXPORT_DATA	 		save loaded time series as. Input = switch between Panels DATA_A | DATA_B | DATA_C | DATA_D ;switch number for all/selected only, 1 = all channels,2 = selected channels (in L1); String with output file name. Example: DATA_A;1;F:\mikolaj\Desktop\Test_Script_Export.tsf => all iGrav time series will be exported to *.tsf file.
 % PAUSE					pauses the computation for required time. Input = number of seconds, e.g, 5. This option is advisable when plotting long time series as the visualisation takes some time and consecutive plotting commands (e.g., UITABLE_IGRAV_L) may not be otherwise perform sufficiently.
 % SHOW_EARTHQUAKES 		plots Geofon Earthquake records. Input = minimum magnitude, e.g., 6. Only last 20 records can be plotted.
 % REMOVE_SPIKES			remove spikes using simple Standard Deviation (SD) condition. Input: number used to multiply the SD, all values of selected channel above input*SD will be set to NaN. Example: 3

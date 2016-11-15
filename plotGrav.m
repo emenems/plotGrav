@@ -289,17 +289,17 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m10,'Label','7zip exe','CallBack','plotGrav select_unzip');
 				uimenu(m10,'Label','Log File','CallBack','plotGrav select_logfile');
 				m121 = 	uimenu(m12,'Label','DATA A');
-					uimenu(m121,'Label','All channels','Callback','plotGrav export_data_a_all');
-					uimenu(m121,'Label','Selected channels (L1)','Callback','plotGrav export_data_a_sel');
-				m122  = uimenu(m12,'Label','TRiLOGi data');
-					uimenu(m122,'Label','All channels','Callback','plotGrav export_data_b_all');
-					uimenu(m122,'Label','Selected channels (L1)','Callback','plotGrav export_data_b_sel');
-				m123 = 	uimenu(m12,'Label','Other1 data');
-					uimenu(m123,'Label','All channels','Callback','plotGrav export_data_c_all');
-					uimenu(m123,'Label','Selected channels (L1)','Callback','plotGrav export_data_c_sel');
-				m124  = uimenu(m12,'Label','Other2 data');
-					uimenu(m124,'Label','All channels','Callback','plotGrav export_data_d_all');
-					uimenu(m124,'Label','Selected channels (L1)','Callback','plotGrav export_data_d_sel');
+					uimenu(m121,'Label','All channels','Callback','plotGrav export_all data_a');
+					uimenu(m121,'Label','Selected channels (L1)','Callback','plotGrav export_sel data_a');
+				m122  = uimenu(m12,'Label','DATA B');
+					uimenu(m122,'Label','All channels','Callback','plotGrav export_all data_b');
+					uimenu(m122,'Label','Selected channels (L1)','Callback','plotGrav export_sel data_b');
+				m123 = 	uimenu(m12,'Label','DATA C');
+					uimenu(m123,'Label','All channels','Callback','plotGrav export_all data_c');
+					uimenu(m123,'Label','Selected channels (L1)','Callback','plotGrav export_sel data_c');
+				m124  = uimenu(m12,'Label','DATA D');
+					uimenu(m124,'Label','All channels','Callback','plotGrav export_all data_d');
+					uimenu(m124,'Label','Selected channels (L1)','Callback','plotGrav export_sel data_d');
 			m13 = 	uimenu(m1,'Label','Print');
 				uimenu(m13,'Label','All plots','CallBack','plotGrav print_all',...	
 					'Tag','plotGrav_menu_print_all','UserData',[]); 		% this uimenu will be used to store file name for printing output (plot all)
@@ -3165,112 +3165,41 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             
 %%%%%%%%%%%%%%%%%%%%%%%%% E X P O R T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
         %% EXPORT DATA   
-        % Export allows user to save the data stored in iGrav, TRiLOGi,
-        % Other1 and Other2 to tsf and mat file format. It works like 'save
-        % as' function.
-		case 'export_data_a_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data (this variable store iGrav together with other time series)
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time (includes iGrav time vector)
-			units = get(findobj('Tag','plotGrav_text_data_a'),'UserData');   % get iGrav units. Will be included in the output.
-			channels = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names)
-            if nargin == 1
-                plotGrav_exportData(time.data_a,data.data_a,channels,units,[],[],'iGrav',[]); % call general function for data export
+        % Export allows user to save the data stored in DATA X, to tsf and
+        % mat file format. It works like 'save as' function.
+		case 'export_all'
+            % Get name of the panel that should be saved
+            panel = char(varargin{1});
+            % get all data (this variable store iGrav together with other time series)
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors. Time is used to detect missing values. Filter cannot be applied if missing data are note taking into account.
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData'); 
+            units_panel = get(findobj('Tag',sprintf('plotGrav_text_%s',panel)),'UserData');         % get iGrav units. Will be used to set output/filtered time series units.
+            channels_panel = get(findobj('Tag',sprintf('plotGrav_edit_%s_path',panel)),'UserData'); % get iGrav channels (names). Will be used to derive output/filtered channel name.
+            % Switch betwen GUI call (one input) and script call (panel
+            % name + output file)
+            if nargin == 2
+                plotGrav_exportData(time.(panel),data.(panel),channels_panel,units_panel,[],[],panel,[]); % call general function for data export
             else
-                plotGrav_exportData(time.data_a,data.data_a,channels,units,[],[],'iGrav',char(varargin{1})); % call general function for data export with output file name
+                plotGrav_exportData(time.(panel),data.(panel),channels_panel,units_panel,[],[],panel,char(varargin{2})); % call general function for data export with output file name
             end
-		case 'export_data_a_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_a'),'UserData');   % get iGrav units
-			channels = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData'); % get iGrav channels (names)
-			data_data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data'); % get the iGrav table
-			select = find(cell2mat(data_data_a(:,1))==1);                    % get selected iGrav channels for L1
-            if isempty(select)
-                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
+		case 'export_sel'
+            % Just link in previous section but with selected channels for
+            % export
+            panel = char(varargin{1});
+            % get all data (this variable store iGrav together with other time series)
+			time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors. Time is used to detect missing values. Filter cannot be applied if missing data are note taking into account.
+            data = get(findobj('Tag','plotGrav_push_load'),'UserData'); 
+            data_panel = get(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panel)),'Data');      % get the DATA_X ui-table. Will be used to find selected/checked channels
+            units_panel = get(findobj('Tag',sprintf('plotGrav_text_%s',panel)),'UserData');         % get iGrav units. Will be used to set output/filtered time series units.
+            channels_panel = get(findobj('Tag',sprintf('plotGrav_edit_%s_path',panel)),'UserData'); % get iGrav channels (names). Will be used to derive output/filtered channel name.
+            % Get selected channels
+			select = find(cell2mat(data_panel(:,1))==1);                    
+            % Switch betwen GUI call (one input) and script call (panel
+            % name + output file)
+            if nargin == 2
+                plotGrav_exportData(time.(panel),data.(panel),channels_panel,units_panel,select,[],panel,[]); % call general function for data export
             else
-                if nargin == 1
-                    plotGrav_exportData(time.data_a,data.data_a,channels,units,select,[],'iGrav',[]);
-                else
-                    plotGrav_exportData(time.data_a,data.data_a,channels,units,select,[],'iGrav',char(varargin{1})); % call general function for data export with output file name
-                end
-            end
-		case 'export_data_b_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_b'),'UserData'); % get data_b units
-			channels = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get data_b channels (names)
-            if nargin == 1
-                plotGrav_exportData(time.data_b,data.data_b,channels,units,[],[],'TRiLOGi',[]);
-            else
-                plotGrav_exportData(time.data_b,data.data_b,channels,units,[],[],'TRiLOGi',char(varargin{1}));
-            end
-		case 'export_data_b_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_b'),'UserData'); % get data_b units
-			channels = get(findobj('Tag','plotGrav_edit_data_b_path'),'UserData'); % get data_b channels (names)
-			data_data_b = get(findobj('Tag','plotGrav_uitable_data_b_data'),'Data'); % get the data_b table
-			select = find(cell2mat(data_data_b(:,1))==1);                  % get selected data_b channels for L1            
-            if isempty(select)
-                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
-            else
-                if nargin == 1
-                    plotGrav_exportData(time.data_b,data.data_b,channels,units,select,[],'TRiLOGi',[]);
-                else
-                    plotGrav_exportData(time.data_b,data.data_b,channels,units,select,[],'TRiLOGi',char(varargin{1}));
-                end
-            end
-		case 'export_data_c_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_c'),'UserData');  % get data_c units
-			channels = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get data_c channels (names)
-            if nargin == 1
-                plotGrav_exportData(time.data_c,data.data_c,channels,units,[],[],'Other1',[]);
-            else
-                plotGrav_exportData(time.data_c,data.data_c,channels,units,[],[],'Other1',char(varargin{1}));
-            end
-		case 'export_data_c_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_c'),'UserData');  % get data_c units
-			channels = get(findobj('Tag','plotGrav_edit_data_c_path'),'UserData'); % get data_c channels (names)
-			data_data_c = get(findobj('Tag','plotGrav_uitable_data_c_data'),'Data'); % get the data_c table
-			select = find(cell2mat(data_data_c(:,1))==1);                   % get selected data_c channels for L1
-            if isempty(select)
-                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
-            else
-                if nargin == 1
-                    plotGrav_exportData(time.data_c,data.data_c,channels,units,select,[],'Other1',[]);
-                else
-                    plotGrav_exportData(time.data_c,data.data_c,channels,units,select,[],'Other1',char(varargin{1}));
-                end
-            end
-		case 'export_data_d_all'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  % get data_d units
-			channels = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get data_d channels (names)
-            if nargin == 1
-                plotGrav_exportData(time.data_d,data.data_d,channels,units,[],[],'Other2',[]);
-            else
-                plotGrav_exportData(time.data_d,data.data_d,channels,units,[],[],'Other2',char(varargin{1}));
-            end
-		case 'export_data_d_sel'
-			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % get all data 
-			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % get time
-			units = get(findobj('Tag','plotGrav_text_data_d'),'UserData');  % get data_d units
-			channels = get(findobj('Tag','plotGrav_edit_data_d_path'),'UserData'); % get data_d channels (names)
-			data_data_d = get(findobj('Tag','plotGrav_uitable_data_d_data'),'Data'); % get the data_d table
-			select = find(cell2mat(data_data_d(:,1))==1);                   % get selected data_d channels for L1
-            if isempty(select)
-                set(findobj('Tag','plotGrav_text_status'),'String','You must select at least one L1 channel.');drawnow % send to status bar
-            else
-                if nargin == 1
-                    plotGrav_exportData(time.data_d,data.data_d,channels,units,select,[],'Other2',[]);
-                else
-                    plotGrav_exportData(time.data_d,data.data_d,channels,units,select,[],'Other2',char(varargin{1}));
-                end
+                plotGrav_exportData(time.(panel),data.(panel),channels_panel,units_panel,select,[],panel,char(varargin{2})); % call general function for data export with output file name
             end
             
         case 'print_all'
