@@ -699,27 +699,27 @@ try                                                                         % ca
                     in = strsplit(row,';');
                     % L1
                     if ~strcmp(char(in(1)),'[]')
-                        plotGrav('set_legend_L1',char(in(1)));
+                        plotGrav('set_legend','L1',char(in(1)));
                     end
                     % R1
                     if ~strcmp(char(in(2)),'[]')
-                        plotGrav('set_legend_R1',char(in(2)));
+                        plotGrav('set_legend','R1',char(in(2)));
                     end
                     % L2
                     if ~strcmp(char(in(3)),'[]')
-                        plotGrav('set_legend_L2',char(in(3)));
+                        plotGrav('set_legend','L2',char(in(3)));
                     end
                     % R2
                     if ~strcmp(char(in(4)),'[]')
-                        plotGrav('set_legend_R2',char(in(4)));
+                        plotGrav('set_legend','R2',char(in(4)));
                     end
                     % L3
                     if ~strcmp(char(in(5)),'[]')
-                        plotGrav('set_legend_L3',char(in(5)));
+                        plotGrav('set_legend','L3',char(in(5)));
                     end
                     % R3
                     if ~strcmp(char(in(6)),'[]')
-                        plotGrav('set_legend_R3',char(in(6)));
+                        plotGrav('set_legend','R3',char(in(6)));
                     end
                 %% Set line width
                 case 'SET_LINE_WIDTH'

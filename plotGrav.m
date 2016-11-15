@@ -337,12 +337,12 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
             m23 = uimenu(m2,'Label','Legend');
 				uimenu(m23,'Label','On/Off','Callback','plotGrav show_legend');
 				m231 = uimenu(m23,'Label','Set');
-                    uimenu(m231,'Label','L1','Callback','plotGrav set_legend_L1');
-                    uimenu(m231,'Label','R1','Callback','plotGrav set_legend_R1');
-                    uimenu(m231,'Label','L2','Callback','plotGrav set_legend_L2');
-                    uimenu(m231,'Label','R2','Callback','plotGrav set_legend_R2');
-                    uimenu(m231,'Label','L3','Callback','plotGrav set_legend_L3');
-                    uimenu(m231,'Label','R3','Callback','plotGrav set_legend_R3');
+                    uimenu(m231,'Label','L1','Callback','plotGrav set_legend L1');
+                    uimenu(m231,'Label','R1','Callback','plotGrav set_legend R1');
+                    uimenu(m231,'Label','L2','Callback','plotGrav set_legend L2');
+                    uimenu(m231,'Label','R2','Callback','plotGrav set_legend R2');
+                    uimenu(m231,'Label','L3','Callback','plotGrav set_legend L3');
+                    uimenu(m231,'Label','R3','Callback','plotGrav set_legend R3');
             uimenu(m2,'Label','Line width','Callback','plotGrav set_line_width','Tag','plotGrav_menu_line_width',...
                         'UserData',[0.5 0.5 0.5 0.5 0.5 0.5]);              % Store line width
             m24 = uimenu(m2,'Label','X axis');
@@ -2855,174 +2855,64 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_text_status'),'String','Could not set Y label.');drawnow % Sent instructions to status bar
             end
             
-        case 'set_legend_L1'
+        case 'set_legend'
             %% Set legend manually
             % By default, plotGrav set the 'channels' as legend for all axes
             % automatically. Nevertheless, user can set the legend manually
             % using this function. The following code contains setting of
             % legend for all axes individually.
-            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % get existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{1} = user_legend;                               % store the legend. Overwrite only L1 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a1(1),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');           % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','L1 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
-        case 'set_legend_R1'
-            a1 = get(findobj('Tag','plotGrav_check_grid'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar    
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_one'),'UserData'); % Existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{2} = user_legend;                               % store the legend. Overwrite only R1 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a1(2),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');           % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','R1 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
-        case 'set_legend_L2'
-            a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                      % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % Existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{1} = user_legend;                               % store the legend. Overwrite only L2 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a2(1),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');           % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','L2 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
-        case 'set_legend_R2'
-            a2 = get(findobj('Tag','plotGrav_check_legend'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_two'),'UserData'); % Existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{2} = user_legend;                               % store the legend. Overwrite only R2 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a2(2),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');           % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_two'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','R2 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
-        case 'set_legend_L3'
-            a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar      
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_three'),'UserData'); % Existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{1} = user_legend;                               % store the legend. Overwrite only L3 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a3(1),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthWest');         % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','L3 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
-        case 'set_legend_R3'
-            a3 = get(findobj('Tag','plotGrav_check_labels'),'UserData');      % first get the axis handle that corresponds to selected Y axis
-            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');   % get font size
-            if nargin == 1
-                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow % Sent instructions to status bar
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
-                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
-                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
-                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
-                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
-            else
-                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1}));
-            end                                                     % wait 15 for user input    
-            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
-            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
-            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
-            legend_save = get(findobj('Tag','plotGrav_menu_print_three'),'UserData'); % Existing legend (might be emtpy)
-            try
-                user_legend = strsplit(user_legend,'|');
-                legend_save{2} = user_legend;                               % store the legend. Overwrite only R3 if existing. This legend will be used during printing as printing algorithm requires this approach.
-                l = legend(a3(2),char(user_legend));
-                set(l,'interpreter','none','FontSize',font_size,'Location','NorthEast');           % change font and interpreter (because channels contain spacial sybols like _)
-                set(findobj('Tag','plotGrav_menu_print_three'),'UserData',legend_save);
-                set(findobj('Tag','plotGrav_text_status'),'String','R3 Legend set.');drawnow % 
-            catch
-                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
-            end
             
+            % get font size (for legend)
+            font_size = get(findobj('Tag','plotGrav_menu_set_font_size'),'UserData');  
+            % Switch between axes (three plots)
+            ax = char(varargin{1});
+            switch ax(2) % use second character as first (Left/Right is not important right now)
+                case '1'
+                    a = get(findobj('Tag','plotGrav_check_grid'),'UserData'); % first get the axis handle that corresponds to selected Y axis
+                    legend_tag = 'plotGrav_menu_print_one';                 % set name of the Tag used to find legend corresponding to first plot
+                case '2'
+                    a = get(findobj('Tag','plotGrav_check_legend'),'UserData');    
+                    legend_tag = 'plotGrav_menu_print_two';
+                case '3'
+                    a = get(findobj('Tag','plotGrav_check_labels'),'UserData');   
+                    legend_tag = 'plotGrav_menu_print_three';
+            end
+            % Switch beween left and right
+            switch ax(1)
+                case 'L'
+                    ind = 1; % set the index of the legend (left == 1, right == 2)
+                    legend_pos = 'NorthWest';
+                case 'R'
+                    ind = 2;
+                    legend_pos = 'NorthEast';
+            end
+            % Sent instructions to status bar in case section is called via
+            % GUI (common for all axes)
+            if nargin == 2
+                set(findobj('Tag','plotGrav_text_status'),'String','Set new legend (delimiter = |)');drawnow 
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','');  % set user dialog to visible. Set String to '' (otherwise, the last used String would be shown)
+                set(findobj('Tag','plotGrav_text_input'),'Visible','on');       %
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar     
+            else
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{2}));
+            end
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off');  % Make user input fields invisible
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');                                            
+            user_legend = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % Get the user input
+            legend_save = get(findobj('Tag',legend_tag),'UserData'); % get existing legend (might be emtpy)
+            try
+                user_legend = strsplit(user_legend,'|');
+                legend_save{ind} = user_legend;                               % store the legend. Overwrite only L1 if existing. This legend will be used during printing as printing algorithm requires this approach.
+                l = legend(a(ind),char(user_legend));
+                set(l,'interpreter','none','FontSize',font_size,'Location',legend_pos);           % change font and interpreter (because channels contain spacial sybols like _)
+                set(findobj('Tag','plotGrav_menu_print_one'),'UserData',legend_save);
+                set(findobj('Tag','plotGrav_text_status'),'String',[ax,' Legend set.']);drawnow % 
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Could not set legend.');drawnow % Sent instructions to status bar
+            end
+        
         case 'set_line_width'
             %% Set line with manually
             % By default, plotGrav set the linewith to 0.5 all axes
