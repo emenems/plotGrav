@@ -10,13 +10,13 @@ function plotGrav(in_switch,varargin)
 % Required functions:
 %   plotGrav_Atmacs_and_EOP.m
 %   plotGrav_conv.m
+%   plotGrav_exportData.m
 %   plotGrav_findTimeStep.m
 %   plotGrav_fit.m
 %   plotGrav_fitData.m
 %   plotGrav_FTP.m
 %   plotGrav_loadData.m
 %   plotGrav_loadtsf.m
-%   plotGrav_exportData.m
 %   plotGrav_plotData.m
 %   plotGrav_printData.m
 %   plotGrav_readcsv.m
@@ -24,39 +24,20 @@ function plotGrav(in_switch,varargin)
 %   plotGrav_spectralAnalysis.m
 %   plotGrav_writetsf.m
 % These functions must be stored in the same folder as plotGrav.m
+%
+% Required additional files:
+%   plotGrav.ini
 % 
 % Some comments/system requirements:
 % - it is allowed to run only one window per Matlab.
-% - this function was tested using Matlab r2013a + statistical toolbox + 
+% - this function was tested using Matlab r2015b + statistical toolbox + 
 %   curve fitting + signal processing toolbox.
-% - should work also using Matlab r2014b. Works not with Octave due to missing
-%	uitable function.
-% - the loading of all data (especially second iGrav/SG030) takes some time!
+% - should work also using Matlab r2014b. Does not work with Octave due to 
+%	missing uitable function.
+% - the loading of all data (especially second iGrav/SG) takes some time!
 %
-% iGrav/SG030 visualisation procedure:
-%	First select either path with iGrav data (root folder, i.e.,
-% - after loading, the function adds 7 new channels to the iGrav tsf. These
-%   are the filtered and corrected gravity values (provided filter and
-%   tides are set correctly). The filtered values are obtained after
-%   convolution corrected for phase shift and interpolated to original time
-%   resolution.
-% - the spectral analysis can be computed for the longest interval without
-%   interruption or for re-interpolated time series.
-% - prior to the spectral anlysis, a linear trend is removed.
-% - TRiLOGi files contain many errors. Therefore, check the code if new
-%   TRiLOGi version is available.
-% - It is not recommended to compute spectral analysis for TRiLOGi data
-%   (see the two comments above).
-% - any change of: drift, calib.factor, admittance, time interval or input
-%   files requires new loading of data.
-% - any change of: grid, legend, labels require a re-plot, i.e. select
-%   another channel or press Reset view.
-% - the GUI is designed to fit the screen,i.e., uses normalized uints.
-% - All tsf output files are written with 3 decimal places.
-% - EOF/PCA results are automatically shown in plot 2 (L2)
 % 
-% 
-%                                                   M.Mikolaj, 23.9.2015
+%                                                   M.Mikolaj, 17.11.2016
 %                                                   mikolaj@gfz-potsdam.de
 
 % In the following, the comments are either on the right side

@@ -576,14 +576,14 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1;                     % 2 input values expected = panel;time resolution in seconds
                     if ~strcmp(char(row),'[]')
                         row = strsplit(row,';');
-                        plotGrav('compute_decimate_select',row{1},row{2})
+                        plotGrav('compute_decimate_select',lower(row{1}),row{2})
                     end 
                     row = row{1};
                 %% Correct time vector = remove ambiguities
                 case 'REMOVE_AMBIGUOUS'
                     row = fgetl(fid);count = count + 1;                     % 1 input values expected = panel
                     if ~strcmp(char(row),'[]')
-                        plotGrav('compute_remove_ambiguities',row)
+                        plotGrav('compute_remove_ambiguities',lower(row))
                     end 
                 %% Channels algebra
                 case 'CHANNELS_ALGEBRA'
