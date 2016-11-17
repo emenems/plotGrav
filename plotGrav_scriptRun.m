@@ -199,7 +199,7 @@ try                                                                         % ca
                         temp = strsplit(row,';');
                         % Back-compatibility with old version
                         if length(temp) == 1
-                            set_admit.data_a = temp{2};set_admit.data_b = NaN;
+                            set_admit.data_a = temp{1};set_admit.data_b = NaN;
                             set_admit.data_c = NaN;set_admit.data_d = NaN;
                             set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
                         else % new version
@@ -510,15 +510,19 @@ try                                                                         % ca
                 %% Correction file (apply or show)
                 case 'CORRECTION_FILE'
                     row = fgetl(fid);count = count + 1;
-                    in = strsplit(row,';');                                 % two inputs expected
+                    in = strsplit(row,';');                                 % two (old) or three (new) inputs expected
                     if ~strcmp(char(in(1)),'[]')
-                        if length(in) == 2                                  % two inputs expected = first is file name, second switch between correction apply, correction show
+                        if length(in) == 2                                  % two inputs expected = old version (back-compatibility)
                             if strcmp(char(in(2)),'1')                      % 1 == apply correction
-                                plotGrav('correction_file',char(in(1))); 
+                                plotGrav('correction_file','data_a',char(in(1))); 
                             elseif strcmp(char(in(2)),'2')                  % 2 == apply to selected channel
                                 plotGrav('correction_file_selected',char(in(1))); 
                             elseif strcmp(char(in(2)),'3')                  % 3 == show correctors
                                 plotGrav('correction_file_show',char(in(1))); 
+                            end
+                        elseif length(in) == 3                              % new plotGrav version with 'data_x' switch
+                            if strcmp(char(in(3)),'1')                      % 1 == apply correction
+                                plotGrav('correction_file',lower(char(in(1))),char(in(2))); 
                             end
                         end
                     end
@@ -954,7 +958,7 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1;
                     if ~strcmp(char(row),'[]')
                         row = strsplit(row,';');
-                        plotGrav('append_channels',row{1},row{2})
+                        plotGrav('append_channels',lower(row{1}),row{2})
                     end 
                     row = row{1};
                 %% Visibility

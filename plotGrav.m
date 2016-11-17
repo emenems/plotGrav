@@ -79,7 +79,6 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         for p = 1:length(panels)
             set_resample.(panels{p}) = '1';                                 % resampling intraval in second
             path_data.(panels{p}) = '';
-            file_data.(panels{p}) = '';
             file_tides.(panels{p}) = '';                                    % File in *.tsf format with Tidal effect (first channel). This file will be used only if data_a or SG030 data are loaded.
             set_admittance.(panels{p}) = '-3.0';                            % admittance factor
             set_calib_factor.(panels{p}) = '1';                             % calibration factor = multiplicator (for data_a only)
@@ -340,8 +339,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 				uimenu(m13,'Label','Editable figure','CallBack','plotGrav print_three',...
 					'Tag','plotGrav_menu_print_three','UserData',[]);		% this uimenu will be used to store file name for printing output (Plot 1 + 2 + 3)
             m14 = uimenu(m1,'Label','Correction file');
-			uimenu(m14,'Label','Apply (read channel)','CallBack','plotGrav correction_file','Tag',...
-					'plotGrav_menu_correction_file','UserData',[]);			% this uimenu will be used to store file name with correction file name
+			m141 = uimenu(m14,'Label','Apply (read channel)');                     % this uimenu will be used to store file name with correction file name
+                for p = 1:length(panels)
+                    uimenu(m141,'Label',strrep(upper(panels{p}),'_',' '),'CallBack',['plotGrav correction_file ',panels{p}]);
+                end
             uimenu(m14,'Label','Apply to selected','CallBack','plotGrav correction_file_selected');
             uimenu(m14,'Label','Show','CallBack','plotGrav correction_file_show');
 			uimenu(m1,'Label','Script file','CallBack','plotGrav script_run');
@@ -420,7 +421,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 					'UserData',earthquake_web,'Tag','plotGrav_menu_show_earthquake');
 				uimenu(m30,'Label','Plot (last 20)','CallBack','plotGrav plot_earthquake',... % contains link to earthquake data
 					'Tag','plotGrav_menu_plot_earthquake','UserData',earthquake_data);
-			uimenu(m3,'Label','File paths','CallBack','plotGrav show_paths');
+			uimenu(m3,'Label','Settings','CallBack','plotGrav show_paths');
 			uimenu(m3,'Label','Filter','CallBack','plotGrav show_filter');
             uimenu(m3,'Label','Webcam','Callback','plotGrav push_webcam',...
 					'Tag','plotGrav_menu_webcam','UserData',path_webcam); 	% Store file path with webcam snapshot
@@ -801,7 +802,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			% Calibration factor, admittance and drift approximation. Get values only. Will be used later.
 			drift_fit = get(findobj('Tag','plotGrav_pupup_drift'),'UserData');  
 			% Additional variables (fixed)
-			data_a_time_resolution = 1;                                      % DATA A time sampling in seconds (fixed, iGrav and SG030 measure with 1 second resolutin => do no use for 10 second data)
+			min_time_resolution = 1;                                        % minimal time sampling in seconds (fixed, iGrav and SG measure with 1 second resolutin => do no use for 10 second data)
 			leap_second = [2015 06 30 23 59 59];                            % excact data for of leap seconds. These values will be used to find the leap second and to REMOVE it (otherwise redundant data permiting filterin = non-monotonic time vector)
             % Convert the input starting time and ending time to matlab format and create a time vector. Time step is ONE day = one file per day written by iGrav or SG
             time_in(:,7) = [datenum(start_time):1:datenum(end_time)]';      
@@ -849,13 +850,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         set(findobj('Tag','plotGrav_text_status'),'String',['Loading ',panels{p},'/dat time series...']);drawnow % send message to status bar
                         [time.(panels{p}),data.(panels{p}),channels.(panels{p}),units.(panels{p}),uitable_data.(panels{p})] = plotGrav_loadData(file_path.(panels{p}),3,start_time,end_time,fid,panels{p});
                         if ~isempty(data.(panels{p}))
-                            data.(panels{p}) = 2;                           % set the switch to 2 = no further correction will be applied to data.data_x
+                            loaded.(panels{p}) = 2;                           % set the switch to 2 = no further correction will be applied to data.data_x
                         end
                     elseif strcmp(file_path.(panels{p})(end-3:end),'.csv')
                             set(findobj('Tag','plotGrav_text_status'),'String',['Loading ',panels{p},'/dat time series...']);drawnow % send message to status bar
                             [time.(panels{p}),data.(panels{p}),channels.(panels{p}),units.(panels{p}),uitable_data.(panels{p})] = plotGrav_loadData(file_path.(panels{p}),4,start_time,end_time,fid,panels{p});
-                            if ~isempty(data.data_b)
-                                data.(panels{p}) = 2;                       % set the switch to 2 = no further correction will be applied to data.data_x
+                            if ~isempty(data.(panels{p}))
+                                loaded.(panels{p}) = 2;                       % set the switch to 2 = no further correction will be applied to data.data_x
                             end
                     elseif strcmp(file_path.(panels{p})(end-3:end-2),'.0') || strcmp(file_path.(panels{p})(end-3:end-2),'.1')
                         % LOAD BKG SGXXX files, i.e. SGXXX data stored in tsf format
@@ -1065,7 +1066,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         clear r ls
                         for j = 1:length(grav_channel.(panels{p}))%:size(data.(panels{p}),2)                           % set which channels should be filtered (1 = gravity observed, 1:size(data.(panels{p}),2) = all channels)
-                            [timeout,dataout,id] = plotGrav_findTimeStep(time.(panels{p}),data.(panels{p})(:,grav_channel.(panels{p})(j)),data_a_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
+                            [timeout,dataout,id] = plotGrav_findTimeStep(time.(panels{p}),data.(panels{p})(:,grav_channel.(panels{p})(j)),min_time_resolution/(24*60*60)); % find time steps. Filter can be use only for evenly spaced data (see plotGrav_findTimeStep function for details)
                             dout = [];                                          % aux. variable
                             for i = 1:size(id,1)                                % use for each time interval (filter between time steps that have been found using plotGrav_findTimeStep function) separately                 
                                 if length(dataout(id(i,1):id(i,2))) > length(Num)*2 % filter only if the current time interval is long enough
@@ -1077,7 +1078,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 dout = vertcat(dout,fgrav,NaN);                 % stack the aux. data vertically (current channel) + NaN to mark holes between fillering sequences
                                 if j == 1                                       % do only onece, i.e. for first channel
                                     time_filt.(panels{p}) = vertcat(time_filt.(panels{p}),ftime,...     % stack the aux. time only for first channel (same for all)
-                                        ftime(end)+data_a_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
+                                        ftime(end)+min_time_resolution/(2*24*60*60)); % this last part is for a NaN, see vertcat(dout above)   
                                 end
                                 clear ftime fgrav
                             end
@@ -1096,7 +1097,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     end
                 else
                     data_filt.(panels{p}) = [];                                             % otherwise, set to empty + write to logfile
-                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No iGrav data filtering (%04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
+                    [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'No %s data filtering (%04d/%02d/%02d %02d:%02d)\n',panels{p},ty,tm,td,th,tmm);
                 end
 
                 %% Tides
@@ -1251,8 +1252,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 else
                     set(findobj('Tag','plotGrav_text_status'),'String','The selected files have been loaded.');drawnow % status
                 end
+                % Store units and channel names
+                set(findobj('Tag',['plotGrav_text_',panels{p}]),'UserData',units.(panels{p}));       
+                set(findobj('Tag',['plotGrav_edit_',panels{p},'_path']),'UserData',channels.(panels{p})); 
+                
             end % for all panels
-            %% Save/store data
+            %% Save/store data & time vecotors
             % Store the all loaded/corrected/resampled data and time.
             % These data will be called for plotting/computing.
             set(findobj('Tag','plotGrav_text_status'),'UserData',time);     % store time vector 
@@ -1272,11 +1277,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 		case 'correction_file'
             % Load and use the correction file:
 			set(findobj('Tag','plotGrav_text_status'),'String','Select correction file.');drawnow % send instructions to status bar
-            if nargin == 1                                                  % => no additional input
+            if nargin == 2                                                  % => no additional input
                 [name,path] = uigetfile({'*.txt'},'Select Correction file');    % Select the file with correctors
                 file_name = fullfile(path,name);
+                panel = varargin{1};
             else
-                file_name = char(varargin{1});                              % read additional function input
+                panel = char(varargin{1});
+                file_name = char(varargin{2});                              % read input file name
                 name = 1;
             end
             if name == 0                                                    % Continue only if some correction file selected (not important if valid or not at this stage)
@@ -1284,15 +1291,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             else                           
 				data = get(findobj('Tag','plotGrav_push_load'),'UserData'); % load all data with all time series. 
 				time = get(findobj('Tag','plotGrav_text_status'),'UserData'); % load time vectors
-				if ~isempty(data.data_a)                                     % continue only if some time series have been loaded. Keep in mind, corrections are applied only on iGrav time series.
-					set(findobj('Tag','plotGrav_text_status'),'String','Correcting...');drawnow % status
+				if ~isempty(data.(panel))                                     % continue only if some time series have been loaded. Keep in mind, corrections are applied only on iGrav time series.
+					set(findobj('Tag','plotGrav_text_status'),'String',['Correcting ',panel,'...']);drawnow % status
 					try
 						fid = fopen(get(findobj('Tag','plotGrav_edit_logfile_file'),'String'),'a'); % Open logfile to document all applied corrections.
 					catch
 						fid = fopen('plotGrav_LOG_FILE.log','a');
 					end
 					try
-						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Loading correction file: %s (%04d/%02d/%02d %02d:%02d)\n',file_name,ty,tm,td,th,tmm);
+						[ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'Loading correction file for %s: %s (%04d/%02d/%02d %02d:%02d)\n',panel,file_name,ty,tm,td,th,tmm);
                         fileid = fopen(file_name);
                         in_cell = textscan(fileid,'%d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %s','CommentStyle','%','TreatAsEmpty',{'NaN'}); % load formated the correction file
 						in = horzcat(double(cell2mat(in_cell(1:14))),double(cell2mat(in_cell(15:16)))); % convert cell aray (standard textscan output) to matrix with double precision
@@ -1304,10 +1311,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         for i = 1:size(in,1)                                % Run the correction algorithm for all correctors
                             switch in(i,1)                                  % switch between correction types (1 = steps, 2 = remove interval, >=3 = local fit). Switch is always stored in the first column of the correction file.
                                 case 1                                      % Step removal. 
-                                    if channel(i) <= size(data.data_a,2)     % continue only if such channel exists
-                                        r = find(time.data_a >= x2(i));      % find points recorded after the step occur.
+                                    if channel(i) <= size(data.(panel),2)     % continue only if such channel exists
+                                        r = find(time.(panel) >= x2(i));      % find points recorded after the step occur.
                                         if ~isempty(r)                      % continue only if some points have been found
-                                            data.data_a(r,channel(i)) = data.data_a(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                            data.(panel)(r,channel(i)) = data.(panel)(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
                                             [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
                                             fprintf(fid,'iGrav step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
                                                 channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
@@ -1316,31 +1323,31 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                         clear r                             % remove temporary variable with indices. Same variable name will be used in next section.
                                     end
                                 case 2                                      % Interval removal. Values between given dates will be removed (set to NaN)   
-                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval
+                                    r = find(time.(panel)>x1(i) & time.(panel)<x2(i)); % find points within the selected interval
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        data.data_a(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
+                                        data.(panel)(r,channel(i)) = NaN;     % remove selected interval = set to NaN!
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval removed: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
                                             in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
                                     end
                                 case 3                                      % Interpolate interval: Linearly. Values between given dates will be replaced with interpolated values
-                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval. 
+                                    r = find(time.(panel)>x1(i) & time.(panel)<x2(i)); % find points within the selected interval. 
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        ytemp = data.data_a(time.data_a<x1(i) | time.data_a>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                        xtemp = time.data_a(time.data_a<x1(i) | time.data_a>x2(i));             % get selected time interval 
-                                        data.data_a(r,channel(i)) = interp1(xtemp,ytemp,time.data_a(r),'linear'); % Interpolate values for the affected interval only (use r as index)
+                                        ytemp = data.(panel)(time.(panel)<x1(i) | time.(panel)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.(panel)(time.(panel)<x1(i) | time.(panel)>x2(i));             % get selected time interval 
+                                        data.(panel)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel)(r),'linear'); % Interpolate values for the affected interval only (use r as index)
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval interpolated linearly: Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
                                             in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
                                     end
                                 case 4                                      % Interpolate interval: Spline. Values between given dates will be replaced with interpolated values
-                                    r = find(time.data_a>x1(i) & time.data_a<x2(i)); % find points within the selected interval. 
+                                    r = find(time.(panel)>x1(i) & time.(panel)<x2(i)); % find points within the selected interval. 
                                     if ~isempty(r)                          % continue only if some points have been found
-                                        ytemp = data.data_a(time.data_a<x1(i) | time.data_a>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
-                                        xtemp = time.data_a(time.data_a<x1(i) | time.data_a>x2(i));             % get selected time interval 
-                                        data.data_a(r,channel(i)) = interp1(xtemp,ytemp,time.data_a(r),'spline'); % Interpolate values for the affected interval only (use r as index)
+                                        ytemp = data.(panel)(time.(panel)<x1(i) | time.(panel)>x2(i),channel(i));  % copy the affected channel to temporary variable. Directly remove the values within the interval. Will be used for interpolation. 
+                                        xtemp = time.(panel)(time.(panel)<x1(i) | time.(panel)>x2(i));             % get selected time interval 
+                                        data.(panel)(r,channel(i)) = interp1(xtemp,ytemp,time.(panel)(r),'spline'); % Interpolate values for the affected interval only (use r as index)
                                         [ty,tm,td,th,tmm] = datevec(now);   % for log file
                                         fprintf(fid,'iGrav channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
@@ -6394,7 +6401,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 			if path == 0                                                    % Send message the user                 
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the iGrav path.');drawnow 
             else                                                            % Otherwise, store the selected file path for future.
-				set(findobj('Tag','plotGrav_edit_',varargin{1},'_path'),'String',path);drawnow 
+				set(findobj('Tag',['plotGrav_edit_',varargin{1},'_path']),'String',path);drawnow 
 				set(findobj('Tag','plotGrav_text_status'),'String','iGrav paht selected.');drawnow 
 			end
 		case 'select_file'                                              % Select DATA X input file
@@ -6405,7 +6412,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             if path == 0                                                    % If cancelled-> no input. This howerver, does not mean that the default file name has been changed or set to []!                                              
 				set(findobj('Tag','plotGrav_text_status'),'String','You must select the a file.');drawnow % status
 			else
-				set(findobj('Tag','plotGrav_edit_',varargin{1},'_path'),'String',[path,name]);drawnow % Store the full file name for future loading.
+				set(findobj('Tag',['plotGrav_edit_',varargin{1},'_path']),'String',[path,name]);drawnow % Store the full file name for future loading.
 				set(findobj('Tag','plotGrav_text_status'),'String',[varargin{1},' file selected.']);drawnow % status
             end
 		case 'select_tides'                                                 % Select file with tide effect
@@ -6551,59 +6558,79 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % To see what files have been selected, user can open a new
             % figure with an overview about all selected paths and files.
             
-            % Get all selected files/paths
-			path_data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'String');
-			path_data_b = get(findobj('Tag','plotGrav_edit_data_b_path'),'String');
-			file_tides = get(findobj('Tag','plotGrav_edit_tide_file'),'UserData');
+            % Get paths to single files
 			file_filter = get(findobj('Tag','plotGrav_edit_filter_file'),'String');
-			path_webcam = get(findobj('Tag','plotGrav_edit_webcam_path'),'String');
-			file_data_c = get(findobj('Tag','plotGrav_edit_data_c_path'),'String');
-			file_data_d = get(findobj('Tag','plotGrav_edit_data_d_path'),'String');
 			file_logfile = get(findobj('Tag','plotGrav_edit_logfile_file'),'String');
             % Open new figure (do not plot to GUI)
 			p3 = figure('Resize','on','Menubar','none','ToolBar','none',... % allow resizing if file names too long
 				'NumberTitle','off','Color',[0.941 0.941 0.941],...
-				'Name','plotGrav: paths/files settings');
-            % Create uicontrols with file names and paths
-			uicontrol(p3,'Style','Text','String','iGrav paht:','units','normalized',...
-					'Position',[0.02,0.89,0.13,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',path_data_a,'units','normalized','HorizontalAlignment','left',...
-					  'Position',[0.17,0.90,0.8,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
-			uicontrol(p3,'Style','Text','String','TRiLOGi:','units','normalized',...
-					  'Position',[0.02,0.82,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',path_data_b,'units','normalized',...
-					  'Position',[0.17,0.83,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Other1 file:','units','normalized',...
-					  'Position',[0.02,0.75,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_data_c,'units','normalized',...
-					  'Position',[0.17,0.76,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Other2 file:','units','normalized',...
-					  'Position',[0.02,0.68,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_data_d,'units','normalized',...
-					  'Position',[0.17,0.69,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Tide/Pol file:','units','normalized',...
-					  'Position',[0.02,0.61,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_tides,'units','normalized',...
-					  'Position',[0.17,0.62,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Filter file:','units','normalized',...
-					  'Position',[0.02,0.54,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_filter,'units','normalized',...
-					  'Position',[0.17,0.55,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Webcam file:','units','normalized',...
-					  'Position',[0.02,0.54-0.07,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',path_webcam,'units','normalized',...
-					  'Position',[0.17,0.55-0.07,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
-			uicontrol(p3,'Style','Text','String','Logfile:','units','normalized',...
-					  'Position',[0.02,0.47-0.07,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
-			uicontrol(p3,'Style','Edit','String',file_logfile,'units','normalized',...
-					  'Position',[0.17,0.48-0.07,0.8,0.06],'FontSize',9,'BackgroundColor','w',...
-					  'HorizontalAlignment','left','Enable','off');
+				'Name',['plotGrav settings (log file: ',file_logfile,')']);
+            
+            % Get Panel files
+			file_tides = get(findobj('Tag','plotGrav_edit_tide_file'),'UserData');
+            calib_factor_all = get(findobj('Tag','plotGrav_edit_calb_factor'),'UserData');
+            calib_delay_all = get(findobj('Tag','plotGrav_edit_calb_delay'),'UserData');
+            admittance_factor_all = get(findobj('Tag','plotGrav_edit_admit_factor'),'UserData');
+            grav_channel = get(findobj('Tag','plotGrav_menu_grav_channel'),'UserData');
+            pres_channel = get(findobj('Tag','plotGrav_menu_pres_channel'),'UserData');
+			resample = get(findobj('Tag','plotGrav_edit_resample'),'UserData'); % get resampling value
+            
+            panels = {'data_a','data_b','data_c','data_d'};
+            for p = 1:length(panels)
+                % Get parameters
+                file_path.(panels{p}) = get(findobj('Tag',['plotGrav_edit_',panels{p},'_path']),'String');
+                data_prefix.(panels{p}) = get(findobj('Tag',['plotGrav_menu_',panels{p},'_file']),'UserData');  % DATA X file prefix (used during data loading). No prefix for SG030, the selected input file (file_path_data_a) will be used also for file prefix.
+                file_prefix = get(findobj('Tag',['plotGrav_menu_',panels{p},'_file']),'UserData');
+                % Set
+                % Create uicontrols with file names and paths
+                uicontrol(p3,'Style','Text','String',[upper(panels{p}),' input:'],'units','normalized',...
+					'Position',[0.02,0.88-(p-1)*0.07,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
+                uicontrol(p3,'Style','Edit','String',file_path.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.17,0.89-(p-1)*0.07,0.55,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',file_prefix,'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.74,0.89-(p-1)*0.07,0.23,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                % Tides file
+                uicontrol(p3,'Style','Text','String',[upper(panels{p}),' tides:'],'units','normalized',...
+					'Position',[0.02,0.88-(p+3)*0.07-0.01,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
+                uicontrol(p3,'Style','Edit','String',file_tides.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.17,0.89-(p+3)*0.07-0.005,0.8,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                % Processing parameters
+                uicontrol(p3,'Style','Text','String',[upper(panels{p}),':'],'units','normalized',...
+					'Position',[0.02,0.88-(p+7)*0.07-0.045,0.145,0.06],'FontSize',9,'HorizontalAlignment','left');
+                uicontrol(p3,'Style','Edit','String',admittance_factor_all.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.17,0.89-(p+7)*0.07-0.045,0.12,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',resample.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.31,0.89-(p+7)*0.07-0.045,0.12,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',calib_factor_all.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.45,0.89-(p+7)*0.07-0.045,0.12,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',calib_delay_all.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.59,0.89-(p+7)*0.07-0.045,0.12,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',grav_channel.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.73,0.89-(p+7)*0.07-0.045,0.115,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+                uicontrol(p3,'Style','Edit','String',pres_channel.(panels{p}),'units','normalized','HorizontalAlignment','left',...
+					  'Position',[0.855,0.89-(p+7)*0.07-0.045,0.115,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+            end
+            % Header lines for admittance, resample,...
+            uicontrol(p3,'Style','Text','String','admittance','units','normalized',...
+                'Position',[0.18,0.350,0.12,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','resample','units','normalized',...
+                'Position',[0.32,0.350,0.1,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','cal.fact','units','normalized',...
+                'Position',[0.46,0.350,0.1,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','cal.phase','units','normalized',...
+                'Position',[0.60,0.350,0.1,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','Grav and Pres channel','units','normalized',...
+                'Position',[0.74,0.350,0.25,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','file/path','units','normalized',...
+                'Position',[0.4,0.96,0.1,0.035],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Text','String','prefix','units','normalized',...
+                'Position',[0.85,0.96,0.1,0.035],'FontSize',9,'HorizontalAlignment','left');
+			
+            uicontrol(p3,'Style','Text','String','Filter file:','units','normalized',...
+                'Position',[0.02,0.0,0.145,0.05],'FontSize',9,'HorizontalAlignment','left');
+            uicontrol(p3,'Style','Edit','String',file_filter,'units','normalized','HorizontalAlignment','left',...
+                'Position',[0.17,0,0.8,0.06],'FontSize',9,'BackgroundColor','w','Enable','off');
+			
 		  
     end                                                                     % nargin == 0
 end
