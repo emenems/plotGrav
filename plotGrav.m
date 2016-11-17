@@ -410,7 +410,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
         m4 = uimenu('Label','Compute');
 			% Sub-COMPUTE menu
 			uimenu(m4,'Label','Algebra','CallBack','plotGrav simple_algebra'); 
-			uimenu(m4,'Label','Atmacs','CallBack','plotGrav get_atmacs'); 	% the Atmacs URL will be set by user via string input
+			m46 = uimenu(m4,'Label','Atmacs'); 	% the Atmacs URL will be set by user via string input
+            for p = 1:length(panels)
+                uimenu(m46,'Label',upper(strrep(panels{p},'_',' ')),'CallBack',['plotGrav get_atmacs ',panels{p}]);
+            end
 			m40 = uimenu(m4,'Label','Correlation');
 				uimenu(m40,'Label','Simple all','CallBack','plotGrav correlation_matrix');
 				uimenu(m40,'Label','Simple select','CallBack','plotGrav correlation_matrix_select');
@@ -434,7 +437,10 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                 uimenu(m43,'Label','Fit locally','CallBack','plotGrav fit_local');
 %        		m431 = uimenu(m43,'Label','Sine');
 %               	uimenu(m431,'Label','One','CallBack','plotGrav fit_sine1');
-            uimenu(m4,'Label','Pol+LOD','CallBack','plotGrav get_polar');
+            m47 = uimenu(m4,'Label','Pol+LOD','CallBack','plotGrav get_polar');
+            for p = 1:length(panels)
+                uimenu(m47,'Label',upper(strrep(panels{p},'_',' ')),'CallBack',['plotGrav get_polar ',panels{p}]);
+            end
 			uimenu(m4,'Label','Regression','CallBack','plotGrav regression_simple');
 			m45 = uimenu(m4,'Label','Re-sample');
                 uimenu(m45,'Label','All','CallBack','plotGrav compute_decimate');
@@ -5763,14 +5769,15 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % the end of it.
             
             % First get all required inputs
+			panel = varargin{1};
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
-            units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get iGrav units (two new channels will be appended)
-            channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
+            data_table.(panel) = get(findobj('Tag',['plotGrav_uitable_',panel,'_data']),'Data');    % get the iGrav ui-table (two new channels will be appended)
+            units.(panel) = get(findobj('Tag',['plotGrav_text_',panel]),'UserData');             % get iGrav units (two new channels will be appended)
+            channels.(panel) = get(findobj('Tag',['plotGrav_edit_',panel,'_path']),'UserData');     % get iGrav channels (names) (two new channels will be appended)
             
-            if ~isempty(data.data_a)                                         % proceed only if data_a time series loaded
-                if nargin == 1
+            if ~isempty(data.(panel))                                         % proceed only if data_a time series loaded
+                if nargin == 2
                     % Get user input = station coordinates. Fixed URL is used
                     % to get Polar motion and LOD parameters
                     set(findobj('Tag','plotGrav_text_status'),'String','Latitude and Longitude (in deg, space separated)');drawnow % send instructions to status bar
@@ -5781,7 +5788,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
                     set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
                 else
-                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{1}));
+                    set(findobj('Tag','plotGrav_edit_text_input'),'String',char(varargin{2}));
                 end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn off editable fields
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
@@ -5799,33 +5806,33 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
 					Lon = str2double(user_in(2));
 					atmacs_url_link_loc = '';                               % Required input, see 'plotGrav_Atmacs_and_EOP.m' (used to computed atmacs effect)
 					atmacs_url_link_glo = '';  
-					[pol_corr,lod_corr,~,~,corr_check] = plotGrav_Atmacs_and_EOP(time.data_a,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); % call polar motion/LOD function
-					c = length(channels.data_a);                             % get current number of channel. Two new channels (polar effect and LOD effect will be appended)
+					[pol_corr,lod_corr,~,~,corr_check] = plotGrav_Atmacs_and_EOP(time.(panel),Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); % call polar motion/LOD function
+					c = length(channels.(panel));                             % get current number of channel. Two new channels (polar effect and LOD effect will be appended)
                     if corr_check(1)+corr_check(2) == 2                     % 'plotGrav_Atmacs_and_EOP.m' check-sum output
 						[ty,tm,td,th,tmm] = datevec(now);                   % logfile time
 						% Polar motion
-						units.data_a(c+1) = {'nm/s^2'};                      % add units
-						channels.data_a(c+1) = {'polar motion effect'};      % add channel name
-						data_table.data_a(c+1,1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (%s)',c+1,char(channels.data_a(c+1)),char(units.data_a(c+1))),...
+						units.(panel)(c+1) = {'nm/s^2'};                      % add units
+						channels.(panel)(c+1) = {'polar motion effect'};      % add channel name
+						data_table.(panel)(c+1,1:7) = {false,false,false,...        % add to ui-table
+															sprintf('[%02d] %s (%s)',c+1,char(channels.(panel)(c+1)),char(units.(panel)(c+1))),...
 																false,false,false};
-						data.data_a(:,c+1) = -pol_corr;                      % add/append data (convert correction to effect)
-						fprintf(fid,'iGrav channel %d == polar motion effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
-                            c+1,Lat,Lon,ty,tm,td,th,tmm);
+						data.(panel)(:,c+1) = -pol_corr;                      % add/append data (convert correction to effect)
+						fprintf(fid,'%s channel %d == polar motion effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
+                            panel,c+1,Lat,Lon,ty,tm,td,th,tmm);
 						% LOD
-						units.data_a(c+2) = {'nm/s^2'};                      % add units
-						channels.data_a(c+2) = {'LOD effect'};               % add channel name
-						data_table.data_a(c+2,1:7) = {false,false,false,...  % add to ui-table
-															sprintf('[%2d] %s (%s)',c+2,char(channels.data_a(c+2)),char(units.data_a(c+2))),...
+						units.(panel)(c+2) = {'nm/s^2'};                      % add units
+						channels.(panel)(c+2) = {'LOD effect'};               % add channel name
+						data_table.(panel)(c+2,1:7) = {false,false,false,...  % add to ui-table
+															sprintf('[%02d] %s (%s)',c+2,char(channels.(panel)(c+2)),char(units.(panel)(c+2))),...
 																false,false,false};
-						data.data_a(:,c+2) = -lod_corr;                      % add data (convert correction to effect)
-						fprintf(fid,'iGrav channel %d == length of day effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
-                            c+2,Lat,Lon,ty,tm,td,th,tmm);
+						data.(panel)(:,c+2) = -lod_corr;                      % add data (convert correction to effect)
+						fprintf(fid,'%s channel %d == length of day effect. Used coordinates: lat = %9.6f deg, lon = %9.6f deg (%04d/%02d/%02d %02d:%02d)\n',...
+                            panel,c+2,Lat,Lon,ty,tm,td,th,tmm);
 						% Store updated data/ui-table/channels/units
-						set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a); % update table
-						set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
-						set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a); % update iGrav units
-						set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a); % update iGrav channels (names)
+						set(findobj('Tag',['plotGrav_uitable_',panel,'_data']),'Data',data_table.(panel)); % update table
+                        set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store time
+                        set(findobj('Tag',['plotGrav_text_',panel]),'UserData',units.(panel)); % update iGrav units
+                        set(findobj('Tag',['plotGrav_edit_',panel,'_path']),'UserData',channels.(panel)); % update iGrav channels (names)
 						fclose(fid);
 						set(findobj('Tag','plotGrav_text_status'),'String','Polar motion and LOD effect computed.');drawnow % message
 					else
@@ -5851,18 +5858,19 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
             % atmacs time series to iGrav panel.
          
             % First get all required inputs
+            panel = varargin{1};
 			data = get(findobj('Tag','plotGrav_push_load'),'UserData');     % load all data 
 			time = get(findobj('Tag','plotGrav_text_status'),'UserData');   % load time
-            data_table.data_a = get(findobj('Tag','plotGrav_uitable_data_a_data'),'Data');    % get the iGrav ui-table (two new channels will be appended)
-            units.data_a = get(findobj('Tag','plotGrav_text_data_a'),'UserData');             % get iGrav units (two new channels will be appended)
-            channels.data_a = get(findobj('Tag','plotGrav_edit_data_a_path'),'UserData');     % get iGrav channels (names) (two new channels will be appended)
-
-            if ~isempty(time.data_a)                                         % proceed only if iGrav data loaded
+            data_table.(panel) = get(findobj('Tag',['plotGrav_uitable_',panel,'_data']),'Data');    % get the iGrav ui-table (two new channels will be appended)
+            units.(panel) = get(findobj('Tag',['plotGrav_text_',panel]),'UserData');             % get iGrav units (two new channels will be appended)
+            channels.(panel) = get(findobj('Tag',['plotGrav_edit_',panel,'_path']),'UserData');     % get iGrav channels (names) (two new channels will be appended)
+            
+            if ~isempty(time.(panel))                                         % proceed only if iGrav data loaded
                 % Get user input = 2x URL with local and global part +
                 % channel number with in-situ pressure variations (will be
                 % used to compute the residual effect). Main single admittance
                 % will be used for residual effect (See GUI)
-                if nargin == 1                                              % This function can be called with more then one input. If only one input (function name = 'get_atmacs'), then get user input. Otherwise, use function input for further computation.
+                if nargin == 2                                              % This function can be called with more then one input. If only one input (function name = 'get_atmacs'), then get user input. Otherwise, use function input for further computation.
                     set(findobj('Tag','plotGrav_text_status'),'String','Set url for local part (if needed use , as delimiter)');drawnow % send instruction to status bar
                     set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav');% Show user input field and set default URL (wettzell)
                     set(findobj('Tag','plotGrav_text_input'),'Visible','on'); 
@@ -5892,13 +5900,13 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 else
                     % Make sure the input is either empty string or cell
                     % containing all urls
-                    if isempty(varargin{1})
+                    if isempty(varargin{2})
                         atmacs_url_link_loc = '';
                     else
-                        atmacs_url_link_loc = strsplit(varargin{1},',');
+                        atmacs_url_link_loc = strsplit(varargin{2},',');
                     end   
-                    atmacs_url_link_glo = strsplit(varargin{2},',');
-                    press_channel = char(varargin{3});                  
+                    atmacs_url_link_glo = strsplit(varargin{3},',');
+                    press_channel = char(varargin{4});                  
                 end
                 set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % turn off editable fields
                 set(findobj('Tag','plotGrav_text_input'),'Visible','off');
@@ -5906,8 +5914,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 Lat = [];Lon = [];                                          % No coordinates are required for Atmospheric effect
                 % Call Atmcas function. The output does not include
                 % residual effect!! This will be computed afterwards.
-                [~,~,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and_EOP(time.data_a,Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); 
-                admittance_factor = str2double(get(findobj('Tag','plotGrav_edit_admit_factor'),'UserData'));  % get admittance factor stored in main GUI 'Admittance' editable field.
+                [~,~,atmo_corr,pressure,corr_check] = plotGrav_Atmacs_and_EOP(time.(panel),Lat,Lon,atmacs_url_link_loc,atmacs_url_link_glo); 
+                admittance_factor = get(findobj('Tag','plotGrav_edit_admit_factor'),'UserData');  % get admittance factor stored in main GUI 'Admittance' editable field.
+                admittance_factor.(panel) = str2double(admittance_factor.(panel));
                 if corr_check(3) == 1                                       % 'plotGrav_Atmacs_and_EOP' check sum (used to identify what and if computed)
                     % Open logfile
                     try
@@ -5918,16 +5927,16 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                     [ty,tm,td,th,tmm] = datevec(now);                       % Time for logfile
                     try
                         % Append new time series: Atmacs effect
-                        units.data_a(length(channels.data_a)+1) = {'nm/s^2'};     % append units
-                        channels.data_a(length(channels.data_a)+1) = {'Atmacs effect'}; % append channel name
-                        data_table.data_a(length(channels.data_a),1:7) = {false,false,false,... % append to table. Waring use length(channels.data_a) not length(channels.data_a)+1 as channels.data_a already updated!
-                                                                sprintf('[%2d] %s (%s)',length(channels.data_a),char(channels.data_a(length(channels.data_a))),char(units.data_a(length(channels.data_a)))),...
+                        units.(panel)(length(channels.(panel))+1) = {'nm/s^2'};     % append units
+                        channels.(panel)(length(channels.(panel))+1) = {'Atmacs effect'}; % append channel name
+                        data_table.(panel)(length(channels.(panel)),1:7) = {false,false,false,... % append to table. Waring use length(channels.(panel)) not length(channels.(panel))+1 as channels.(panel) already updated!
+                                                                sprintf('[%02d] %s (%s)',length(channels.(panel)),char(channels.(panel)(length(channels.(panel)))),char(units.(panel)(length(channels.(panel))))),...
                                                                     false,false,false};
                         if ~isempty(press_channel)                              % add residual effect if local pressure available
-                            dp = data.data_a(:,str2double(press_channel)) - pressure/100; % pressure difference = local - model. /100 => convert Pa to hPa
-                            data.data_a(:,length(channels.data_a)) = -atmo_corr + admittance_factor.data_a*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
+                            dp = data.(panel)(:,str2double(press_channel)) - pressure/100; % pressure difference = local - model. /100 => convert Pa to hPa
+                            data.(panel)(:,length(channels.(panel))) = -atmo_corr + admittance_factor.(panel)*dp; % compute the gravity effect = -correction(=effect) + admittance * pressure residuals.
                             % Write to logfile
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',length(channels.data_a),admittance_factor.data_a);
+                            fprintf(fid,'%s channel %d == Atmacs total effect including residual effect (admittance = %4.2f nm/s^2/hPa, local url=',panel,length(channels.(panel)),admittance_factor.(panel));
                             for j = 1:length(atmacs_url_link_loc)
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
@@ -5937,9 +5946,9 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             end
                             fprintf(fid,' %04d/%02d/%02d %02d:%02d)\n',ty,tm,td,th,tmm);
                         else
-                            data.data_a(:,length(channels.data_a)) = -atmo_corr;  % add data (convert correction to effect)
+                            data.(panel)(:,length(channels.(panel))) = -atmo_corr;  % add data (convert correction to effect)
                             % Write to logfile
-                            fprintf(fid,'iGrav channel %d == Atmacs total effect without residaul effect. Local url=',length(channels.data_a));
+                            fprintf(fid,'% channel %d == Atmacs total effect without residaul effect. Local url=',panel,length(channels.(panel)));
                             for j = 1:length(atmacs_url_link_loc);
                                 fprintf(fid,'%s,',atmacs_url_link_loc{j});
                             end
@@ -5951,20 +5960,20 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         end
                         % Append new time series: Atmacs pressure (to be able
                         % to reconstruct the residual effect)
-                        units.data_a(length(channels.data_a)+1) = {'mBar'};       % append units
-                        channels.data_a(length(channels.data_a)+1) = {'Atmacs pressure'}; % append channel name
-                        data_table.data_a(length(channels.data_a),1:7) = {false,false,false,... % append to ui-table
-                                            sprintf('[%2d] %s (%s)',length(channels.data_a),char(channels.data_a(length(channels.data_a))),char(units.data_a(length(channels.data_a)))),...
+                        units.(panel)(length(channels.(panel))+1) = {'mBar'};       % append units
+                        channels.(panel)(length(channels.(panel))+1) = {'Atmacs pressure'}; % append channel name
+                        data_table.(panel)(length(channels.(panel)),1:7) = {false,false,false,... % append to ui-table
+                                            sprintf('[%02d] %s (%s)',length(channels.(panel)),char(channels.(panel)(length(channels.(panel)))),char(units.(panel)(length(channels.(panel))))),...
                                                 false,false,false};
 
-                        data.data_a(:,length(channels.data_a)) = pressure/100;    % append pressure. /100 => convert Pa to hPa 
-                        fprintf(fid,'iGrav channel %d == Atmacs pressure (%04d/%02d/%02d %02d:%02d)\n',...
-                                length(channels.data_a),ty,tm,td,th,tmm);
+                        data.(panel)(:,length(channels.(panel))) = pressure/100;    % append pressure. /100 => convert Pa to hPa 
+                        fprintf(fid,'%s channel %d == Atmacs pressure (%04d/%02d/%02d %02d:%02d)\n',...
+                                panel,length(channels.(panel)),ty,tm,td,th,tmm);
                         % Store the results
-                        set(findobj('Tag','plotGrav_uitable_data_a_data'),'Data',data_table.data_a); % update table
+                        set(findobj('Tag',['plotGrav_uitable_',panel,'_data']),'Data',data_table.(panel)); % update table
                         set(findobj('Tag','plotGrav_push_load'),'UserData',data);   % store time
-                        set(findobj('Tag','plotGrav_text_data_a'),'UserData',units.data_a); % update iGrav units
-                        set(findobj('Tag','plotGrav_edit_data_a_path'),'UserData',channels.data_a); % update iGrav channels (names)
+                        set(findobj('Tag',['plotGrav_text_',panel]),'UserData',units.(panel)); % update iGrav units
+                        set(findobj('Tag',['plotGrav_edit_',panel,'_path']),'UserData',channels.(panel)); % update iGrav channels (names)
                         fclose(fid);                                            % close logfile
                         set(findobj('Tag','plotGrav_text_status'),'String','Atmacs effect computed.');drawnow % message
                     catch

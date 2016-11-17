@@ -33,7 +33,7 @@
 % UNCHECK_ALL	 		un-checks all selected time series (all panels). No input expected! 
 % RESET_VIEW 			re-sets the plots, i.e., zooms out to whole time series (e.g., after using SET_PLOT_DATE). No input.
 % GET_POLAR_MOTION 		computes the polar motion effect. On input: Latitude Longitude (not separated), e.g., 49.14490 12.87687
-% GET_ATMACS 			computes the Atmacs effect. On input: url(s) to local part (separated by , in case of multiple urls. Set to [] in case global model = icongl is used for whole globe); url(s) to global part (separated by , in case of multiple urls);channel number with pressure variations. If no pressure channel present, leave empty = do not set. Example1: http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav;2 Example2: http://atmacs.bkg.bund.de/data/results/lm/we2009_lm2_12km_19deg.grav,http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/gm/we2010a_gm192_19deg.grav,http://atmacs.bkg.bund.de/data/results/gm/we_gm256_19deg.grav;2 Example 3 (one file for whole globe):[];http://atmacs.bkg.bund.de/data/results/icongl/we2016_icon384_200km.grav;2
+% GET_ATMACS 			computes the Atmacs effect for DATA_X panel. On input: panel;url(s) to local part (separated by , in case of multiple urls. Set to [] in case global model = icongl is used for whole globe); url(s) to global part (separated by , in case of multiple urls);channel number with pressure variations. If no pressure channel present, leave empty = do not set. Example1: DATA_A;http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav;2 Example2: DATA_A;http://atmacs.bkg.bund.de/data/results/lm/we2009_lm2_12km_19deg.grav,http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/gm/we2010a_gm192_19deg.grav,http://atmacs.bkg.bund.de/data/results/gm/we_gm256_19deg.grav;2 Example 3 (one file for whole globe):DATA_A;[];http://atmacs.bkg.bund.de/data/results/icongl/we2016_icon384_200km.grav;2
 % CORRECTION_FILE 		correct time series in DATA_X using a correction file. Input: panel;full file name of correction file;correction switch ,e.g., DATA_A;F:\mikolaj\Documents\plotGrav\iGrav_correction_file.txt;1. Apply/Show switch, 1 = apply, 2 = apply to selected channel, 3 = show. !Use Panel (DATA_X) only if switch = 1!
 % SET_FONT_SIZE 		set font size of all labels, legends and axes. Input: number, e.g., 12
 % SET_PLOT_DATE 		set plot range (time interval). Input: starting date (2015 5 10 15 0 0); ending date (2015 6 1 0 0 0). Do not separate year month day hour minute and second with ; but with space. Use ; to separate star and stop. . Alternatively, use two string with minus sign to plot past X days, e.g., Input: -11;-1 => will set the plot date range to current date-11 days up to current date-1.
@@ -146,9 +146,9 @@ UITABLE_DATA_C_R
 PRINT_FIGURE
 3;F:\mikolaj\Desktop\Test_Script_Print.jpg;400;1 1 1920 1080
 %GET_POLAR_MOTION
-%49.14490 12.87687
+%DATA_B;49.14490 12.87687
 %GET_ATMACS
-%http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav;2
+%DATA_A;http://atmacs.bkg.bund.de/data/results/lm/we_lm2_12km_19deg.grav;http://atmacs.bkg.bund.de/data/results/icon/we_icon384_19deg.grav;2
 UNCHECK_ALL
 SET_FONT_SIZE
 9

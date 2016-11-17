@@ -489,22 +489,31 @@ try                                                                         % ca
                 %% Plar motion effect
                 case 'GET_POLAR_MOTION'
                     row = fgetl(fid);count = count + 1;
-                    if ~strcmp(char(row),'[]')
-                       plotGrav('get_polar',char(row));                         % In this case 2 inputs for plotGrav function. First calls the function/section and second sets th additional input. This way, no ui input fields are required.
+                    in = strsplit(row,';');
+                    if ~strcmp(char(in{1}),'[]')
+                        if length(in) == 1 % old plotGrav versio
+                            plotGrav('get_polar','data_a',char(row));         
+                        else
+                            plotGrav('get_polar',lower(in{1}),in{2});    
+                        end
                     end
                 %% Atmacs atmospheric effect
                 case 'GET_ATMACS'
                     row = fgetl(fid);count = count + 1;
                     in = strsplit(row,';');                                 % two or three inputs expected
-                    if ~strcmp(char(row),'[]')
+                    if ~strcmp(char(in{1}),'[]')
                         % Convert [] to '' (= empty)
-                        if strcmp(in{1},'[]')
-                            in{1} = '';
+                        if strcmp(in{2},'[]')
+                            in{2} = '';
                         end
-                        if length(in) == 2
-                            plotGrav('get_atmacs',in{1},char(in(2)),''); % In this case 2 inputs for plotGrav function. First calls the function/section and second sets th additional input. This way, no ui input fields are required.
-                        elseif length(in) == 3
-                            plotGrav('get_atmacs',in{1},char(in(2)),char(in(3)));
+                        if length(in) == 2 % for old plotGrav version
+                            plotGrav('get_atmacs','data_a',in{1},char(in(2)),'');
+                        elseif length(in) == 3 && ~strcmpi(in{1}(1),'d')% old version
+                            plotGrav('get_atmacs','data_a',in{1},in{2},in{3}); 
+                        elseif length(in) == 3 && strcmpi(in{1}(1),'d')% new version
+                            plotGrav('get_atmacs','data_a',in{1},in{2},in{3},''); 
+                        elseif length(in) == 4
+                            plotGrav('get_atmacs',lower(in{1}),in{2},char(in(3)),char(in(4)));
                         end
                     end
                 %% Correction file (apply or show)
