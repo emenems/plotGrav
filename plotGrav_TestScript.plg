@@ -8,11 +8,9 @@
 %
 % GUI_OFF				GUI not visible. No input.
 % GUI_ON 				GUI visible. No input.
-% FILE_IN_DATA_A		set input file/path name for iGrav. Input: string, e.g., \\dms\hygra\iGrav\iGrav006 Data\
-% FILE_IN_DATA_B		just like FILE_IN_DATA_A, but for TRiLOGi (second panel). Input: string, [] means no input.
-% FILE_IN_DATA_C 		just like FILE_IN_DATA_A, but for Other1 (third panel). Input: string, [] means no input.
-% FILE_IN_DATA_C 		just like FILE_IN_DATA_A, but for Other2 (fourth panel). Input: string, [] means no input.
-% FILE_IN_FILTER		set input filter file name. Input: string, e.g., \\dms\hygra\iGrav\Software\plotGrav\N01S1M01.NLF
+% FILE_IN				set input file/path name for DATA_X panel. Input: DATA_X;file_name, e.g., DATA_A;\\dms\hygra\iGrav\iGrav006 Data\
+% FILE_IN_DATA_X		old version, use FILE_IN. Set input file/path name for DATA_A,B,C,D. Input: string, e.g., \\dms\hygra\iGrav\iGrav006 Data\.
+% FILE_IN_FILTER		set input filter file name for all panels. Input: string, e.g., \\dms\hygra\iGrav\Software\plotGrav\N01S1M01.NLF
 % FILE_IN_TIDES			set input tides file name. Input: string, e.g., \\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
 % FILE_IN_WEBCAM		set path with webcam snapshots. Input: string, e.g., \\dep5z32\hygra\Wettzell\iGrav_Webcam\FI9903P_00626E580815\snap
 % FILE_IN_UNZIP			set file for unzipping (only if downloading from GWR server!). Input: string, e.g., E:\Program Files\7-Zip\7z.exe

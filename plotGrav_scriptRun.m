@@ -36,7 +36,17 @@ try                                                                         % ca
         if ~strcmp(row(1),'%')                                              % run code only if not comment
             switch row                                                      % switch between commands depending on the Script switch.
                 %% Setting file paths
-                case 'FILE_IN_DATA_A'
+                case 'FILE_IN' 
+                    row = fgetl(fid);count = count + 1;                 % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
+                    if ~strcmp(row,'[]')                                 % [] symbol means no input 
+                        temp = strsplit(row,';');
+                        if strcmp(temp{2},'[]')
+                            set(findobj('Tag','plotGrav_edit_',lower(temp{1}),'_a_path'),'String','');
+                        else
+                            set(findobj('Tag','plotGrav_edit_',lower(temp{1}),'_a_path'),'String',temp{2});
+                        end
+                    end
+                case 'FILE_IN_DATA_A' % old version (back-compatibility)
                     row = fgetl(fid);count = count + 1;                     % Get next line/row. The plotGrav script are designed as follows: first the switch and next line the inputs
                     if strcmp(row,'[]')                                     % [] symbol means no input                           
                         set(findobj('Tag','plotGrav_edit_data_a_path'),'String','');
@@ -66,10 +76,23 @@ try                                                                         % ca
                     end
                 case 'FILE_IN_TIDES'
                     row = fgetl(fid);count = count + 1; 
-                    if strcmp(row,'[]')
-                        set(findobj('Tag','plotGrav_edit_tide_file'),'String','');
+                    if ~strcmp(row,'[]')                                 % [] symbol means no input 
+                        temp = strsplit(row,';');
+                        % Old verstion == 1 input for DATA_A
+                        if length(temp) == 1
+                            file_tides.data_a = row;file_tides.data_b = [];
+                            file_tides.data_c = [];file_tides.data_d = [];
+                            set(findobj('Tag','plotGrav_edit_tide_file'),'UserData',file_tides);
+                        else
+                            if strcmp(temp{2},'[]')
+                                file_tides.(lower(temp{1})) = '';
+                            else
+                                file_tides.(lower(temp{1})) = temp{2};
+                            end
+                            set(findobj('Tag','plotGrav_edit_tide_file'),'UserData',file_tides);
+                        end
                     else
-                        set(findobj('Tag','plotGrav_edit_tide_file'),'String',row);
+                        set(findobj('Tag','plotGrav_edit_tide_file'),'UserData',[]);
                     end
                 case 'FILE_IN_FILTER'
                     row = fgetl(fid);count = count + 1; 
@@ -77,13 +100,6 @@ try                                                                         % ca
                         set(findobj('Tag','plotGrav_edit_filter_file'),'String','');
                     else
                         set(findobj('Tag','plotGrav_edit_filter_file'),'String',row);
-                    end
-                case 'FILE_IN_UNZIP'
-                    row = fgetl(fid);count = count + 1; 
-                    if strcmp(row,'[]')
-                        set(findobj('Tag','plotGrav_menu_ftp'),'UserData','');  % unlike other inputs, unzip (7zip) exe full file name is stored in userdata container.
-                    else
-                        set(findobj('Tag','plotGrav_menu_ftp'),'UserData',row);
                     end
                 case 'FILE_IN_WEBCAM'
                     row = fgetl(fid);count = count + 1; 
@@ -142,35 +158,108 @@ try                                                                         % ca
                     end
                 %% Gravimeter processing settings
                 case 'CALIBRATION_FACTOR'
-                    row = fgetl(fid);count = count + 1;
-                    if ~strcmp(row,'[]')                                        % proceed/set only if required
-                        set(findobj('Tag','plotGrav_edit_calb_factor'),'String',row);
+                    row = fgetl(fid);count = count + 1; 
+                    if ~strcmp(row,'[]')                            
+                        temp = strsplit(row,';');
+                        % Back-compatibility with old version
+                        if length(temp) == 1
+                            calib.data_a = row;calib.data_b = '1';
+                            calib.data_c = '1';calib.data_d = '1';
+                            set(findobj('Tag','plotGrav_edit_calb_factor'),'UserData',calib);
+                            clear calib
+                        else
+                            if ~strcmp(temp{2},'[]')
+                                calib.(lower(temp{1})) = temp{2};
+                                set(findobj('Tag','plotGrav_edit_calb_factor'),'UserData',calib);
+                                clear calib
+                            end
+                        end
                     end
                 case 'CALIBRATION_DELAY'
                     row = fgetl(fid);count = count + 1;
-                    if ~strcmp(row,'[]')                                        % proceed/set only if required
-                        set(findobj('Tag','plotGrav_edit_calb_delay'),'String',row);
+                    if ~strcmp(row,'[]')                            
+                        temp = strsplit(row,';');
+                        % Back-compatibility with old version
+                        if length(temp) == 1
+                            calib.data_a = row;calib.data_b = '0';
+                            calib.data_c = '0';calib.data_d = '0';
+                            set(findobj('Tag','plotGrav_edit_calb_delay'),'UserData',calib);
+                            clear calib
+                        else
+                            if ~strcmp(temp{2},'[]')
+                                calib.(lower(temp{1})) = temp{2};
+                                set(findobj('Tag','plotGrav_edit_calb_delay'),'UserData',calib);
+                                clear calib
+                            end
+                        end
                     end
                 case 'ADMITTANCE_FACTOR'
-                    row = fgetl(fid);count = count + 1;
-                    if ~strcmp(row,'[]')                                        % proceed/set only if required
-                        set(findobj('Tag','plotGrav_edit_admit_factor'),'String',row);
+                    row = fgetl(fid);count = count + 1; 
+                    if ~strcmp(row,'[]')                            
+                        temp = strsplit(row,';');
+                        % Back-compatibility with old version
+                        if length(temp) == 1
+                            set_admit.data_a = temp{2};set_admit.data_b = NaN;
+                            set_admit.data_c = NaN;set_admit.data_d = NaN;
+                            set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
+                        else % new version
+                            if ~strcmp(temp{2},'[]')
+                                set_admit.(lower(temp{1})) = temp{2};
+                                set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
+                            end
+                        end
                     end
-                case 'RESAMPLE_DATA_A'
-                    row = fgetl(fid);count = count + 1;
-                    if ~strcmp(row,'[]')                                        % proceed/set only if required
-                        set(findobj('Tag','plotGrav_edit_resample'),'String',row);
+                case 'RESAMPLE'
+                    row = fgetl(fid);count = count + 1; 
+                    if ~strcmp(row,'[]')
+                        temp = strsplit(row,';');
+                        set_resample.(lower(temp{1})) = temp{2};
+                        set(findobj('Tag','plotGrav_edit_resample'),'UserData',set_resample);
                     end
+                case 'GRAVITY_CHANNEL'
+                        row = fgetl(fid);count = count + 1; 
+                        if ~strcmp(row,'[]')                            
+                            temp = strsplit(row,';');
+                            if strcmp(temp{2},'[]')
+                                grav_channel.(lower(temp{1})) = 1;
+                            else
+                                grav_channel.(lower(temp{1})) = str2double(strsplit(temp{2},' '));
+                            end
+                            set(findobj('Tag','plotGrav_menu_grav_channel'),'UserData',grav_channel);
+                        end
+                case 'PRESSURE_CHANNEL'
+                        row = fgetl(fid);count = count + 1; 
+                        if ~strcmp(row,'[]')                            
+                            temp = strsplit(row,';');
+                            if strcmp(temp{2},'[]')
+                                pres_channel.(lower(temp{1})) = 1;
+                            else
+                                pres_channel.(lower(temp{1})) = str2double(strsplit(temp{2},' '));
+                            end
+                            set(findobj('Tag','plotGrav_menu_pres_channel'),'UserData',pres_channel);
+                        end
                 case 'DRIFT_SWITCH'
                     row = fgetl(fid);count = count + 1;
-                    coef = strsplit(row,';');                                % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
-                    if ~strcmp(char(coef),'[]')                             % proceed/set only if required
-                        set(findobj('Tag','plotGrav_pupup_drift'),'Value',str2double(coef(1))); 
-                        if strcmp(char(coef(1)),'6')                        % 6 = user defined polynomial ceoffients
-                            set(findobj('Tag','plotGrav_edit_drift_manual'),'String',char(coef(2:end)));  % set coefficients
-                            set(findobj('Tag','plotGrav_edit_drift_manual'),'Visible','on'); % turn on (by default off) editable field with polynomial coefficients
-                        else
-                            set(findobj('Tag','plotGrav_edit_drift_manual'),'Visible','off');
+                    coef = strsplit(row,';');                       % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
+                    if ~strcmp(char(coef{1}),'[]')                     % proceed/set only if required
+                        if strcmpi(coef{1}(1),'D')
+                            set_drift_switch.(lower(coef{1})) = str2double(coef{2});
+                            if strcmp(str2double(coef{2}),'6')                % 6 = user defined polynomial ceoffients
+                                set_drift_val.(lower(coef{1})) = char(coef(3:end));
+                            else
+                                set_drift_val.(lower(coef{1})) = [];
+                            end
+                            set(findobj('Tag','plotGrav_pupup_drift'),'Userdata',set_drift_switch); 
+                            set(findobj('Tag','plotGrav_edit_drift_manual'),'UserData',set_drift_val);
+                        else % Old: back compatibility
+                            set_drift_switch.data_a = str2double(coef{1});
+                            if strcmp(str2double(coef{1}),'6')                % 6 = user defined polynomial ceoffients
+                                set_drift_val.data_a = char(coef(2:end));
+                            else
+                                set_drift_val.data_a = [];
+                            end
+                            set(findobj('Tag','plotGrav_pupup_drift'),'Userdata',set_drift_switch); 
+                            set(findobj('Tag','plotGrav_edit_drift_manual'),'UserData',set_drift_val);
                         end
                     end
                 %% Channels selection/checking

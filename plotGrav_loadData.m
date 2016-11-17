@@ -47,8 +47,24 @@ switch format_switch
             for i = 1:length(channels)                                      % run this for for all channels of the input file in order to extract the channel names (channel correct)
                 temp = strsplit(char(channels(i)),':');                     % split string using :, i.e., tsf standard for separating Location:Intrument:Measurement. See plotGrav_loadtsf functions
                 channels(i) = temp(end);                                    % get the last string, i.e., 'Measurement' == channel name
+                % Correct possible '  Channel 1' to 'Channel 1'
+                temp_whole = temp(end);
+                temp_first = temp_whole(1);
+                while strcmp(temp_first,' ')
+                    temp_whole = temp_whole(2:end);
+                    temp_first = temp_whole(1);
+                end
+                channels(i) = temp_whole;clear temp_first temp_whole
+                % Correct units name '  nm/s^2' to 'nm/s^2'
+                temp_whole = units{i};
+                temp_first = temp_whole(1);
+                while strcmp(temp_first,' ')
+                    temp_whole = temp_whole(2:end);
+                    temp_first = temp_whole(1);
+                end
+                units{i} = temp_whole;clear temp_first temp_whole
                 % Now, after extracting channels name, create an ui-table. 
-                uitable_data(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false}; % update table
+                uitable_data(i,1:7) = {false,false,false,sprintf('[%02d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false}; % update table
                 clear temp                                                  % remove temp variable
             end
             if length(find(isnan(data))) ~= numel(data)                     % check if loaded data contains numeric values, otherwise set data and time = [], i.e., default output for no data loaded 
@@ -93,7 +109,7 @@ switch format_switch
             units = temp.units;                                             % get channel units. -- || --
             clear temp                                                      % remove the temporary variable
             for i = 1:length(channels)                                % run for all channels to prepare the date for ui-table
-                uitable_data(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false}; % just names and units. Check/uncheck will be updated later.
+                uitable_data(i,1:7) = {false,false,false,sprintf('[%02d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false}; % just names and units. Check/uncheck will be updated later.
             end
             if length(find(isnan(data))) ~= numel(data)                     % check if loaded data contains numeric values
                 if ~isempty(start_time) && ~isempty(end_time)               % cut the time series only if some input
@@ -130,7 +146,7 @@ switch format_switch
             cut = [];                                                       % auxiliary variable to count/identify channel names with no string = redundant (will be used to update channels and units variables)
             for i = 1:length(channels)                                      % run for loop to create the ui-table and to remove channels with no name (will not affect DATA, only channel Names and Units)
                 if ~isempty(channels{i})                                    % 
-                    uitable_data(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false};
+                    uitable_data(i,1:7) = {false,false,false,sprintf('[%02d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false};
                 else
                     cut = vertcat(cut,i);                                   % count all redundant channel names
                 end
@@ -177,7 +193,7 @@ switch format_switch
             end
             % set ui table
             for i = 1:length(channels)                                      % run for loop to create the ui-table and to remove channels with no name (will not affect DATA, only channel Names and Units)
-                uitable_data(i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false};
+                uitable_data(i,1:7) = {false,false,false,sprintf('[%02d] %s (%s)',i,char(channels(i)),char(units(i))),false,false,false};
             end
             if length(find(isnan(data))) ~= numel(data)                     % check if loaded data contains numeric values
                 if ~isempty(start_time) && ~isempty(end_time)               % cut the time series only if some input
