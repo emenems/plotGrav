@@ -437,7 +437,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                 uimenu(m43,'Label','Fit locally','CallBack','plotGrav fit_local');
 %        		m431 = uimenu(m43,'Label','Sine');
 %               	uimenu(m431,'Label','One','CallBack','plotGrav fit_sine1');
-            m47 = uimenu(m4,'Label','Pol+LOD','CallBack','plotGrav get_polar');
+            m47 = uimenu(m4,'Label','Pol+LOD');
             for p = 1:length(panels)
                 uimenu(m47,'Label',upper(strrep(panels{p},'_',' ')),'CallBack',['plotGrav get_polar ',panels{p}]);
             end
@@ -922,7 +922,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             try  
                                 % First find out if sub-folder with daily iGrav data exists, i.e. 
                                 % if the data sent by iGrav has been unzipped. 
-                                if exist(fullfile(file_path.(panels{p}),...           % if folder /iGrav006_YYYY/DDMM/ does not exists, it is assumed the data is still unzipped
+                                if exist(fullfile(file_path.(panels{p}),...           % if folder /iGravNNN_YYYY/DDMM/ does not exists, it is assumed the data is still unzipped
                                     sprintf('%s_%04d',data_prefix.(panels{p}),time_in(i,1)),sprintf('%02d%02d',time_in(i,2),time_in(i,3))),'dir') ~= 7 % exist function return 7 if such folder exists
                                     file_in = fullfile(file_path.(panels{p}),...      % create input file name = file path + file prefix + date + .zip
                                         sprintf('%s_%04d',data_prefix.(panels{p}),time_in(i,1)),sprintf('%s_%04d%02d%02d.zip',data_prefix.(panels{p}),time_in(i,1),time_in(i,2),time_in(i,3)));
@@ -2917,7 +2917,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.(char(panels(i)))(run_index) = {char(units.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j)))}; % add diff units. The same as input.
                                 channels.(char(panels(i)))(run_index) = {[char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))),'_diff']}; % add diff name. The same as input + diff.
                                 data_table.(char(panels(i)))(run_index,1:7) = {false,false,false,...        % add diff to ui-table
-                                                    sprintf('[%2d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
+                                                    sprintf('[%02d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
                                                         false,false,false};
                                 ttime = datevec(now);
                                 fprintf(fid,'%s channel %2d derivative/difference computed -> %2d (%04d/%02d/%02d %02d:%02d)\n',...
@@ -3011,7 +3011,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.(char(panels(i)))(run_index) = {char(units.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j)))}; % add diff units. The same as input.
                                 channels.(char(panels(i)))(run_index) = {[char(channels.(char(panels(i)))(plot_axesL1.(char(panels(i)))(j))),'_sum']}; % add diff name. The same as input + diff.
                                 data_table.(char(panels(i)))(run_index,1:7) = {false,false,false,...        % add diff to ui-table
-                                                    sprintf('[%2d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
+                                                    sprintf('[%02d] %s (%s)',run_index,char(channels.(char(panels(i)))(run_index)),char(units.(char(panels(i)))(run_index))),...
                                                         false,false,false};
                                 ttime = datevec(now);
                                 fprintf(fid,'%s channel %2d cumulative sum computed -> %2d (%04d/%02d/%02d %02d:%02d)\n',...
@@ -3427,7 +3427,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             units.(panels{p})(channel_number) = units.(panels{p})(plot_axesL1.(panels{p})(j)); 
                             channels.(panels{p})(channel_number) = {sprintf('%s_filt',char(channels.(panels{p})(plot_axesL1.(panels{p})(j))))}; % add channel name
                             data_table.(panels{p})(channel_number,1:7) = {false,false,false,... % append the new channel to the ui-table.
-                                                                sprintf('[%2d] %s (%s)',channel_number,char(channels.(panels{p})(channel_number)),char(units.(panels{p})((plot_axesL1.(panels{p})(j))))),...
+                                                                sprintf('[%02d] %s (%s)',channel_number,char(channels.(panels{p})(channel_number)),char(units.(panels{p})((plot_axesL1.(panels{p})(j))))),...
 																false,false,false};
                             % Append the filtered time series to data matrix
                             data.(panels{p})(:,channel_number) = interp1(time_filt,data_filt,time.(panels{p})); 
@@ -3505,7 +3505,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         % channel numers. Removal of a channel data_data_a(plot_axesL1.data_a,:) = [];
                         % does not invoke numbering update!!
                         for i = 1:length(channels.(panels{p}))              % Loop for all remaining channels
-                            data_table.(panels{p})(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels{p})(i)),char(units.(panels{p})(i)))};
+                            data_table.(panels{p})(i,4) = {sprintf('[%02d] %s (%s)',i,char(channels.(panels{p})(i)),char(units.(panels{p})(i)))};
                         end
                         % Store the new channel names, units and data table
                         set(findobj('Tag',sprintf('plotGrav_uitable_%s_data',panels{p})),'Data',data_table.(panels{p})); 
@@ -3563,7 +3563,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.(panels{p})(channel_number) = units.(panels{p})(plot_axesL1.(panels{p})(j)); % copy/append units
                                 channels.(panels{p})(channel_number) = {sprintf('%s_copy',char(channels.(panels{p})(plot_axesL1.(panels{p})(j))))}; % add channel name
                                 data_table.(panels{p})(channel_number,1:7) = {false,false,false,... % add to ui-table. By default, the copied channel is not checked for either axes (=false)
-                                                                    sprintf('[%2d] %s (%s)',channel_number,char(channels.(panels{p})(channel_number)),char(units.(panels{p})((plot_axesL1.(panels{p})(j))))),...
+                                                                    sprintf('[%02d] %s (%s)',channel_number,char(channels.(panels{p})(channel_number)),char(units.(panels{p})((plot_axesL1.(panels{p})(j))))),...
                                                                         false,false,false};
                                 data.(panels{p})(:,channel_number) = data.(panels{p})(:,plot_axesL1.(panels{p})(j)); % append to data matrix
                                 channel_number = channel_number + 1;        % increase the number for next channel
@@ -4662,10 +4662,10 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                         channels.(panel)(column_num) = {[channels.(panel){str2double(st{1}(2:end))},'_RegFit']}; % add fit name. The same as input + RegFit suffix.
                         channels.(panel)(column_num+1) = {[channels.(panel){str2double(st{1}(2:end))},'_RegRes']}; % add residuals name. The same as input + RegFit suffix.
                         data_table.(panel)(column_num,1:7) = {false,false,false,...        % add fit to ui-table
-                                                    sprintf('[%2d] %s (%s)',column_num,char(channels.(panel){column_num}),char(units.(panel){column_num})),...
+                                                    sprintf('[%02d] %s (%s)',column_num,char(channels.(panel){column_num}),char(units.(panel){column_num})),...
                                                         false,false,false};
                         data_table.(panel)(column_num+1,1:7) = {false,false,false,...        % add residuals to ui-table
-                                                    sprintf('[%2d] %s (%s)',column_num+1,char(channels.(panel){column_num+1}),char(units.(panel){column_num+1})),...
+                                                    sprintf('[%02d] %s (%s)',column_num+1,char(channels.(panel){column_num+1}),char(units.(panel){column_num+1})),...
                                                         false,false,false};
                         % Write the results to log-file
                         [ty,tm,td,th,tmm] = datevec(now);fprintf(fid,'%s channel %2d = Regression fit: ',panel,column_num);
@@ -4826,7 +4826,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.data_a(str2double(st{1}(2:end))) = {'?'}; % change/add units. By defauld, no unit
                                 channels.data_a(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.data_a(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
+															sprintf('[%02d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4839,7 +4839,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.data_b(str2double(st{1}(2:end))) = {'?'};
                                 channels.data_b(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.data_b(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
+															sprintf('[%02d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4852,7 +4852,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.data_c(str2double(st{1}(2:end))) = {'?'};
                                 channels.data_c(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.data_c(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
+															sprintf('[%02d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -4865,7 +4865,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 units.data_d(str2double(st{1}(2:end))) = {'?'};
                                 channels.data_d(str2double(st{1}(2:end))) = {sprintf('%s',[st{3:end}])}; % change the channel name
                                 data_table.data_d(str2double(st{1}(2:end)),1:7) = {false,false,false,...        % add to ui-table
-															sprintf('[%2d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
+															sprintf('[%02d] %s (?)',str2double(st{1}(2:end)),[st{3:end}]),...
 																false,false,false};
                                 % Store the results
                                 set(findobj('Tag','plotGrav_push_load'),'UserData',data); 
@@ -5714,7 +5714,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                     units.(char(panels(p)))(channel_number) = units.(char(panels(p)))(plot_axesL1.(char(panels(p)))(i)); % copy/append units
                                     channels.(char(panels(p)))(channel_number) = {sprintf('%s_shift%3.1fs',char(channels.(char(panels(p)))(plot_axesL1.(char(panels(p)))(i))),new_shift)}; % add channel name
                                     data_table.(char(panels(p)))(channel_number,1:7) = {false,false,false,... % add to ui-table. By default, the new channel is not checked for either axes (=false)
-                                                                            sprintf('[%2d] %s (%s)',channel_number,char(channels.(char(panels(p)))(channel_number)),char(units.(char(panels(p)))((plot_axesL1.(char(panels(p)))(i))))),...
+                                                                            sprintf('[%02d] %s (%s)',channel_number,char(channels.(char(panels(p)))(channel_number)),char(units.(char(panels(p)))((plot_axesL1.(char(panels(p)))(i))))),...
                                                                                 false,false,false};
                                     data.(char(panels(p)))(:,channel_number) = ...
                                         interp1(time.(char(panels(p)))+new_shift/86400,data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(i)),time.(char(panels(p))));
@@ -6038,7 +6038,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
                                 fprintf(fid,'%s channel %2d name changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
                                 channels.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
+                                data_table.(panels)(i,4) = {sprintf('[%02d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
                         % Store new channel names
@@ -6109,7 +6109,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             if ~strcmp(char(user_in(i)),'[]')                    % [] symbol means do not change this name!
                                 fprintf(fid,'%s channel %2d units changed: %s -> %s (%04d/%02d/%02d %02d:%02d)\n',panels,i,char(channels.(panels)(i)),char(user_in(i)),ty,tm,td,th,tmm);
                                 units.(panels)(i) = {char(user_in(i))};       % change the user name
-                                data_table.(panels)(i,4) = {sprintf('[%2d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
+                                data_table.(panels)(i,4) = {sprintf('[%02d] %s (%s)',i,char(channels.(panels)(i)),char(units.(panels)(i)))}; % +update the ui-table using new channel name
                             end
                         end
                         % Store new channel names
@@ -6517,7 +6517,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             units_panel = horzcat(reshape(units_panel,[1,length(units_panel)]),reshape(units_new,[1,length(units_new)]));
                             % Append names to ui-table
                             for i = 1:length(channels_new)
-                                data_panel(current_num+i,1:7) = {false,false,false,sprintf('[%2d] %s (%s)',...
+                                data_panel(current_num+i,1:7) = {false,false,false,sprintf('[%02d] %s (%s)',...
                                     current_num+i,char(channels_new(i)),char(units_new(i))),false,false,false};
                             end
                             % Store updated variables

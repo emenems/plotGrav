@@ -40,7 +40,7 @@ time = get(findobj('Tag','plotGrav_text_status'),'UserData');               % lo
 % Set panel 'official' panel names. To reduce the code length, use a for loop for
 % all panels (iGrav, TRiLOGi, Other 1 and 2). Use 'panels' as variable for
 % filling the structure arrays.
-panels = {'igrav','trilogi','other1','other2'};  
+panels = {'data_a','data_b','data_c','data_d'};  
 % First get all channel names, units and data tables + find selected channels
 for i = 1:length(panels)
      % Get units. Will be used for output/plot
