@@ -184,7 +184,7 @@ switch format_switch
         end
     case 4
         try 
-            [time,data,temp] = plotGrav_readcsv(file_name_in,1,',',1,'yyyy/mm/dd HH:MM:SS"','All'); % fixed : 1 = number of header lines, ',' = delimiter, 1 = first column == time, fixed time format, 'All' = load all columns
+            [time,data,temp] = plotGrav_readcsv(file_name_in,1,',',1,'yyyy/mm/dd HH:MM:SS','All'); % fixed : 1 = number of header lines, ',' = delimiter, 1 = first column == time, fixed time format, 'All' = load all columns
             channels = temp(2:end);                                         % get channel names
             % Set channel units to '' as hygraph header does not contain
             % units

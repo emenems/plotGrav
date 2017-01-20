@@ -73,7 +73,7 @@ for i = 1:number_of_column
         format_spec = [format_spec,' '];
     end
 end
-data_all = textscan(fid,format_spec,'Delimiter',char(delim),'TreatAsEmpty',{'"NAN"','"INF"','"-INF"','NotYetSet','nan'}); % read the whole file at once
+data_all = textscan(fid,format_spec,'Delimiter',char(delim),'TreatAsEmpty',{'"NAN"','"INF"','"-INF"','NotYetSet','nan','NA'}); % read the whole file at once
 time = datenum(data_all{date_column},date_format);                          % convert time string to matlab format
 if ischar(data_column)                                                      % is char = 'All columns'
     data = cell2mat(data_all(2:end));

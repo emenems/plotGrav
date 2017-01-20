@@ -5101,7 +5101,7 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                             for j = 1:length(plot_axesL1.(char(panels(p)))) % run loop for all selected channels
                                 if ~isempty(plot_axesL1.(char(panels(p)))) && ~isempty(data.(char(panels(p)))) % check if current panel is selected and data are loaded
                                     r = find(isnan(data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(j)))); % find all NaNs in
-                                    if ~isempty(r)                              % continue only if at least one NaN has been found.
+                                    if ~isempty(r) && length(r) < length(data.(char(panels(p)))(:,plot_axesL1.(char(panels(p)))(j)))-2 % continue only if at least one NaN has been found.
                                         for i = 1:length(r)
                                             set(findobj('Tag','plotGrav_text_status'),'String',sprintf('Removing NaNs...(%4.1f%%).',i/length(r)*100));drawnow % status
                                             x1 = time.(char(panels(p)))(r(i))-threshold; % set time limits: for current NaN
