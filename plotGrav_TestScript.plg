@@ -81,6 +81,9 @@
 % SPECTRAL_ANALYSIS		perform spectral analysis. Input is a switch between: 1 = maximum valid interval (no interpolation prior to analysis), 2 = interpolate prior to analysis (to remove NaNs), 3 = spectrogram. In this case the second number gives the window length in hours (3;20 = spectrogram for window length 24 hours).
 % TIME_SHIFT			time shift introduced to selected channel. Input example: 12 => introduces a time shift of 12 second to SELECTED channel. The result will be appended as the last channel. Use UITABLE_XXXX_L for channel selection.
 % APPEND_CHANNELS 		append channels to selected panel. Input: fist string = switch between panels (DATA_A,B,C,D), second input = full file name. Example: DATA_A;\\dms\hygra\iGrav\Software\plotGrav\WE_iGrav_TideEffect_CurrentFile_60sec.tsf
+% PREFIX_NAME			Instrument name for DATA X (A,B,C or D) used when loading iGrav (not SG) time series. Will be used to create Sub-folder names and File names. Two inputs: panel;string, e.g. DATA_A;iGrav006
+% GRAVITY_CHANNEL		Select channel containing gravity observations. Applied only if iGrav/SG time series loaded. Two inputs: panel;value, e.g., DATA_A;1
+% PRESSURE_CHANNEL		Select channel containing pressure observations (in mBar). Used to compute atmospheric correction only if iGrav/SG time series loaded. Two inputs: panel;value, e.g., DATA_A;2
 % SCRIPT_END			terminates the script run. No input.
 %
 % Older version of plotGrav (still supported)
@@ -92,7 +95,6 @@
 % 	CALIBRATION_DELAY	sets the DATA_A phase delay. Input: phase delay in seconds (with minus sign). Example: -14.2
 % 	ADMITTANCE_FACTOR	admittance factor used for atmospheric effect. Input: admittance in nm/s^2/hPa. Example: -3
 % 	CORRECTION_FILE 	correct time series in DATA_A panel using a correction file. Input: full file name of correction file,e.g., F:\mikolaj\Documents\plotGrav\iGrav_correction_file.txt; Apply/Show switch, 1 = apply, 2 = apply to selected channel, 3 = show.
-
 % 25.09.2015, M. Mikolaj, mikolaj@gfz-potsdam.de
 %
 % Start example:

@@ -515,6 +515,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                     uimenu(m524,'Label','Select','CallBack','plotGrav interpolate_interval_linear');
                     uimenu(m524,'Label','Auto','CallBack','plotGrav interpolate_interval_auto');
                 	uimenu(m53,'Label','Out of range','CallBack','plotGrav replace_range_by');
+            uimenu(m5,'Label','Data specs','CallBack','plotGrav set_file_specs');
             
         % (UI) Panels for selecting time series. Each row of such
         % ui-table referes to a matrix column. The loaded time series are
@@ -2765,6 +2766,75 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                 set(findobj('Tag','plotGrav_edit_drift_manual'),'Visible','on');
             else
                 set(findobj('Tag','plotGrav_edit_drift_manual'),'Visible','off');
+            end
+        case 'set_file_specs'
+            % Set file loading&processing parameters
+            if nargin == 1
+                set(findobj('Tag','plotGrav_text_status'),'String','panel;prefix;admit;resol;scale;phase;grav;pres;driftType;driftValue');drawnow % send instructions to status bar
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String','data_a;iGrav;-3;60;-914.42;-11.8;1;2;6;0.4 0'); % Make user input fields visible + set default value
+                set(findobj('Tag','plotGrav_text_input'),'Visible','on');
+                set(findobj('Tag','plotGrav_push_confirm'),'Visible','on');drawnow % Show confirmation button 
+                waitfor(findobj('Tag','plotGrav_push_confirm'),'Visible','off'); % Wait for confirmation
+                set(findobj('Tag','plotGrav_text_input'),'Visible','off');  % turn of visibility of status bar   
+            else
+                set(findobj('Tag','plotGrav_edit_text_input'),'Visible','on','String',char(varargin{1})); 
+            end
+            set(findobj('Tag','plotGrav_edit_text_input'),'Visible','off'); % Turn of user input fields
+            set(findobj('Tag','plotGrav_text_input'),'Visible','off');
+            st = get(findobj('Tag','plotGrav_edit_text_input'),'String'); % get user input
+            st = strsplit(st,';');
+            try
+                % Get current values
+                set_admit = get(findobj('Tag','plotGrav_edit_admit_factor'),'UserData');
+                set_resample = get(findobj('Tag','plotGrav_edit_resample'),'UserData');
+                grav_channel = get(findobj('Tag','plotGrav_menu_grav_channel'),'UserData');
+                pres_channel = get(findobj('Tag','plotGrav_menu_pres_channel'),'UserData');
+                calib_delay = get(findobj('Tag','plotGrav_edit_calb_delay'),'UserData');
+                calib_fac = get(findobj('Tag','plotGrav_edit_calb_factor'),'UserData');
+                set_drift_switch = get(findobj('Tag','plotGrav_pupup_drift'),'Userdata');
+                set_drift_val = get(findobj('Tag','plotGrav_edit_drift_manual'),'UserData');
+                panel = lower(st{1});
+                % Set new values
+                if ~strcmp(st{2},'[]')
+                    set(findobj('Tag',['plotGrav_menu_',panel,'_file']),'UserData',st{2});
+                end
+                if ~strcmp(st{3},'[]')
+                    set_admit.(panel) = st{3};
+                    set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
+                end
+                if ~strcmp(st{4},'[]')
+                    set_resample.(panel) = st{4};
+                    set(findobj('Tag','plotGrav_edit_resample'),'UserData',set_resample);
+                end
+                if ~strcmp(st{5},'[]')
+                    calib_fac.(panel) = st{5};
+                    set(findobj('Tag','plotGrav_edit_calb_factor'),'UserData',calib_fac);
+                end
+                if ~strcmp(st{6},'[]')
+                    calib_delay.(panel) = st{6};
+                    set(findobj('Tag','plotGrav_edit_calb_delay'),'UserData',calib_delay);
+                end
+                if ~strcmp(st{7},'[]')
+                    grav_channel.(panel) = str2double(st{7});
+                    set(findobj('Tag','plotGrav_menu_grav_channel'),'UserData',grav_channel);
+                end
+                if ~strcmp(st{8},'[]')
+                    pres_channel.(panel) = str2double(st{8});
+                    set(findobj('Tag','plotGrav_menu_pres_channel'),'UserData',pres_channel);
+                end
+                if ~strcmp(st{9},'[]')
+                    set_drift_switch.(panel) = str2double(st{9});
+                    set(findobj('Tag','plotGrav_pupup_drift'),'UserData',set_drift_switch);
+                end
+                if set_drift_val.(panel) == 6 
+                    if ~strcmp(st{10},'[]')
+                        set_drift_val.(panel) = st{10};
+                        set(findobj('Tag','plotGrav_edit_drift_manual'),'UserData',set_drift_val);
+                    end
+                end
+                set(findobj('Tag','plotGrav_text_status'),'String','All set');drawnow % status
+            catch
+                set(findobj('Tag','plotGrav_text_status'),'String','Not set');drawnow % status
             end
             
 %%%%%%%%%%%%%%%%%%%%%%%%% E X P O R T I N G %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    

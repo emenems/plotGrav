@@ -41,9 +41,9 @@ try                                                                         % ca
                     if ~strcmp(row,'[]')                                 % [] symbol means no input 
                         temp = strsplit(row,';');
                         if strcmp(temp{2},'[]')
-                            set(findobj('Tag','plotGrav_edit_',lower(temp{1}),'_a_path'),'String','');
+                            set(findobj('Tag',['plotGrav_edit_',lower(temp{1}),'_path']),'String','');
                         else
-                            set(findobj('Tag','plotGrav_edit_',lower(temp{1}),'_a_path'),'String',temp{2});
+                            set(findobj('Tag',['plotGrav_edit_',lower(temp{1}),'_path']),'String',temp{2});
                         end
                     end
                 case 'FILE_IN_DATA_A' % old version (back-compatibility)
@@ -115,6 +115,16 @@ try                                                                         % ca
                     else
                         set(findobj('Tag','plotGrav_edit_logfile_file'),'String',row);
                     end
+				case 'PREFIX_NAME'
+					row = fgetl(fid);count = count + 1; 
+                    if ~strcmp(row,'[]')                            
+						temp = strsplit(row,';');
+                        if strcmp(temp{2},'[]')
+                            set(findobj('Tag',['plotGrav_menu_',lower(temp{1}),'_file']),'UserData','')
+                        else
+                            set(findobj('Tag',['plotGrav_menu_',lower(temp{1}),'_file']),'UserData',temp{2})
+                        end
+                    end
                 %% Input time settings
                 case 'TIME_START'                                           % Starting time
                     row = fgetl(fid);count = count + 1;                     % read the date
@@ -169,6 +179,7 @@ try                                                                         % ca
                             clear calib
                         else
                             if ~strcmp(temp{2},'[]')
+                                calib = get(findobj('Tag','plotGrav_edit_calb_factor'),'UserData');
                                 calib.(lower(temp{1})) = temp{2};
                                 set(findobj('Tag','plotGrav_edit_calb_factor'),'UserData',calib);
                                 clear calib
@@ -187,6 +198,7 @@ try                                                                         % ca
                             clear calib
                         else
                             if ~strcmp(temp{2},'[]')
+                                calib = get(findobj('Tag','plotGrav_edit_calb_delay'),'UserData');
                                 calib.(lower(temp{1})) = temp{2};
                                 set(findobj('Tag','plotGrav_edit_calb_delay'),'UserData',calib);
                                 clear calib
@@ -204,6 +216,7 @@ try                                                                         % ca
                             set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
                         else % new version
                             if ~strcmp(temp{2},'[]')
+                                set_admit = get(findobj('Tag','plotGrav_edit_admit_factor'),'UserData');
                                 set_admit.(lower(temp{1})) = temp{2};
                                 set(findobj('Tag','plotGrav_edit_admit_factor'),'UserData',set_admit);
                             end
@@ -213,6 +226,7 @@ try                                                                         % ca
                     row = fgetl(fid);count = count + 1; 
                     if ~strcmp(row,'[]')
                         temp = strsplit(row,';');
+                        set_resample = get(findobj('Tag','plotGrav_edit_resample'),'UserData');
                         set_resample.(lower(temp{1})) = temp{2};
                         set(findobj('Tag','plotGrav_edit_resample'),'UserData',set_resample);
                     end
@@ -220,6 +234,7 @@ try                                                                         % ca
                         row = fgetl(fid);count = count + 1; 
                         if ~strcmp(row,'[]')                            
                             temp = strsplit(row,';');
+                            grav_channel = get(findobj('Tag','plotGrav_menu_grav_channel'),'UserData');
                             if strcmp(temp{2},'[]')
                                 grav_channel.(lower(temp{1})) = 1;
                             else
@@ -229,7 +244,8 @@ try                                                                         % ca
                         end
                 case 'PRESSURE_CHANNEL'
                         row = fgetl(fid);count = count + 1; 
-                        if ~strcmp(row,'[]')                            
+                        if ~strcmp(row,'[]')    
+                            pres_channel = get(findobj('Tag','plotGrav_menu_pres_channel'),'UserData');
                             temp = strsplit(row,';');
                             if strcmp(temp{2},'[]')
                                 pres_channel.(lower(temp{1})) = 1;
@@ -243,6 +259,8 @@ try                                                                         % ca
                     coef = strsplit(row,';');                       % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
                     if ~strcmp(char(coef{1}),'[]')                     % proceed/set only if required
                         if strcmpi(coef{1}(1),'D')
+                            set_drift_switch = get(findobj('Tag','plotGrav_pupup_drift'),'Userdata');
+                            set_drift_val = get(findobj('Tag','plotGrav_edit_drift_manual'),'UserData');
                             set_drift_switch.(lower(coef{1})) = str2double(coef{2});
                             if strcmp(str2double(coef{2}),'6')                % 6 = user defined polynomial ceoffients
                                 set_drift_val.(lower(coef{1})) = char(coef(3:end));
