@@ -230,16 +230,16 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                             row = fgetl(fid);count = count + 1;
                             coef = strsplit(row,';');                       % multiple input possible => split it (first=polynomial, second=possibly polynomial coefficients
                             if ~strcmp(char(coef{1}),'[]')                     % proceed/set only if required
-                                if strcmpi(coef{1}(1),'D')
+                                if strcmp(coef{1}(1),'D')
                                     set_drift_switch.(lower(coef{1})) = str2double(coef{2});
-                                    if strcmp(str2double(coef{2}),'6')                % 6 = user defined polynomial ceoffients
+                                    if strcmp(coef{2},'6')                % 6 = user defined polynomial ceoffients
                                         set_drift_val.(lower(coef{1})) = char(coef(3:end));
                                     else
                                         set_drift_val.(lower(coef{1})) = [];
                                     end
                                 else
                                     set_drift_switch.data_a = str2double(coef{1});
-                                    if strcmp(str2double(coef{1}),'6')                % 6 = user defined polynomial ceoffients
+                                    if strcmp(coef{1},'6')                % 6 = user defined polynomial ceoffients
                                         set_drift_val.data_a = char(coef(2:end));
                                     else
                                         set_drift_val.data_a = [];
