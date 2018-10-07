@@ -1,11 +1,8 @@
 function plotGrav(in_switch,varargin)
 %PLOTGRAV visualize gravity and hydrological time series
-% This GUI is designed for iGrav006. Additionally, user can load SG030 and
-% other time series, provided these are in supported file format. 
-% The aim of this function is to visualize time series recorded by iGrav 
-% as well as iGFE (field enclosure) together with other hydrological and 
-% gravity time series. This function generates the GUI. Run this function in
-% order to use plotGrav.
+% This GUI was designed for processing of gravimeter data but
+% other time series can be loaded as well (provided these are in supported 
+% file format).
 % 
 % Required functions:
 %   plotGrav_Atmacs_and_EOP.m
@@ -14,8 +11,8 @@ function plotGrav(in_switch,varargin)
 %   plotGrav_findTimeStep.m
 %   plotGrav_fit.m
 %   plotGrav_fitData.m
-%   plotGrav_FTP.m
 %   plotGrav_loadData.m
+%   plotGrav_loadggp.m
 %   plotGrav_loadtsf.m
 %   plotGrav_plotData.m
 %   plotGrav_printData.m
@@ -37,7 +34,7 @@ function plotGrav(in_switch,varargin)
 % - the loading of all data (especially second iGrav/SG) takes some time!
 %
 % 
-%                                                   M.Mikolaj, 17.11.2016
+%                                                   M.Mikolaj
 %                                                   mikolaj@gfz-potsdam.de
 
 % In the following, the comments are either on the right side
