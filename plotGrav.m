@@ -12,7 +12,6 @@ function plotGrav(in_switch,varargin)
 %   plotGrav_fit.m
 %   plotGrav_fitData.m
 %   plotGrav_loadData.m
-%   plotGrav_loadggp.m
 %   plotGrav_loadtsf.m
 %   plotGrav_plotData.m
 %   plotGrav_printData.m
@@ -85,7 +84,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                                 date = strsplit(row,';');                           % By default multiple inputs are delimited by ;. If one input (with minus sign), then set to current time - input
                                 if length(date) == 1
                                     date = char(date);
-                                    if strcmp(date(1),'-');
+                                    if strcmp(date(1),'-')
                                         temp = now;
                                         set_start = datevec(temp+str2double(date)); % use + as input starts with minus sign!
                                         set_start(4) = 00;
@@ -102,7 +101,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
                                 date = strsplit(row,';');                            % By default multiple inputs are delimited by ; If one input (with minus sign), then set to current time - input
                                 if length(date) == 1
                                     date = char(date);
-                                    if strcmp(date(1),'-');
+                                    if strcmp(date(1),'-')
                                         temp = now;
                                         set_stop = datevec(temp+str2double(date)); % use + as input starts with minus sign!
                                         set_stop(4) = 24;
@@ -266,7 +265,7 @@ if nargin == 0																% Standard start for GUI function, i.e. no functio
 		F1 = figure('Position',[50 50 scrs(3)-50*2, scrs(4)-50*3],...       % create main window
                     'Tag','plotGrav_main_menu','Resize','on','Menubar','none','ToolBar','none',...
                     'NumberTitle','off','Color',[0.941 0.941 0.941],...
-                    'Name','plotGrav: plot gravity time series');
+                    'Name','plotGrav: plot gravity & other time series');
 					
         % Start creating interface menu
 		% Main FILE menu (selection of files: inputs and outputs)
@@ -1298,8 +1297,17 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                 case 1                                      % Step removal. 
                                     if channel(i) <= size(data.(panel),2)     % continue only if such channel exists
                                         r = find(time.(panel) >= x2(i));      % find points recorded after the step occur.
+                                        % check if given or computed difference should be
+                                        % applied 
+                                        if ~isnan(y1(i)) && isnan(y2(i))
+                                            applyDiff = interp1(time.(panel),data.(panel)(:,channel(i)),x2(i)) - ...
+                                                        interp1(time.(panel),data.(panel)(:,channel(i)),x1(i)) - ...
+                                                        y1(i);
+                                        else 
+                                            applyDiff = (y2(i)-y1(i));
+                                        end
                                         if ~isempty(r)                      % continue only if some points have been found
-                                            data.(panel)(r,channel(i)) = data.(panel)(r,channel(i)) - (y2(i)-y1(i)); % remove the step by SUBTRACTING the given difference.
+                                            data.(panel)(r,channel(i)) = data.(panel)(r,channel(i)) - applyDiff; % remove the step by SUBTRACTING the given difference.
                                             [ty,tm,td,th,tmm] = datevec(now); % Time for logfile.
                                             fprintf(fid,'iGrav step removed for channel %d : First point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f, Second point = %04d/%02d/%02d %02d:%02d:%02.0f / %7.3f (%04d/%02d/%02d %02d:%02d)\n',...
                                                 channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),y1(i),...
@@ -1337,6 +1345,12 @@ else																		% nargin ~= 0 => Use Switch/Case to run selected code bloc
                                         fprintf(fid,'iGrav channel %d time interval interpolated (spline): Start = %04d/%02d/%02d %02d:%02d:%02.0f, Stop = %04d/%02d/%02d %02d:%02d:%02.0f (%04d/%02d/%02d %02d:%02d)\n',...
                                             channel(i),in(i,3),in(i,4),in(i,5),in(i,6),in(i,7),in(i,8),...
                                             in(i,9),in(i,10),in(i,11),in(i,12),in(i,13),in(i,14),ty,tm,td,th,tmm);
+                                    end
+                                case 5 % Set range to given values 
+                                    r = find(time.(panel)>=x1(i) & time.(panel)<=x2(i)); 
+                                    if ~isempty(r)
+                                        rep_val = linspace(y1(i),y2(i),length(r));
+                                        data.(panel)(r,channel(i)) = rep_val;
                                     end
                             end
                         end
