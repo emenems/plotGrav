@@ -1,4 +1,4 @@
-FileTools
+plotGrav
 =========
 Matlab GUI tool for processing & visualization of various time series.  
 The toolbox was developed for processing of gravimeter time series but can be used for arbitrary input.  
@@ -13,7 +13,7 @@ The toolbox was developed for processing of gravimeter time series but can be us
 * filter time series
 * compute spectral analysis
 * do some algebra on all input series (e.g., add, subtract, divide time series)
-* download & process [Atmacs](/http://atmacs.bkg.bund.de) atmospheric model data
+* download & process [Atmacs](http://atmacs.bkg.bund.de) atmospheric model data
 * compute polar motion and length of day gravity effect
 * introduce time shifts and re-sample the data (new temporal resolution)
 * automatically fill missing data (interpolate or set to constant)
